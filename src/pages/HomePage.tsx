@@ -1,5 +1,7 @@
 function HomePage() {
-    return <>
-    </>;
+    return <div>
+
+
+    </div>;
 }
 
