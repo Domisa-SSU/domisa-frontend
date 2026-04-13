@@ -5,6 +5,179 @@
 }
 
 body {
+  background-color: black;
   margin: 0;
+  font-family: "Pretendard";
 }
 
+
+@theme {
+  --color-primary-100: #fff6f9;
+  --color-primary-200: #ffcfdf;
+  --color-primary-300: #ffa6c4;
+  --color-primary-400: #ff88b0;
+  --color-primary-500: #ff6c9d;
+  --color-primary-600: #ff3d7e;
+  --color-primary-700: #e5346f;
+  --color-primary-800: #cd215b;
+  --color-primary-900: #b62757;
+
+  --color-grey-100: #ffffff;
+  --color-grey-200: #f9f9f9;
+  --color-grey-300: #f6f6f6;
+  --color-grey-400: #eaeaea;
+  --color-grey-500: #e0e0e0;
+  --color-grey-600: #c4c4c4;
+  --color-grey-700: #808080;
+  --color-grey-800: #585858;
+  --color-grey-900: #000000;
+}
+
+.typo-title-header-1 {
+  font-family: Pretendard;
+  font-size: 1.25rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.75rem;
+}
+
+.typo-title-header-1-b {
+  font-family: Pretendard;
+  font-size: 1.25rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.75rem;
+}
+
+.typo-subtitle-header-2 {
+  font-family: Pretendard;
+  font-size: 1.125rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.3125rem;
+}
+
+.typo-header-3 {
+  font-family: Pretendard;
+  font-size: 1.125rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.75rem;
+}
+
+.typo-header-3-b {
+  font-family: Pretendard;
+  font-size: 1.125rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.75rem;
+}
+
+.typo-button-text {
+  font-family: Pretendard;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.1875rem;
+}
+
+.typo-button-text-b {
+  font-family: Pretendard;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.1875rem;
+}
+
+.typo-input-text {
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.25rem;
+}
+
+.typo-input-text-m {
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+
+.typo-input-text-r {
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.25rem;
+}
+
+.typo-comment-1 {
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.0625rem;
+}
+
+.typo-comment-1-b {
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.0625rem;
+}
+
+.typo-comment-1-m {
+  font-family: Pretendard;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1rem;
+}
+
+.typo-comment-2 {
+  font-family: Pretendard;
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 0.875rem;
+}
+
+.bg-home-date-day {
+  background: linear-gradient(131deg, #ffcde3 2.77%, #ffe8f2 95.22%);
+}
+
+.bg-home-date-night {
+  background: linear-gradient(131deg, #ff78ae 2.77%, #fe759c 95.22%);
+}
+
+.bg-home-map-day {
+  background: linear-gradient(132deg, #99e2eb 19.15%, #a4f5ff 94.63%);
+}
+
+.bg-home-map-night {
+  background: linear-gradient(132deg, #395558 19.15%, #24484c 94.63%);
+}
+
+.bg-home-friend-day {
+  background: linear-gradient(91deg, #ff85ae 5.94%, #ff85ae 95.33%);
+}
+
+.bg-home-friend-night {
+  background: linear-gradient(91deg, #ff4281 5.94%, #ff73a2 95.33%);
+}
+
+@keyframes marquee {
+  from {
+    transform: translate(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
