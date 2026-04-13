@@ -3,7 +3,6 @@ import heartIcon from "../assets/heartIcon.svg";
 import heartFaceIcon from "../assets/heartFaceIcon.svg";
 import wingIcon from "../assets/wingIcon.svg";
 
-// const emoji : [] = [🌸, ];
 
 function MessageCard({ sliderIcon }: { sliderIcon: string }) {
   return (
