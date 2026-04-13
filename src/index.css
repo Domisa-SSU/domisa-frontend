@@ -5,9 +5,11 @@
 }
 
 body {
+  background-color: black;
   margin: 0;
   font-family: "Pretendard";
 }
+
 
 @theme {
   --color-primary-100: #fff6f9;
@@ -31,7 +33,7 @@ body {
   --color-grey-900: #000000;
 }
 
-.text-title-header-1 {
+.typo-title-header-1 {
   font-family: Pretendard;
   font-size: 1.25rem;
   font-style: normal;
@@ -39,7 +41,7 @@ body {
   line-height: 1.75rem;
 }
 
-.text-title-header-1b {
+.typo-title-header-1-b {
   font-family: Pretendard;
   font-size: 1.25rem;
   font-style: normal;
@@ -47,7 +49,7 @@ body {
   line-height: 1.75rem;
 }
 
-.text-subtitle-header-2 {
+.typo-subtitle-header-2 {
   font-family: Pretendard;
   font-size: 1.125rem;
   font-style: normal;
@@ -55,7 +57,7 @@ body {
   line-height: 1.3125rem;
 }
 
-.text-header-3 {
+.typo-header-3 {
   font-family: Pretendard;
   font-size: 1.125rem;
   font-style: normal;
@@ -63,7 +65,7 @@ body {
   line-height: 1.75rem;
 }
 
-.text-header-3-b {
+.typo-header-3-b {
   font-family: Pretendard;
   font-size: 1.125rem;
   font-style: normal;
@@ -71,7 +73,7 @@ body {
   line-height: 1.75rem;
 }
 
-.text-button-text {
+.typo-button-text {
   font-family: Pretendard;
   font-size: 1rem;
   font-style: normal;
@@ -79,7 +81,7 @@ body {
   line-height: 1.1875rem;
 }
 
-.text-button-text-b {
+.typo-button-text-b {
   font-family: Pretendard;
   font-size: 1rem;
   font-style: normal;
@@ -87,7 +89,7 @@ body {
   line-height: 1.1875rem;
 }
 
-.text-input-text {
+.typo-input-text {
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
@@ -95,7 +97,7 @@ body {
   line-height: 1.25rem;
 }
 
-.text-input-text-m {
+.typo-input-text-m {
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
@@ -103,7 +105,7 @@ body {
   line-height: 1.25rem;
 }
 
-.text-input-text-r {
+.typo-input-text-r {
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
@@ -111,7 +113,7 @@ body {
   line-height: 1.25rem;
 }
 
-.text-comment-1 {
+.typo-comment-1 {
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
@@ -119,7 +121,7 @@ body {
   line-height: 1.0625rem;
 }
 
-.text-comment-1-b {
+.typo-comment-1-b {
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
@@ -127,7 +129,7 @@ body {
   line-height: 1.0625rem;
 }
 
-.text-comment-1-m {
+.typo-comment-1-m {
   font-family: Pretendard;
   font-size: 0.875rem;
   font-style: normal;
@@ -135,7 +137,7 @@ body {
   line-height: 1rem;
 }
 
-.text-comment-2 {
+.typo-comment-2 {
   font-family: Pretendard;
   font-size: 0.75rem;
   font-style: normal;
@@ -165,4 +167,17 @@ body {
 
 .bg-home-friend-night {
   background: linear-gradient(91deg, #ff4281 5.94%, #ff73a2 95.33%);
+}
+
+@keyframes marquee {
+  from {
+    transform: translate(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
 }
