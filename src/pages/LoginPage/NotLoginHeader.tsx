@@ -8,7 +8,7 @@ function NotLoginHeader({title = "default"} : {title ?: string}) {
     return (
         <div>
             <HeaderTop></HeaderTop>
-            <div className="px-5 py-2.5 flex items-center">
+            <div className="relative px-5 py-2.5 flex items-center border-b-[0.8px] border-grey-500">
                 <button className="p-[0.62rem]" onClick={() => {navigate(-1)}}>
                     <img src={headerArrow} alt="" className="w-[0.45rem] h-[0.9rem]"/>
                 </button>

@@ -181,3 +181,26 @@ body {
 .animate-marquee {
   animation: marquee 30s linear infinite;
 }
+
+@keyframes animal-swing {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(4deg);
+  }
+  50% {
+    transform: rotate(-4deg);
+  }
+  75% {
+    transform: rotate(2deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-animal-swing {
+  animation: animal-swing 1.4s ease-in-out;
+  transform-origin: center bottom;
+}
