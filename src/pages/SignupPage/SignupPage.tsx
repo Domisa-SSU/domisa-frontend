@@ -4,6 +4,7 @@ import BottomActionBar from "../../components/BottomActionBar";
 import Toast from "../../components/Toast";
 import { KAKAO_LOGIN_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
 import NotLoginHeader from "../LoginPage/NotLoginHeader";
+import forbiddenIcon from "./asset/forbiddenIcon.svg";
 import pinkCheckIcon from "./asset/pinkCheckIcon.svg";
 import selectArrow from "./asset/selectArrow.svg";
 
@@ -12,7 +13,7 @@ const contactMethods = ["인스타 ID", "전화번호", "카카오톡ID"];
 const phonePrefixes = ["010", "011", "016", "017"];
 
 const fieldClassName =
-    "h-10 w-full rounded-[0.625rem] bg-primary-100 px-[0.875rem] typo-input-text-m text-primary-500 placeholder:text-grey-600 focus:outline-none";
+    "h-10 w-full rounded-[0.625rem] border-[1.2px] border-transparent bg-primary-100 px-[0.875rem] typo-input-text-m text-primary-500 placeholder:text-grey-600 focus:outline-none";
 const selectClassName =
     "h-10 w-full appearance-none rounded-[0.625rem] bg-primary-100 px-[0.875rem] pr-9 typo-input-text-m focus:outline-none";
 
@@ -20,6 +21,7 @@ function SignupPage() {
     const navigate = useNavigate();
     const [nickname, setNickname] = useState("");
     const [isNicknameChecked, setIsNicknameChecked] = useState(false);
+    const [nicknameErrorMessage, setNicknameErrorMessage] = useState("");
     const [gender, setGender] = useState("");
     const [birthYear, setBirthYear] = useState("2003");
     const [referralCode, setReferralCode] = useState("");
@@ -111,20 +113,45 @@ function SignupPage() {
                                     onChange={(event) => {
                                         handleLimitedChange(event.target.value, 4, setNickname);
                                         setIsNicknameChecked(false);
+                                        setNicknameErrorMessage("");
                                     }}
-                                    className={`${fieldClassName} pr-[5.5rem]`}
+                                    className={`${fieldClassName} pr-[5.5rem] ${
+                                        nicknameErrorMessage
+                                            ? "border-[1.2px] border-warning"
+                                            : ""
+                                    }`}
                                     placeholder="닉네임을 입력하세요"
                                 />
                                 <button
                                     type="button"
-                                    onClick={() => setIsNicknameChecked(nickname.trim().length > 0)}
+                                    onClick={() => {
+                                        if (nickname.trim().length === 0) {
+                                            setIsNicknameChecked(false);
+                                            setNicknameErrorMessage("이미 사용중인 닉네임입니다");
+                                            return;
+                                        }
+
+                                        setNicknameErrorMessage("");
+                                        setIsNicknameChecked(true);
+                                    }}
                                     className="absolute right-[0.31rem] top-1/2 flex -translate-y-1/2 items-center justify-center rounded-[0.625rem] border-[0.8px] border-primary-200 bg-grey-100 px-4 py-2"
                                 >
                                     <span className="typo-comment-2 text-primary-300">확인</span>
                                 </button>
                             </div>
                             <div className="min-h-[0.875rem]">
-                                {isNicknameChecked ? (
+                                {nicknameErrorMessage ? (
+                                    <div className="flex items-center gap-[0.125rem]">
+                                        <span className="typo-comment-2 text-warning">
+                                            {nicknameErrorMessage}
+                                        </span>
+                                        <img
+                                            src={forbiddenIcon}
+                                            alt=""
+                                            className="h-[0.6875rem] w-[0.6875rem]"
+                                        />
+                                    </div>
+                                ) : isNicknameChecked ? (
                                     <div className="flex items-center gap-[0.125rem]">
                                         <span className="typo-comment-2 text-primary-300">
                                             사용 가능한 닉네임입니다

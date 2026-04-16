@@ -8,6 +8,7 @@ body {
   background-color: white;
   margin: 0;
   font-family: "Pretendard";
+  overflow-x: hidden;
 }
 
 
@@ -31,6 +32,8 @@ body {
   --color-grey-700: #808080;
   --color-grey-800: #585858;
   --color-grey-900: #000000;
+
+  --color-warning: #ff5a47;
 }
 
 .typo-title-header-1 {

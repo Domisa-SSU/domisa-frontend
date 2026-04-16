@@ -41,10 +41,11 @@ function HomePage() {
 
   return (
     <div
-      className="min-h-screen bg-center bg-cover bg-no-repeat flex flex-col justify-between
+      className="flex min-h-screen w-full flex-col justify-between overflow-x-hidden bg-center bg-cover bg-no-repeat
     "
       style={{
         backgroundImage: `url(${theme == `day` ? dayBgImg : nightBgImg})`,
+        backgroundColor: theme == "day" ? "#f5dce7" : "#123d41",
       }}
     >
       <MessageSlider></MessageSlider>
