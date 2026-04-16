@@ -1,4 +1,5 @@
 import friendSignUpImg from "../IntroduceFriendPage/assets/friendSignUpImg.png";
+import { KAKAO_LOGIN_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
 import loginImg from "./asset/loginImg.png";
 import NotLoginHeader from "./NotLoginHeader";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -16,6 +17,11 @@ function Kakao() {
         ? "/auth/signup?flow=introduce-friend"
         : "/auth/signup";
     const headerTitle = isIntroduceFriendFlow ? "친구 소개하기" : "로그인";
+
+    const handleKakaoLogin = () => {
+        sessionStorage.setItem(KAKAO_LOGIN_TOAST_STORAGE_KEY, "true");
+        navigate(nextPath);
+    };
 
     return (
         <div
@@ -54,7 +60,7 @@ function Kakao() {
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => navigate(nextPath)}
+                                    onClick={handleKakaoLogin}
                                     className="relative flex h-12 w-full items-center justify-center rounded-[0.375rem] bg-[#FEE500] px-[0.875rem]"
                                 >
                                     <img
@@ -85,7 +91,7 @@ function Kakao() {
                     <div className="absolute inset-x-0 bottom-0 bg-primary-400 px-5 pt-[0.62rem] pb-[2.94rem]">
                         <button
                             type="button"
-                            onClick={() => navigate(nextPath)}
+                            onClick={handleKakaoLogin}
                             className="relative mx-auto flex h-12 w-full max-w-[20.9375rem] items-center justify-center rounded-[0.375rem] bg-[#FEE500] px-[0.875rem]"
                         >
                             <img

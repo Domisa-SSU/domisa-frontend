@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomActionBar from "../../components/BottomActionBar";
 import { INTRODUCE_FRIEND_DRAFT_STORAGE_KEY } from "../../constants/storageKeys";
@@ -18,6 +18,12 @@ function IntroduceFriendPage() {
         if (value.length <= limit) {
             setter(value);
         }
+    };
+
+    const handleTextareaInput = (event: FormEvent<HTMLTextAreaElement>) => {
+        const target = event.currentTarget;
+        target.style.height = "0px";
+        target.style.height = `${target.scrollHeight}px`;
     };
 
     useEffect(() => {
@@ -54,7 +60,9 @@ function IntroduceFriendPage() {
                                 onChange={(event) =>
                                     handleLimitedChange(event.target.value, 35, setShortIntro)
                                 }
-                                className={`h-[2.125rem] w-full resize-none rounded-[0.625rem] px-[0.625rem] py-2 placeholder:text-grey-600 focus:outline-none ${
+                                onInput={handleTextareaInput}
+                                rows={3}
+                                className={`min-h-[5.5rem] w-full resize-none overflow-hidden rounded-[0.625rem] px-[0.625rem] py-2 placeholder:text-grey-600 focus:outline-none ${
                                     shortIntro.length > 0
                                         ? "bg-primary-100 typo-input-text text-primary-500"
                                         : "bg-grey-300 typo-input-text-m text-grey-600"
@@ -72,11 +80,13 @@ function IntroduceFriendPage() {
                         <div className="flex flex-col items-end gap-[0.3125rem]">
                             <textarea
                                 value={charmPoint}
-                                maxLength={150}
+                                maxLength={75}
                                 onChange={(event) =>
-                                    handleLimitedChange(event.target.value, 150, setCharmPoint)
+                                    handleLimitedChange(event.target.value, 75, setCharmPoint)
                                 }
-                                className={`h-[5.0625rem] w-full resize-none rounded-[0.625rem] px-[0.625rem] py-2 placeholder:text-grey-600 focus:outline-none ${
+                                onInput={handleTextareaInput}
+                                rows={4}
+                                className={`min-h-[6.75rem] w-full resize-none overflow-hidden rounded-[0.625rem] px-[0.625rem] py-2 placeholder:text-grey-600 focus:outline-none ${
                                     charmPoint.length > 0
                                         ? "bg-primary-100 typo-input-text text-primary-500"
                                         : "bg-grey-300 typo-input-text-m text-grey-600"
@@ -86,7 +96,7 @@ function IntroduceFriendPage() {
                             <p className="w-full typo-comment-2 text-primary-300">
                                 * 수많은 솔로 중 내 친구를 선택해야 되는 이유를 어필해주세요
                             </p>
-                            <span className="typo-comment-1-m text-grey-600">{`${charmPoint.length}/150`}</span>
+                            <span className="typo-comment-1-m text-grey-600">{`${charmPoint.length}/75`}</span>
                         </div>
                     </section>
 
@@ -97,18 +107,20 @@ function IntroduceFriendPage() {
                         <div className="flex flex-col items-end gap-[0.3125rem]">
                             <textarea
                                 value={funnyEpisode}
-                                maxLength={150}
+                                maxLength={75}
                                 onChange={(event) =>
-                                    handleLimitedChange(event.target.value, 150, setFunnyEpisode)
+                                    handleLimitedChange(event.target.value, 75, setFunnyEpisode)
                                 }
-                                className={`h-[5.0625rem] w-full resize-none rounded-[0.625rem] px-[0.625rem] py-2 placeholder:text-grey-600 focus:outline-none ${
+                                onInput={handleTextareaInput}
+                                rows={4}
+                                className={`min-h-[6.75rem] w-full resize-none overflow-hidden rounded-[0.625rem] px-[0.625rem] py-2 placeholder:text-grey-600 focus:outline-none ${
                                     funnyEpisode.length > 0
                                         ? "bg-primary-100 typo-input-text text-primary-500"
                                         : "bg-grey-300 typo-input-text-m text-grey-600"
                                 }`}
                                 placeholder={"물고기가 먹고 싶어서 한강에서 낚시를 한 적이 있어요\n회 떠먹었습니다.."}
                             />
-                            <span className="typo-comment-1-m text-grey-600">{`${funnyEpisode.length}/150`}</span>
+                            <span className="typo-comment-1-m text-grey-600">{`${funnyEpisode.length}/75`}</span>
                         </div>
                     </section>
                 </div>
