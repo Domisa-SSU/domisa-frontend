@@ -34,8 +34,10 @@ function SignupCharacterSelectPage() {
 
     return (
         <div className="min-h-screen bg-grey-100">
-            <NotLoginHeader title="회원가입"></NotLoginHeader>
-            <div className="px-5 pt-[1.72rem] pb-[9.5rem]">
+            <div className="fixed inset-x-0 top-0 z-40 bg-grey-100">
+                <NotLoginHeader title="회원가입"></NotLoginHeader>
+            </div>
+            <div className="px-5 pt-[9.5rem] pb-[9.5rem]">
                 <div className="mx-auto flex w-full max-w-[22.5625rem] flex-col gap-5">
                     <h1 className="typo-title-header-1 text-grey-900">
                         본인과 닮은 동물을 선택해주세요
