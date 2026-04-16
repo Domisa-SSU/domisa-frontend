@@ -5,9 +5,10 @@
 }
 
 body {
-  background-color: black;
+  background-color: white;
   margin: 0;
   font-family: "Pretendard";
+  overflow-x: hidden;
 }
 
 
@@ -31,6 +32,8 @@ body {
   --color-grey-700: #808080;
   --color-grey-800: #585858;
   --color-grey-900: #000000;
+
+  --color-warning: #ff5a47;
 }
 
 .typo-title-header-1 {
@@ -180,4 +183,27 @@ body {
 
 .animate-marquee {
   animation: marquee 30s linear infinite;
+}
+
+@keyframes animal-swing {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(4deg);
+  }
+  50% {
+    transform: rotate(-4deg);
+  }
+  75% {
+    transform: rotate(2deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-animal-swing {
+  animation: animal-swing 1.4s ease-in-out;
+  transform-origin: center bottom;
 }

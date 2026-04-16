@@ -9,6 +9,7 @@ import catImg from "../assets/catIcon.svg";
 import mapImg from "../assets/mapIcon.svg";
 import arrowImg from "../assets/arrowIcon.svg";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const getThemeByTime = () => {
   const hour = new Date().getHours();
@@ -16,7 +17,8 @@ const getThemeByTime = () => {
 };
 
 function HomePage() {
-  const [theme, setTheme] = useState(getThemeByTime());
+  const [theme] = useState(getThemeByTime());
+  const navigate = useNavigate();
 
   const themeClasses =
     theme == "day"
@@ -39,10 +41,11 @@ function HomePage() {
 
   return (
     <div
-      className="min-h-screen bg-center bg-cover bg-no-repeat flex flex-col justify-between
+      className="flex min-h-screen w-full flex-col justify-between overflow-x-hidden bg-center bg-cover bg-no-repeat
     "
       style={{
         backgroundImage: `url(${theme == `day` ? dayBgImg : nightBgImg})`,
+        backgroundColor: theme == "day" ? "#f5dce7" : "#123d41",
       }}
     >
       <MessageSlider></MessageSlider>
@@ -103,6 +106,7 @@ function HomePage() {
             제 친구가 연애했으면 좋겠어요
           </span>
           <button
+            onClick={() => navigate("/introduce-friend")}
             className="w-90 h-12.5 flex justify-center items-center gap-[0.62rem] bg-home-friend-day border-[0.8px] border-white rounded-[1.25rem]
           shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.25)]"
           >
