@@ -325,11 +325,10 @@ function SignupPage() {
             </div>
 
             <BottomActionBar
+                label="다음"
                 disabled={!isFormValid}
                 onClick={() => navigate("/auth/signup/next")}
-            >
-                다음
-            </BottomActionBar>
+            />
         </div>
     );
 }
