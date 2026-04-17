@@ -15,8 +15,8 @@ const variantStyles: Record<ButtonVariant, string> = {
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  [ButtonSize.Default]: 'h-[50px] rounded-[14px] typo-button-text-b',
-  [ButtonSize.Small]: 'h-[45px] rounded-[10px] typo-button-text',
+  [ButtonSize.Default]: 'w-full h-[3.125rem] rounded-[0.875rem] typo-button-text-b',
+  [ButtonSize.Small]: 'w-full h-[2.8125rem] rounded-[0.625rem] typo-button-text',
 };
 
 const Button = ({
@@ -36,7 +36,7 @@ const Button = ({
   };
 
   const classes = [
-    'w-full flex items-center justify-center transition duration-200',
+    'flex items-center justify-center transition duration-200',
     sizeStyles[size],
     disabled ? 'bg-grey-400 text-grey-100 cursor-not-allowed' : variantStyles[variant],
     className,
