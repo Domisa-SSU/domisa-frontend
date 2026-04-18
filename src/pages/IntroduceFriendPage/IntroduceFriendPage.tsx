@@ -127,11 +127,10 @@ function IntroduceFriendPage() {
             </div>
 
             <BottomActionBar
+                label="다음"
                 disabled={!isFormValid}
                 onClick={() => navigate("/auth?flow=introduce-friend")}
-            >
-                다음
-            </BottomActionBar>
+            />
         </div>
     );
 }

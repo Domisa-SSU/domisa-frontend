@@ -81,13 +81,12 @@ function SignupCharacterSelectPage() {
                 </div>
             </div>
             <BottomActionBar
+                label="다음"
                 disabled={false}
                 topContent={
                     <p className="typo-button-text text-primary-500">{`저는 ${selectedAnimal}상👀이에요`}</p>
                 }
-            >
-                다음
-            </BottomActionBar>
+            />
         </div>
     );
 }
