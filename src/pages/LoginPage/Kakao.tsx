@@ -1,7 +1,7 @@
 import friendSignUpImg from "../IntroduceFriendPage/assets/friendSignUpImg.png";
 import { KAKAO_LOGIN_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
 import loginImg from "./asset/loginImg.png";
-import NotLoginHeader from "./NotLoginHeader";
+import NotLoginHeader from "../../components/NotLoginHeader";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const kakaoIconImg =

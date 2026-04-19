@@ -1,10 +1,10 @@
-import HeaderTop from "../../components/HeaderTop";
-import headerArrow from "../../assets/headerArrow.svg";
+import HeaderTop from "./HeaderTop";
+import headerArrow from "../assets/headerArrow.svg";
 import { useNavigate } from "react-router-dom";
 
 function NotLoginHeader({title = "default"} : {title ?: string}) {
     const navigate = useNavigate();
-    
+
     return (
         <div>
             <HeaderTop></HeaderTop>
