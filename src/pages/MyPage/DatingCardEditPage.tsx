@@ -5,10 +5,10 @@ import editPencilImg from "../../assets/edit_pencil.svg";
 import toastCheckIcon from "../../assets/toastCheckIcon.svg";
 import profileChangeIcon from "../../assets/profile_change.svg";
 import photoUploadIcon from "../../assets/photo_upload.svg";
+import xIcon from "../../assets/X.svg";
 
 type DatingCardData = {
   mbti: string;
-  tendency: string;
   romanticAnswer: string;
   idealTypeAnswer: string;
   photoUrl: string | null;
@@ -17,7 +17,6 @@ type DatingCardData = {
 // TODO: API 연동 시 교체
 const mockDatingCard: DatingCardData = {
   mbti: "INFJ",
-  tendency: "에겐",
   romanticAnswer:
     "요거바라 사먹고 돌계에서 수다 떨며 하루를 마무리 하는 연애가 하고 싶습니다.",
   idealTypeAnswer:
@@ -27,6 +26,13 @@ const mockDatingCard: DatingCardData = {
 
 const MAX_LENGTH = 75;
 
+const MBTI_PAIRS: [string, string][] = [
+  ["E", "I"],
+  ["N", "S"],
+  ["T", "F"],
+  ["P", "J"],
+];
+
 const textareaClass = (value: string) =>
   `h-[5.0625rem] w-full resize-none overflow-hidden rounded-[0.625rem] px-2.5 py-2 typo-input-text-m leading-5 focus:outline-none ${
     value.trim()
@@ -34,11 +40,76 @@ const textareaClass = (value: string) =>
       : "bg-grey-300 text-grey-600 placeholder:text-grey-600"
   }`;
 
+type MbtiModalProps = {
+  mbti: string;
+  onClose: (mbti: string) => void;
+};
+
+function MbtiModal({ mbti, onClose }: MbtiModalProps) {
+  const [draft, setDraft] = useState(mbti);
+
+  const select = (rowIndex: number, letter: string) => {
+    setDraft((prev) => {
+      const chars = prev.split("");
+      chars[rowIndex] = letter;
+      return chars.join("");
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* 오버레이 */}
+      <div
+        className="absolute inset-0 bg-grey-900/70"
+        onClick={() => onClose(draft)}
+      />
+      {/* 모달 */}
+      <div className="relative z-10 flex w-[21.25rem] flex-col items-center gap-5 rounded-[0.875rem] bg-white py-10">
+        {/* 닫기 버튼 */}
+        <button
+          type="button"
+          onClick={() => onClose(draft)}
+          className="absolute right-[0.625rem] top-5 flex items-center justify-center p-2.5"
+          aria-label="닫기"
+        >
+          <img src={xIcon} alt="" className="h-[1.0625rem] w-4" />
+        </button>
+
+        <p className="typo-subtitle-header-2 text-grey-900">MBTI 수정</p>
+
+        <div className="flex w-[18.75rem] flex-col gap-[1.1rem]">
+          {MBTI_PAIRS.map(([left, right], rowIndex) => (
+            <div key={rowIndex} className="flex gap-[1.1rem]">
+              {[left, right].map((letter) => {
+                const isSelected = draft[rowIndex] === letter;
+                return (
+                  <button
+                    key={letter}
+                    type="button"
+                    onClick={() => select(rowIndex, letter)}
+                    className={`flex h-[3.0625rem] flex-1 items-center justify-center rounded-[0.75rem] ${
+                      isSelected
+                        ? "bg-primary-400 typo-button-text-b text-grey-100"
+                        : "bg-primary-100 typo-button-text text-grey-600"
+                    }`}
+                  >
+                    {letter}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DatingCardEditPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  const [editingTag, setEditingTag] = useState<"mbti" | "tendency" | null>(null);
+  const [showMbtiModal, setShowMbtiModal] = useState(false);
 
   // 뷰 모드에서 보여주는 저장된 값
   const [saved, setSaved] = useState<DatingCardData>(mockDatingCard);
@@ -46,29 +117,26 @@ function DatingCardEditPage() {
   const [draft, setDraft] = useState<DatingCardData>(mockDatingCard);
 
   const handleStartEdit = () => {
-    setDraft(saved); // saved 기준으로 draft 초기화
+    setDraft(saved);
     setIsEditing(true);
   };
 
   const handleBack = () => {
-    // draft 버리고 뷰 모드로 (saved는 그대로)
-    setEditingTag(null);
+    setShowMbtiModal(false);
     setIsEditing(false);
   };
 
   const handleComplete = () => {
     // TODO: API 연동 시 교체
-    setSaved(draft); // draft를 saved로 커밋
+    setSaved(draft);
     setIsEditing(false);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2500);
   };
 
-  const handleTagConfirm = (field: "mbti" | "tendency") => {
-    if (!draft[field].trim()) {
-      setDraft((prev) => ({ ...prev, [field]: saved[field] })); // 비어있으면 원래 값으로 복원
-    }
-    setEditingTag(null);
+  const handleMbtiModalClose = (newMbti: string) => {
+    setDraft((prev) => ({ ...prev, mbti: newMbti.trim() }));
+    setShowMbtiModal(false);
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,36 +154,6 @@ function DatingCardEditPage() {
     draft.romanticAnswer.trim().length > 0 &&
     draft.idealTypeAnswer.trim().length > 0;
 
-  const renderTag = (field: "mbti" | "tendency") => {
-    if (isEditing && editingTag === field) {
-      return (
-        <input
-          autoFocus
-          value={draft[field]}
-          onChange={(e) => setDraft((prev) => ({ ...prev, [field]: e.target.value }))}
-          onBlur={() => handleTagConfirm(field)}
-          onKeyDown={(e) => { if (e.key === "Enter") handleTagConfirm(field); }}
-          className="w-24 rounded-[0.9375rem] bg-primary-100 px-4 py-1.5 typo-button-text text-primary-500 focus:outline-none"
-        />
-      );
-    }
-    return (
-      <div className="flex items-center gap-1.5 rounded-[0.9375rem] bg-primary-100 px-5 py-1.5">
-        <span className="typo-button-text text-primary-500">{card[field]}</span>
-        {isEditing && (
-          <button
-            type="button"
-            onClick={() => setEditingTag(field)}
-            aria-label={`${field} 변경`}
-            className="flex items-center justify-center"
-          >
-            <img src={profileChangeIcon} alt="" className="h-[0.6875rem] w-[0.875rem]" />
-          </button>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-grey-100">
       <NotLoginHeader
@@ -125,14 +163,23 @@ function DatingCardEditPage() {
 
       <div className="px-5 pt-6 pb-10">
         <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-[1.875rem]">
-          {/* MBTI / 성향 */}
+          {/* MBTI */}
           <section className="flex flex-col gap-4">
-            <h2 className="typo-subtitle-header-2 text-grey-900">
-              MBTI / 성향
-            </h2>
+            <h2 className="typo-subtitle-header-2 text-grey-900">MBTI</h2>
             <div className="flex flex-wrap gap-2.5">
-              {renderTag("mbti")}
-              {renderTag("tendency")}
+              <div className="flex items-center gap-1.5 rounded-[0.9375rem] bg-primary-100 px-5 py-1.5">
+                <span className="typo-button-text text-primary-500">{card.mbti}</span>
+                {isEditing && (
+                  <button
+                    type="button"
+                    onClick={() => setShowMbtiModal(true)}
+                    aria-label="MBTI 변경"
+                    className="flex items-center justify-center"
+                  >
+                    <img src={profileChangeIcon} alt="" className="h-[0.6875rem] w-[0.875rem]" />
+                  </button>
+                )}
+              </div>
             </div>
           </section>
 
@@ -281,6 +328,10 @@ function DatingCardEditPage() {
           </button>
         </div>
       </div>
+
+      {showMbtiModal && (
+        <MbtiModal mbti={draft.mbti} onClose={handleMbtiModalClose} />
+      )}
 
       {showToast && <Toast message="수정 완료되었습니다" />}
     </div>
