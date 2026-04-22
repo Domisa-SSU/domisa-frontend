@@ -51,6 +51,7 @@ function SignupPage() {
 
         return (
             nickname.trim().length > 0 &&
+            isNicknameChecked &&
             gender.length > 0 &&
             birthYear.length > 0 &&
             isContactFilled
@@ -60,6 +61,7 @@ function SignupPage() {
         contactMethod,
         contactValue,
         gender,
+        isNicknameChecked,
         nickname,
         phoneLast,
         phoneMiddle,

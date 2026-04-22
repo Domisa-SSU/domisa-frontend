@@ -28,7 +28,7 @@ const selectClassName =
 function EditProfilePage() {
   const navigate = useNavigate();
   const [nickname, setNickname] = useState(mockUser.nickname);
-  const [isNicknameChecked, setIsNicknameChecked] = useState(false);
+  const [isNicknameChecked, setIsNicknameChecked] = useState(true);
   const [nicknameErrorMessage, setNicknameErrorMessage] = useState("");
   const [gender, setGender] = useState(mockUser.gender);
   const [birthYear, setBirthYear] = useState(mockUser.birthYear);
@@ -48,6 +48,7 @@ function EditProfilePage() {
 
     return (
       nickname.trim().length > 0 &&
+      isNicknameChecked &&
       gender.length > 0 &&
       birthYear.length > 0 &&
       isContactFilled
@@ -57,6 +58,7 @@ function EditProfilePage() {
     contactMethod,
     contactValue,
     gender,
+    isNicknameChecked,
     nickname,
     phoneLast,
     phoneMiddle,
