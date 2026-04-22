@@ -110,7 +110,7 @@ function EditProfilePage() {
                   onClick={() => {
                     if (nickname.trim().length === 0) {
                       setIsNicknameChecked(false);
-                      setNicknameErrorMessage("이미 사용중인 닉네임입니다");
+                      setNicknameErrorMessage("닉네임을 입력해주세요");
                       return;
                     }
                     setNicknameErrorMessage("");
