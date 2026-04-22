@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomActionBar from "../../components/BottomActionBar";
 import NotLoginHeader from "../../components/NotLoginHeader";
+import { EDIT_PROFILE_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
 import forbiddenIcon from "../SignupPage/asset/forbiddenIcon.svg";
 import pinkCheckIcon from "../SignupPage/asset/pinkCheckIcon.svg";
 import selectArrow from "../SignupPage/asset/selectArrow.svg";
@@ -309,7 +310,11 @@ function EditProfilePage() {
       <BottomActionBar
         label="수정 완료"
         disabled={!isFormValid}
-        onClick={() => navigate(-1)}
+        onClick={() => {
+          // TODO: API 연동 시 수정 성공 콜백 안으로 이동
+          sessionStorage.setItem(EDIT_PROFILE_TOAST_STORAGE_KEY, "true");
+          navigate(-1);
+        }}
       />
     </div>
   );

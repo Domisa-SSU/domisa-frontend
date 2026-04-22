@@ -127,7 +127,7 @@ function DatingCardEditPage() {
   };
 
   const handleComplete = () => {
-    // TODO: API 연동 시 교체
+    // TODO: API 연동 시 수정 성공 콜백 안으로 이동
     setSaved(draft);
     setIsEditing(false);
     setShowToast(true);

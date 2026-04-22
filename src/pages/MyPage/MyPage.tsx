@@ -1,5 +1,8 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NotLoginHeader from "../../components/NotLoginHeader";
+import Toast from "../../components/Toast";
+import { EDIT_PROFILE_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
 import Button from "../../components/Button/Button";
 import { ButtonVariant, ButtonSize } from "../../components/Button/ButtonEnums";
 import RightArrow from "../../assets/right_arrow.svg?react";
@@ -28,6 +31,20 @@ interface MyPageProps {
 
 function MyPage({ hasDateCard = true }: MyPageProps) {
   const navigate = useNavigate();
+  const [showEditProfileToast, setShowEditProfileToast] = useState(() => {
+    const shouldShow =
+      sessionStorage.getItem(EDIT_PROFILE_TOAST_STORAGE_KEY) === "true";
+    if (shouldShow) {
+      sessionStorage.removeItem(EDIT_PROFILE_TOAST_STORAGE_KEY);
+    }
+    return shouldShow;
+  });
+
+  useEffect(() => {
+    if (!showEditProfileToast) return;
+    const timer = setTimeout(() => setShowEditProfileToast(false), 3000);
+    return () => clearTimeout(timer);
+  }, [showEditProfileToast]);
 
   return (
     <div className="min-h-screen bg-grey-100">
@@ -199,6 +216,8 @@ function MyPage({ hasDateCard = true }: MyPageProps) {
             <span className="typo-comment-1 text-primary-500">{mockUser.referralCode}</span>
           </div>
         </div>
+
+        {showEditProfileToast && <Toast message="정보가 수정되었어요!" />}
 
         {/* 로그아웃 / 탈퇴하기 */}
         <div className="relative h-[3.5625rem] w-full typo-comment-1 text-grey-600">
