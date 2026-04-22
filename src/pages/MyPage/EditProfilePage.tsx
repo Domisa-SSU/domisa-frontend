@@ -113,6 +113,7 @@ function EditProfilePage() {
                       setNicknameErrorMessage("닉네임을 입력해주세요");
                       return;
                     }
+                    // TODO: 닉네임 중복 확인 API 호출로 교체 (nickname.trim() 전송)
                     setNicknameErrorMessage("");
                     setIsNicknameChecked(true);
                   }}
