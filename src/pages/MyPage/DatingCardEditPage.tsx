@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import Toast from "../../components/Toast";
 import editPencilImg from "../../assets/edit_pencil.svg";
@@ -107,9 +107,16 @@ function MbtiModal({ mbti, onClose }: MbtiModalProps) {
 
 function DatingCardEditPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const objectUrlRef = useRef<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [showMbtiModal, setShowMbtiModal] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    };
+  }, []);
 
   // 뷰 모드에서 보여주는 저장된 값
   const [saved, setSaved] = useState<DatingCardData>(mockDatingCard);
@@ -142,10 +149,10 @@ function DatingCardEditPage() {
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setDraft((prev) => ({
-        ...prev,
-        photoUrl: URL.createObjectURL(file),
-      }));
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+      const newUrl = URL.createObjectURL(file);
+      objectUrlRef.current = newUrl;
+      setDraft((prev) => ({ ...prev, photoUrl: newUrl }));
     }
   };
 
