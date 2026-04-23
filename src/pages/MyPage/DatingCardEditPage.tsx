@@ -133,12 +133,17 @@ function DatingCardEditPage() {
     setIsEditing(false);
   };
 
+  useEffect(() => {
+    if (!showToast) return;
+    const timer = setTimeout(() => setShowToast(false), 2500);
+    return () => clearTimeout(timer);
+  }, [showToast]);
+
   const handleComplete = () => {
-    // TODO: API 연동 시 수정 성공 콜백 안으로 이동
+    // TODO: API 연동 시 수정 성공 콜백 안으로 이동, isSubmitting 상태로 연타 방어 추가
     setSaved(draft);
     setIsEditing(false);
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 2500);
   };
 
   const handleMbtiModalClose = (newMbti: string) => {
