@@ -238,10 +238,20 @@ function MyPage() {
 
         {/* 로그아웃 / 탈퇴하기 */}
         <div className="relative h-[3.5625rem] w-full typo-comment-1 text-grey-600">
-          <button className="absolute left-1/2 -translate-x-1/2 top-5 underline underline-offset-4">
+          <button
+            className="absolute left-1/2 -translate-x-1/2 top-5 underline underline-offset-4"
+            onClick={() => {
+              // TODO: 로그아웃 API 호출 후 로그인 페이지로 이동
+            }}
+          >
             로그아웃
           </button>
-          <button className="absolute left-[21.156rem] -translate-x-1/2 top-5 underline underline-offset-4 whitespace-nowrap">
+          <button
+            className="absolute right-0 top-5 underline underline-offset-4 whitespace-nowrap"
+            onClick={() => {
+              // TODO: 회원 탈퇴 확인 모달 표시 후 탈퇴 API 호출
+            }}
+          >
             탈퇴하기
           </button>
         </div>
