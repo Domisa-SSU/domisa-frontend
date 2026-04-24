@@ -13,6 +13,7 @@ function NotLoginHeader({title = "default", onBack} : {title ?: string; onBack?:
                     <img src={headerArrow} alt="" className="w-[0.45rem] h-[0.9rem]"/>
                 </button>
                 <span className="absolute left-1/2 -translate-x-1/2 text-grey-700 typo-subtitle-header-2">{title}</span>
+                {/* 타이틀 중앙 정렬을 위한 왼쪽 버튼 대칭 스페이서 */}
                 <div></div>
             </div>
         </div>
