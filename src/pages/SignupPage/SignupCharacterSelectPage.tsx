@@ -1,6 +1,6 @@
 import { useState } from "react";
 import BottomActionBar from "../../components/BottomActionBar";
-import NotLoginHeader from "../LoginPage/NotLoginHeader";
+import NotLoginHeader from "../../components/NotLoginHeader";
 import alphacaImg from "./asset/alphacaImg.png";
 import bearImg from "./asset/bearImg.png";
 import capibaraImg from "./asset/capibaraImg.png";

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import BottomActionBar from "../../components/BottomActionBar";
 import Toast from "../../components/Toast";
 import { KAKAO_LOGIN_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
-import NotLoginHeader from "../LoginPage/NotLoginHeader";
+import NotLoginHeader from "../../components/NotLoginHeader";
 import forbiddenIcon from "./asset/forbiddenIcon.svg";
 import pinkCheckIcon from "./asset/pinkCheckIcon.svg";
 import selectArrow from "./asset/selectArrow.svg";
@@ -51,6 +51,7 @@ function SignupPage() {
 
         return (
             nickname.trim().length > 0 &&
+            isNicknameChecked &&
             gender.length > 0 &&
             birthYear.length > 0 &&
             isContactFilled
@@ -60,6 +61,7 @@ function SignupPage() {
         contactMethod,
         contactValue,
         gender,
+        isNicknameChecked,
         nickname,
         phoneLast,
         phoneMiddle,
@@ -127,10 +129,11 @@ function SignupPage() {
                                     onClick={() => {
                                         if (nickname.trim().length === 0) {
                                             setIsNicknameChecked(false);
-                                            setNicknameErrorMessage("이미 사용중인 닉네임입니다");
+                                            setNicknameErrorMessage("닉네임을 입력해주세요");
                                             return;
                                         }
 
+                                        // TODO: 닉네임 중복 확인 API 호출로 교체 (nickname.trim() 전송)
                                         setNicknameErrorMessage("");
                                         setIsNicknameChecked(true);
                                     }}

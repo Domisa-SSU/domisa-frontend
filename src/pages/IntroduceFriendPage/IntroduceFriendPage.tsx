@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomActionBar from "../../components/BottomActionBar";
 import { INTRODUCE_FRIEND_DRAFT_STORAGE_KEY } from "../../constants/storageKeys";
-import NotLoginHeader from "../LoginPage/NotLoginHeader";
+import NotLoginHeader from "../../components/NotLoginHeader";
 
 function IntroduceFriendPage() {
     const navigate = useNavigate();

@@ -1,7 +1,7 @@
 import friendSignUpImg from "../IntroduceFriendPage/assets/friendSignUpImg.png";
 import { KAKAO_LOGIN_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
 import loginImg from "./asset/loginImg.png";
-import NotLoginHeader from "./NotLoginHeader";
+import NotLoginHeader from "../../components/NotLoginHeader";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const kakaoIconImg =
@@ -19,6 +19,7 @@ function Kakao() {
     const headerTitle = isIntroduceFriendFlow ? "친구 소개하기" : "로그인";
 
     const handleKakaoLogin = () => {
+        // TODO: API 연동 시 카카오 OAuth 성공 콜백 안으로 이동
         sessionStorage.setItem(KAKAO_LOGIN_TOAST_STORAGE_KEY, "true");
         navigate(nextPath);
     };
