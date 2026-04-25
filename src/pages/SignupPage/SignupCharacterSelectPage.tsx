@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import BottomActionBar from "../../components/BottomActionBar";
 import NotLoginHeader from "../../components/NotLoginHeader";
+import { useSignupFlow } from "./SignupFlowContext";
 import alphacaImg from "./asset/alphacaImg.png";
 import bearImg from "./asset/bearImg.png";
 import bottomArrow from "./asset/bottomArrow.svg";
@@ -32,7 +34,13 @@ const animalOptions = [
 ];
 
 function SignupCharacterSelectPage() {
-    const [selectedAnimal, setSelectedAnimal] = useState("수달");
+    const navigate = useNavigate();
+    const {
+        signupFormData,
+        selectedAnimal,
+        setSelectedAnimal,
+        resetSignupFlow,
+    } = useSignupFlow();
     const [showScrollHint, setShowScrollHint] = useState(false);
     const [bottomBarHeight, setBottomBarHeight] = useState(0);
     const bottomBarRef = useRef<HTMLDivElement>(null);
@@ -75,6 +83,17 @@ function SignupCharacterSelectPage() {
 
         return () => resizeObserver.disconnect();
     }, []);
+
+    const handleCompleteSignup = () => {
+        const signupPayload = {
+            ...signupFormData,
+            animalType: selectedAnimal,
+        };
+
+        console.log("[mock] signup complete payload", signupPayload);
+        resetSignupFlow();
+        navigate("/");
+    };
 
     return (
         <div className="min-h-screen bg-grey-100">
@@ -137,6 +156,7 @@ function SignupCharacterSelectPage() {
                 ref={bottomBarRef}
                 label="다음"
                 disabled={false}
+                onClick={handleCompleteSignup}
                 topContent={
                     <p className="flex items-center typo-button-text text-primary-500">
                         {`저는 ${selectedAnimal}상`}
