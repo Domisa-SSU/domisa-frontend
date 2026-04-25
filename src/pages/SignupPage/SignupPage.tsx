@@ -4,6 +4,7 @@ import BottomActionBar from "../../components/BottomActionBar";
 import Toast from "../../components/Toast";
 import { KAKAO_LOGIN_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
 import NotLoginHeader from "../../components/NotLoginHeader";
+import { useSignupFlow } from "./SignupFlowContext";
 import forbiddenIcon from "./asset/forbiddenIcon.svg";
 import pinkCheckIcon from "./asset/pinkCheckIcon.svg";
 import selectArrow from "./asset/selectArrow.svg";
@@ -19,17 +20,20 @@ const selectClassName =
 
 function SignupPage() {
     const navigate = useNavigate();
-    const [nickname, setNickname] = useState("");
-    const [isNicknameChecked, setIsNicknameChecked] = useState(false);
+    const { signupFormData, setSignupFormData } = useSignupFlow();
+    const [nickname, setNickname] = useState(signupFormData.nickname);
+    const [isNicknameChecked, setIsNicknameChecked] = useState(
+        signupFormData.nickname.trim().length > 0,
+    );
     const [nicknameErrorMessage, setNicknameErrorMessage] = useState("");
-    const [gender, setGender] = useState("");
-    const [birthYear, setBirthYear] = useState("2003");
-    const [referralCode, setReferralCode] = useState("");
-    const [contactMethod, setContactMethod] = useState("");
-    const [phonePrefix, setPhonePrefix] = useState("010");
-    const [phoneMiddle, setPhoneMiddle] = useState("");
-    const [phoneLast, setPhoneLast] = useState("");
-    const [contactValue, setContactValue] = useState("");
+    const [gender, setGender] = useState(signupFormData.gender);
+    const [birthYear, setBirthYear] = useState(signupFormData.birthYear);
+    const [referralCode, setReferralCode] = useState(signupFormData.referralCode);
+    const [contactMethod, setContactMethod] = useState(signupFormData.contactMethod);
+    const [phonePrefix, setPhonePrefix] = useState(signupFormData.phonePrefix);
+    const [phoneMiddle, setPhoneMiddle] = useState(signupFormData.phoneMiddle);
+    const [phoneLast, setPhoneLast] = useState(signupFormData.phoneLast);
+    const [contactValue, setContactValue] = useState(signupFormData.contactValue);
     const [showKakaoLoginToast, setShowKakaoLoginToast] = useState(() => {
         const shouldShowToast =
             sessionStorage.getItem(KAKAO_LOGIN_TOAST_STORAGE_KEY) === "true";
@@ -78,6 +82,21 @@ function SignupPage() {
         if (value.length <= limit) {
             setter(value);
         }
+    };
+
+    const handleNext = () => {
+        setSignupFormData({
+            nickname,
+            gender,
+            birthYear,
+            referralCode,
+            contactMethod,
+            phonePrefix,
+            phoneMiddle,
+            phoneLast,
+            contactValue,
+        });
+        navigate("/auth/signup/next");
     };
 
     useEffect(() => {
@@ -330,7 +349,7 @@ function SignupPage() {
             <BottomActionBar
                 label="다음"
                 disabled={!isFormValid}
-                onClick={() => navigate("/auth/signup/next")}
+                onClick={handleNext}
             />
         </div>
     );

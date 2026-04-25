@@ -1,12 +1,16 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import BottomActionBar from "../../components/BottomActionBar";
 import NotLoginHeader from "../../components/NotLoginHeader";
+import { useSignupFlow } from "./SignupFlowContext";
 import alphacaImg from "./asset/alphacaImg.png";
 import bearImg from "./asset/bearImg.png";
+import bottomArrow from "./asset/bottomArrow.svg";
 import capibaraImg from "./asset/capibaraImg.png";
 import catImg from "./asset/catImg.png";
 import deerImg from "./asset/deerImg.png";
 import dogImg from "./asset/dogImg.png";
+import eyeIcon from "./asset/eyeIcon.svg";
 import foxImg from "./asset/foxImg.png";
 import hamsterImg from "./asset/hamsterImg.png";
 import namuneulboImg from "./asset/namuneulboImg.png";
@@ -30,7 +34,66 @@ const animalOptions = [
 ];
 
 function SignupCharacterSelectPage() {
-    const [selectedAnimal, setSelectedAnimal] = useState("수달");
+    const navigate = useNavigate();
+    const {
+        signupFormData,
+        selectedAnimal,
+        setSelectedAnimal,
+        resetSignupFlow,
+    } = useSignupFlow();
+    const [showScrollHint, setShowScrollHint] = useState(false);
+    const [bottomBarHeight, setBottomBarHeight] = useState(0);
+    const bottomBarRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const updateScrollHint = () => {
+            const documentHeight = document.documentElement.scrollHeight;
+            const hasScrollableArea = documentHeight > window.innerHeight + 1;
+            const isAtTop = window.scrollY <= 1;
+
+            setShowScrollHint(hasScrollableArea && isAtTop);
+        };
+
+        updateScrollHint();
+
+        window.addEventListener("scroll", updateScrollHint, { passive: true });
+        window.addEventListener("resize", updateScrollHint);
+
+        return () => {
+            window.removeEventListener("scroll", updateScrollHint);
+            window.removeEventListener("resize", updateScrollHint);
+        };
+    }, []);
+
+    useEffect(() => {
+        const bottomBar = bottomBarRef.current;
+
+        if (!bottomBar) {
+            return;
+        }
+
+        const updateBottomBarHeight = () => {
+            setBottomBarHeight(bottomBar.offsetHeight);
+        };
+
+        updateBottomBarHeight();
+
+        const resizeObserver = new ResizeObserver(updateBottomBarHeight);
+        resizeObserver.observe(bottomBar);
+
+        return () => resizeObserver.disconnect();
+    }, []);
+
+    const handleCompleteSignup = () => {
+        const signupPayload = {
+            ...signupFormData,
+            animalType: selectedAnimal,
+        };
+
+        console.log("[mock] signup complete payload", signupPayload);
+        resetSignupFlow();
+        navigate("/");
+    };
 
     return (
         <div className="min-h-screen bg-grey-100">
@@ -80,11 +143,26 @@ function SignupCharacterSelectPage() {
                     </div>
                 </div>
             </div>
+            {showScrollHint && (
+                <img
+                    src={bottomArrow}
+                    alt=""
+                    aria-hidden="true"
+                    className="pointer-events-none fixed left-1/2 z-30 h-[2.5rem] w-[2.5rem] -translate-x-1/2 opacity-80"
+                    style={{ bottom: `calc(${bottomBarHeight}px + 1.2rem)` }}
+                />
+            )}
             <BottomActionBar
+                ref={bottomBarRef}
                 label="다음"
                 disabled={false}
+                onClick={handleCompleteSignup}
                 topContent={
-                    <p className="typo-button-text text-primary-500">{`저는 ${selectedAnimal}상👀이에요`}</p>
+                    <p className="flex items-center typo-button-text text-primary-500">
+                        {`저는 ${selectedAnimal}상`}
+                        <img src={eyeIcon} alt="" aria-hidden="true" className="h-[1em] w-[1em]" />
+                        이에요
+                    </p>
                 }
             />
         </div>
