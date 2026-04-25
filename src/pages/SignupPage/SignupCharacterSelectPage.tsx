@@ -8,6 +8,7 @@ import capibaraImg from "./asset/capibaraImg.png";
 import catImg from "./asset/catImg.png";
 import deerImg from "./asset/deerImg.png";
 import dogImg from "./asset/dogImg.png";
+import eyeIcon from "./asset/eyeIcon.svg";
 import foxImg from "./asset/foxImg.png";
 import hamsterImg from "./asset/hamsterImg.png";
 import namuneulboImg from "./asset/namuneulboImg.png";
@@ -137,7 +138,11 @@ function SignupCharacterSelectPage() {
                 label="다음"
                 disabled={false}
                 topContent={
-                    <p className="typo-button-text text-primary-500">{`저는 ${selectedAnimal}상👀이에요`}</p>
+                    <p className="flex items-center typo-button-text text-primary-500">
+                        {`저는 ${selectedAnimal}상`}
+                        <img src={eyeIcon} alt="" aria-hidden="true" className="h-[1em] w-[1em]" />
+                        이에요
+                    </p>
                 }
             />
         </div>
