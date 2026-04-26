@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
+import IntroduceFriendGeneratingPage from "./pages/IntroduceFriendPage/IntroduceFriendGeneratingPage";
 import IntroduceFriendPage from "./pages/IntroduceFriendPage/IntroduceFriendPage";
 import Kakao from "./pages/LoginPage/Kakao";
 import SignupCharacterSelectPage from "./pages/SignupPage/SignupCharacterSelectPage";
@@ -22,6 +23,10 @@ function App() {
           <Route
             path="/introduce-friend"
             element={<IntroduceFriendPage></IntroduceFriendPage>}
+          ></Route>
+          <Route
+            path="/introduce-friend/generating"
+            element={<IntroduceFriendGeneratingPage></IntroduceFriendGeneratingPage>}
           ></Route>
           <Route path="/auth/signup" element={<SignupPage></SignupPage>}></Route>
           <Route

@@ -1,5 +1,8 @@
 import friendSignUpImg from "../IntroduceFriendPage/assets/friendSignUpImg.png";
-import { KAKAO_LOGIN_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
+import {
+    INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY,
+    KAKAO_LOGIN_TOAST_STORAGE_KEY,
+} from "../../constants/storageKeys";
 import loginImg from "./asset/loginImg.png";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -12,13 +15,22 @@ function Kakao() {
 
     const loginImage = isIntroduceFriendFlow ? friendSignUpImg : loginImg;
     const nextPath = isIntroduceFriendFlow
-        ? "/auth/signup?flow=introduce-friend"
+        ? "/introduce-friend/generating"
         : "/auth/signup";
     const headerTitle = isIntroduceFriendFlow ? "친구 소개하기" : "로그인";
 
     const handleKakaoLogin = () => {
         // TODO: API 연동 시 카카오 OAuth 성공 콜백 안으로 이동
-        sessionStorage.setItem(KAKAO_LOGIN_TOAST_STORAGE_KEY, "true");
+        if (isIntroduceFriendFlow) {
+            sessionStorage.setItem(INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY, "logged-in");
+        } else {
+            sessionStorage.setItem(KAKAO_LOGIN_TOAST_STORAGE_KEY, "true");
+        }
+        navigate(nextPath);
+    };
+
+    const handleSkip = () => {
+        sessionStorage.setItem(INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY, "guest");
         navigate(nextPath);
     };
 
@@ -52,7 +64,7 @@ function Kakao() {
                             <div className="mx-auto flex w-full max-w-[22.625rem] flex-col items-center gap-[1.12rem]">
                                 <button
                                     type="button"
-                                    onClick={() => navigate(nextPath)}
+                                    onClick={handleSkip}
                                     className="typo-button-text-b text-grey-100 underline underline-offset-[0.18rem]"
                                 >
                                     건너뛰기
