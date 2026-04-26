@@ -3,9 +3,7 @@ import { KAKAO_LOGIN_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
 import loginImg from "./asset/loginImg.png";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import { useNavigate, useSearchParams } from "react-router-dom";
-
-const kakaoIconImg =
-    "https://www.figma.com/api/mcp/asset/7f35b5c3-ab8b-475a-b18a-506be69f947c";
+import kakaoIconImg from "./asset/kakaoLogo.svg";
 
 function Kakao() {
     const navigate = useNavigate();
