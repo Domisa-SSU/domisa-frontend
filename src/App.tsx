@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import IntroduceFriendGeneratingPage from "./pages/IntroduceFriendPage/IntroduceFriendGeneratingPage";
@@ -11,9 +12,29 @@ import MyCookiePage from "./pages/MyPage/MyCookiePage";
 import EditProfilePage from "./pages/MyPage/EditProfilePage";
 import DatingCardEditPage from "./pages/MyPage/DatingCardEditPage";
 import RequireIntroducePage from "./pages/DatingPage/RequireIntroducePage";
+import { useUserStore } from "./stores/userStore";
 import "./App.css";
 
 function App() {
+  const fetchMe = useUserStore((state) => state.fetchMe);
+  const isAuthLoaded = useUserStore((state) => state.isAuthLoaded);
+
+  useEffect(() => {
+    void fetchMe();
+  }, [fetchMe]);
+
+  if (!isAuthLoaded) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-grey-100">
+        <div
+          role="status"
+          aria-label="사용자 정보 확인 중"
+          className="h-10 w-10 animate-spin rounded-full border-[0.1875rem] border-primary-200 border-t-primary-500"
+        />
+      </div>
+    );
+  }
+
   return (
     <>
       <SignupFlowProvider>
