@@ -16,7 +16,6 @@ build/
 .env.production.local
 
 # Editor directories and files
-.vscode/
 .idea/
 
 # OS generated files
