@@ -3,7 +3,7 @@ import NotLoginHeader from "../../components/NotLoginHeader";
 import Toast from "../../components/Toast";
 import editPencilImg from "../../assets/edit_pencil.svg";
 import toastCheckIcon from "../../assets/toastCheckIcon.svg";
-import profileChangeIcon from "../../assets/profile_change.svg";
+import ProfileChangeIcon from "../../assets/profile_change.svg?react";
 import photoUploadIcon from "../../assets/photo_upload.svg";
 import xIcon from "../../assets/X.svg";
 
@@ -197,7 +197,7 @@ function DatingCardEditPage() {
                   className="flex items-center gap-1.5 rounded-[0.9375rem] bg-primary-100 px-5 py-1.5"
                 >
                   <span className="typo-button-text text-primary-500">{card.mbti}</span>
-                  <img src={profileChangeIcon} alt="" className="h-[0.6875rem] w-[0.875rem]" />
+                  <ProfileChangeIcon className="h-[0.6875rem] w-[0.875rem] text-primary-300" />
                 </button>
               ) : (
                 <div className="flex items-center gap-1.5 rounded-[0.9375rem] bg-primary-100 px-5 py-1.5">
