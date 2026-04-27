@@ -221,19 +221,6 @@ function MyPage() {
           </div>
         </div>
 
-        {/* 추천인 코드 */}
-        <div className="flex flex-col gap-2.5">
-          <div className="flex items-center gap-2.5">
-            <span className="typo-button-text text-grey-900">추천인 코드</span>
-            <span className="typo-comment-2 text-grey-600">
-              *친구가 추천인 코드를 입력하면 쿠키 2개를 받아요
-            </span>
-          </div>
-          <div className="flex items-center justify-center h-10 px-2.5 bg-primary-100 rounded-[0.625rem]">
-            <span className="typo-comment-1 text-primary-500">{user.referralCode}</span>
-          </div>
-        </div>
-
         {showEditProfileToast && <Toast message="정보가 수정되었어요!" />}
 
         {/* 로그아웃 / 탈퇴하기 */}
