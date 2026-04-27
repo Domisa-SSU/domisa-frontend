@@ -34,7 +34,6 @@ export const MainDisable: Story = {
 };
 
 export const Muted: Story = {
-  name: 'Muted',
   args: { label: '수정하기', variant: ButtonVariant.Muted, disabled: false },
 };
 

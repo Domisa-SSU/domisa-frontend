@@ -4,7 +4,7 @@ import BottomActionBar from "../../components/BottomActionBar";
 import Toast from "../../components/Toast";
 import { KAKAO_LOGIN_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
 import NotLoginHeader from "../../components/NotLoginHeader";
-import { useSignupFlow } from "./SignupFlowContext";
+import { useSignupFlow } from "./useSignupFlow";
 import forbiddenIcon from "./asset/forbiddenIcon.svg";
 import pinkCheckIcon from "./asset/pinkCheckIcon.svg";
 import selectArrow from "./asset/selectArrow.svg";
