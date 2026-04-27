@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from "react";
-import NotLoginHeader from "../../components/NotLoginHeader";
-import Toast from "../../components/Toast";
-import editPencilImg from "../../assets/edit_pencil.svg";
-import toastCheckIcon from "../../assets/toastCheckIcon.svg";
-import ProfileChangeIcon from "../../assets/profile_change.svg?react";
-import photoUploadIcon from "../../assets/photo_upload.svg";
-import xIcon from "../../assets/X.svg";
+import { useEffect, useRef, useState } from 'react';
+import NotLoginHeader from '../../components/NotLoginHeader';
+import Toast from '../../components/Toast';
+import editPencilImg from '../../assets/edit_pencil.svg';
+import toastCheckIcon from '../../assets/toastCheckIcon.svg';
+import ProfileChangeIcon from '../../assets/profile_change.svg?react';
+import photoUploadIcon from '../../assets/photo_upload.svg';
+import xIcon from '../../assets/X.svg';
+import cryIcon from '../../assets/cryIcon.svg';
 
 type DatingCardData = {
   mbti: string;
@@ -16,29 +17,65 @@ type DatingCardData = {
 
 // TODO: API 연동 시 교체
 const mockDatingCard: DatingCardData = {
-  mbti: "INFJ",
-  romanticAnswer:
-    "요거바라 사먹고 돌계에서 수다 떨며 하루를 마무리 하는 연애가 하고 싶습니다.",
-  idealTypeAnswer:
-    "물고기가 먹고 싶어서 한강에서 낚시를 할 만한 사람.\n회 떠먹어요",
+  mbti: 'INFJ',
+  romanticAnswer: '요거바라 사먹고 돌계에서 수다 떨며 하루를 마무리 하는 연애가 하고 싶습니다.',
+  idealTypeAnswer: '물고기가 먹고 싶어서 한강에서 낚시를 할 만한 사람.\n회 떠먹어요',
   photoUrl: null,
 };
 
 const MAX_LENGTH = 75;
 
 const MBTI_PAIRS: [string, string][] = [
-  ["E", "I"],
-  ["N", "S"],
-  ["T", "F"],
-  ["P", "J"],
+  ['E', 'I'],
+  ['N', 'S'],
+  ['T', 'F'],
+  ['P', 'J'],
 ];
 
 const textareaClass = (value: string) =>
   `h-[5.0625rem] w-full resize-none overflow-hidden rounded-[0.625rem] px-2.5 py-2 typo-input-text-m leading-5 focus:outline-none ${
     value.trim()
-      ? "bg-primary-100 text-primary-500 placeholder:text-primary-300"
-      : "bg-grey-300 text-grey-600 placeholder:text-grey-600"
+      ? 'bg-primary-100 text-primary-500 placeholder:text-primary-300'
+      : 'bg-grey-300 text-grey-600 placeholder:text-grey-600'
   }`;
+
+type DeleteConfirmModalProps = {
+  onConfirm: () => void;
+  onCancel: () => void;
+};
+
+function DeleteConfirmModal({ onConfirm, onCancel }: DeleteConfirmModalProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-grey-900/70" onClick={onCancel} />
+      <div className="relative z-10 flex w-[21.25rem] flex-col items-center gap-[1.875rem] rounded-[0.875rem] bg-white pb-5 pt-[1.875rem]">
+        <div className="flex flex-col items-center gap-[0.9375rem]">
+          <p className="typo-subtitle-header-2 text-grey-900">정말 삭제하시겠어요?</p>
+          <div className="flex items-center gap-1 typo-input-text-m text-grey-700">
+            <span>소개팅 카드를 삭제하면 소개팅을 할 수 없어요</span>
+            <img src={cryIcon} alt="" className="h-3.5 w-3.5" />
+          </div>
+        </div>
+        <div className="flex w-[18.75rem] gap-2.5">
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="flex h-[3.125rem] flex-1 items-center justify-center rounded-[0.875rem] bg-grey-400"
+          >
+            <span className="typo-button-text-b text-grey-800">삭제</span>
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex h-[3.125rem] flex-1 items-center justify-center rounded-[0.875rem] bg-primary-500"
+          >
+            <span className="typo-button-text-b text-grey-100">아니요</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type MbtiModalProps = {
   mbti: string;
@@ -51,19 +88,16 @@ function MbtiModal({ mbti, onConfirm, onCancel }: MbtiModalProps) {
 
   const select = (rowIndex: number, letter: string) => {
     setDraft((prev) => {
-      const chars = prev.split("");
+      const chars = prev.split('');
       chars[rowIndex] = letter;
-      return chars.join("");
+      return chars.join('');
     });
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* 오버레이 */}
-      <div
-        className="absolute inset-0 bg-grey-900/70"
-        onClick={onCancel}
-      />
+      <div className="absolute inset-0 bg-grey-900/70" onClick={onCancel} />
       {/* 모달 */}
       <div className="relative z-10 flex w-[21.25rem] flex-col items-center gap-5 rounded-[0.875rem] bg-white pt-10 pb-5">
         {/* 닫기 버튼 */}
@@ -90,8 +124,8 @@ function MbtiModal({ mbti, onConfirm, onCancel }: MbtiModalProps) {
                     onClick={() => select(rowIndex, letter)}
                     className={`flex h-[3.0625rem] flex-1 items-center justify-center rounded-[0.75rem] ${
                       isSelected
-                        ? "bg-primary-400 typo-button-text-b text-grey-100"
-                        : "bg-primary-100 typo-button-text text-grey-600"
+                        ? 'bg-primary-400 typo-button-text-b text-grey-100'
+                        : 'bg-primary-100 typo-button-text text-grey-600'
                     }`}
                   >
                     {letter}
@@ -121,6 +155,7 @@ function DatingCardEditPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [showMbtiModal, setShowMbtiModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -173,13 +208,12 @@ function DatingCardEditPage() {
 
   const card = isEditing ? draft : saved;
   const isFormValid =
-    draft.romanticAnswer.trim().length > 0 &&
-    draft.idealTypeAnswer.trim().length > 0;
+    draft.romanticAnswer.trim().length > 0 && draft.idealTypeAnswer.trim().length > 0;
 
   return (
     <div className="min-h-screen bg-grey-100">
       <NotLoginHeader
-        title={isEditing ? "소개팅 카드 수정" : "소개팅 카드"}
+        title={isEditing ? '소개팅 카드 수정' : '소개팅 카드'}
         onBack={isEditing ? handleBack : undefined}
       />
 
@@ -209,9 +243,7 @@ function DatingCardEditPage() {
 
           {/* 어떤 연애가 하고 싶나요? */}
           <section className="flex flex-col gap-4">
-            <h2 className="typo-subtitle-header-2 text-grey-900">
-              어떤 연애가 하고 싶나요?
-            </h2>
+            <h2 className="typo-subtitle-header-2 text-grey-900">어떤 연애가 하고 싶나요?</h2>
             <div className="flex flex-col gap-[0.3125rem]">
               {isEditing ? (
                 <textarea
@@ -241,9 +273,7 @@ function DatingCardEditPage() {
 
           {/* 이상형을 한 줄로 표현해주세요 */}
           <section className="flex flex-col gap-4">
-            <h2 className="typo-subtitle-header-2 text-grey-900">
-              이상형을 한 줄로 표현해주세요
-            </h2>
+            <h2 className="typo-subtitle-header-2 text-grey-900">이상형을 한 줄로 표현해주세요</h2>
             <div className="flex flex-col gap-[0.3125rem]">
               {isEditing ? (
                 <textarea
@@ -273,9 +303,7 @@ function DatingCardEditPage() {
 
           {/* 나를 표현하는 사진 */}
           <section className="flex flex-col gap-4">
-            <h2 className="typo-subtitle-header-2 text-grey-900">
-              나를 표현하는 사진
-            </h2>
+            <h2 className="typo-subtitle-header-2 text-grey-900">나를 표현하는 사진</h2>
             <div className="relative w-full overflow-hidden rounded-[0.875rem] bg-grey-300 aspect-[363/271]">
               {card.photoUrl && (
                 <img
@@ -318,19 +346,11 @@ function DatingCardEditPage() {
               onClick={handleComplete}
               disabled={!isFormValid}
               className={`flex h-[3.125rem] w-full items-center justify-center gap-2 rounded-[0.875rem] ${
-                isFormValid
-                  ? "bg-primary-500"
-                  : "cursor-not-allowed bg-grey-400"
+                isFormValid ? 'bg-primary-500' : 'cursor-not-allowed bg-grey-400'
               }`}
             >
-              <span className="typo-button-text-b text-grey-100">
-                수정 완료
-              </span>
-              <img
-                src={toastCheckIcon}
-                alt=""
-                className="h-[0.875rem] w-[0.875rem]"
-              />
+              <span className="typo-button-text-b text-grey-100">수정 완료</span>
+              <img src={toastCheckIcon} alt="" className="h-[0.875rem] w-[0.875rem]" />
             </button>
           ) : (
             <button
@@ -346,9 +366,10 @@ function DatingCardEditPage() {
           {/* 프로필 삭제하기 */}
           <button
             type="button"
+            onClick={() => setShowDeleteModal(true)}
             className="typo-comment-1 self-end text-right text-grey-600 underline underline-offset-4"
           >
-            프로필 삭제하기
+            삭제하기
           </button>
         </div>
       </div>
@@ -358,6 +379,16 @@ function DatingCardEditPage() {
           mbti={draft.mbti}
           onConfirm={handleMbtiModalClose}
           onCancel={() => setShowMbtiModal(false)}
+        />
+      )}
+
+      {showDeleteModal && (
+        <DeleteConfirmModal
+          onConfirm={() => {
+            // TODO: API 연동 시 삭제 처리 추가
+            setShowDeleteModal(false);
+          }}
+          onCancel={() => setShowDeleteModal(false)}
         />
       )}
 
