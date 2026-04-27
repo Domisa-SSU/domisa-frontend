@@ -19,7 +19,7 @@ const mockResponse = {
   user: {
     userId: 123,
     nickname: "콩순이짱",
-    age: 24,
+    birthYear: 2003,
     gender: "여",
     profileImageUrl: null as string | null,
     contact: {
@@ -82,7 +82,7 @@ function MyPage() {
             <div className="flex flex-col gap-1.5">
               <span className="typo-title-header-1 text-grey-900">{user.nickname}</span>
               <span className="typo-input-text-m text-grey-700">
-                {user.age}살 {user.gender}
+                {String(user.birthYear).slice(2)}년생 {user.gender}
               </span>
             </div>
           </div>
