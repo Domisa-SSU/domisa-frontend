@@ -23,7 +23,7 @@ import wolfImg from '../SignupPage/asset/wolfImg.png';
 
 const birthYears = Array.from({ length: 21 }, (_, index) => `${2008 - index}`);
 const contactMethods = ['인스타 ID', '전화번호', '카카오톡ID'];
-const phonePrefixes = ['010', '011', '016', '017'];
+const phonePrefix = '010';
 
 const animalOptions = [
   { name: '강아지', image: dogImg },
@@ -132,7 +132,6 @@ function EditProfilePage() {
   const [gender, setGender] = useState(mockUser.gender);
   const [birthYear, setBirthYear] = useState(mockUser.birthYear);
   const [contactMethod, setContactMethod] = useState(mockUser.contactMethod);
-  const [phonePrefix, setPhonePrefix] = useState('010');
   const [phoneMiddle, setPhoneMiddle] = useState('');
   const [phoneLast, setPhoneLast] = useState('');
   const [contactValue, setContactValue] = useState(mockUser.contactValue);
@@ -140,7 +139,7 @@ function EditProfilePage() {
   const isFormValid = useMemo(() => {
     const isContactFilled =
       contactMethod === '전화번호'
-        ? phonePrefix.length > 0 && phoneMiddle.trim().length > 0 && phoneLast.trim().length > 0
+        ? phoneMiddle.trim().length > 0 && phoneLast.trim().length > 0
         : contactMethod.length > 0 && contactValue.trim().length > 0;
 
     return (
@@ -159,7 +158,6 @@ function EditProfilePage() {
     nickname,
     phoneLast,
     phoneMiddle,
-    phonePrefix,
   ]);
 
   const isContactMethodSelected = contactMethod.length > 0;
@@ -319,9 +317,6 @@ function EditProfilePage() {
                     setContactValue('');
                     setPhoneMiddle('');
                     setPhoneLast('');
-                    if (nextMethod !== '전화번호') {
-                      setPhonePrefix('010');
-                    }
                   }}
                   className={`${selectClassName} ${
                     contactMethod ? 'text-primary-500' : 'text-grey-600'
@@ -340,24 +335,11 @@ function EditProfilePage() {
               </div>
               {contactMethod === '전화번호' ? (
                 <div className="grid grid-cols-3 gap-[0.3125rem]">
-                  <div className="relative">
-                    <select
-                      value={phonePrefix}
-                      onChange={(event) => setPhonePrefix(event.target.value)}
-                      disabled={!isContactMethodSelected}
-                      className={`${selectClassName} px-[0.875rem] pr-6 ${
-                        phonePrefix ? 'text-primary-500' : 'text-grey-600'
-                      } ${isContactMethodSelected ? '' : 'opacity-50'}`}
-                    >
-                      {phonePrefixes.map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </select>
-                    <span className="pointer-events-none absolute right-[0.625rem] top-1/2 -translate-y-1/2">
-                      <img src={selectArrow} alt="" className="h-[0.3125rem] w-[0.625rem]" />
-                    </span>
+                  <div
+                    aria-disabled="true"
+                    className="flex h-10 w-full items-center rounded-[0.625rem] bg-primary-100 px-[0.875rem] typo-input-text-m text-primary-500"
+                  >
+                    {phonePrefix}
                   </div>
                   <input
                     value={phoneMiddle}
