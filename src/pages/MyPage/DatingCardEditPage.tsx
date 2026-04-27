@@ -42,10 +42,11 @@ const textareaClass = (value: string) =>
 
 type MbtiModalProps = {
   mbti: string;
-  onClose: (mbti: string) => void;
+  onConfirm: (mbti: string) => void;
+  onCancel: () => void;
 };
 
-function MbtiModal({ mbti, onClose }: MbtiModalProps) {
+function MbtiModal({ mbti, onConfirm, onCancel }: MbtiModalProps) {
   const [draft, setDraft] = useState(mbti);
 
   const select = (rowIndex: number, letter: string) => {
@@ -61,14 +62,14 @@ function MbtiModal({ mbti, onClose }: MbtiModalProps) {
       {/* 오버레이 */}
       <div
         className="absolute inset-0 bg-grey-900/70"
-        onClick={() => onClose(draft)}
+        onClick={onCancel}
       />
       {/* 모달 */}
-      <div className="relative z-10 flex w-[21.25rem] flex-col items-center gap-5 rounded-[0.875rem] bg-white py-10">
+      <div className="relative z-10 flex w-[21.25rem] flex-col items-center gap-5 rounded-[0.875rem] bg-white pt-10 pb-5">
         {/* 닫기 버튼 */}
         <button
           type="button"
-          onClick={() => onClose(draft)}
+          onClick={onCancel}
           className="absolute right-[0.625rem] top-5 flex items-center justify-center p-2.5"
           aria-label="닫기"
         >
@@ -100,6 +101,15 @@ function MbtiModal({ mbti, onClose }: MbtiModalProps) {
             </div>
           ))}
         </div>
+
+        {/* 완료 버튼 */}
+        <button
+          type="button"
+          onClick={() => onConfirm(draft)}
+          className="flex h-[3.125rem] w-[18.75rem] items-center justify-center rounded-[0.875rem] bg-grey-400"
+        >
+          <span className="typo-button-text-b text-grey-800">완료</span>
+        </button>
       </div>
     </div>
   );
@@ -179,19 +189,21 @@ function DatingCardEditPage() {
           <section className="flex flex-col gap-4">
             <h2 className="typo-subtitle-header-2 text-grey-900">MBTI</h2>
             <div className="flex flex-wrap gap-2.5">
-              <div className="flex items-center gap-1.5 rounded-[0.9375rem] bg-primary-100 px-5 py-1.5">
-                <span className="typo-button-text text-primary-500">{card.mbti}</span>
-                {isEditing && (
-                  <button
-                    type="button"
-                    onClick={() => setShowMbtiModal(true)}
-                    aria-label="MBTI 변경"
-                    className="flex items-center justify-center"
-                  >
-                    <img src={profileChangeIcon} alt="" className="h-[0.6875rem] w-[0.875rem]" />
-                  </button>
-                )}
-              </div>
+              {isEditing ? (
+                <button
+                  type="button"
+                  onClick={() => setShowMbtiModal(true)}
+                  aria-label="MBTI 변경"
+                  className="flex items-center gap-1.5 rounded-[0.9375rem] bg-primary-100 px-5 py-1.5"
+                >
+                  <span className="typo-button-text text-primary-500">{card.mbti}</span>
+                  <img src={profileChangeIcon} alt="" className="h-[0.6875rem] w-[0.875rem]" />
+                </button>
+              ) : (
+                <div className="flex items-center gap-1.5 rounded-[0.9375rem] bg-primary-100 px-5 py-1.5">
+                  <span className="typo-button-text text-primary-500">{card.mbti}</span>
+                </div>
+              )}
             </div>
           </section>
 
@@ -342,7 +354,11 @@ function DatingCardEditPage() {
       </div>
 
       {showMbtiModal && (
-        <MbtiModal mbti={draft.mbti} onClose={handleMbtiModalClose} />
+        <MbtiModal
+          mbti={draft.mbti}
+          onConfirm={handleMbtiModalClose}
+          onCancel={() => setShowMbtiModal(false)}
+        />
       )}
 
       {showToast && <Toast message="수정 완료되었습니다" />}
