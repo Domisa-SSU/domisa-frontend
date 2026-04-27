@@ -3,15 +3,13 @@ import { useNavigate } from "react-router-dom";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import Toast from "../../components/Toast";
 import { EDIT_PROFILE_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
-import Button from "../../components/Button/Button";
-import { ButtonVariant, ButtonSize } from "../../components/Button/ButtonEnums";
+import ReferralSection from "../../components/ReferralSection";
 import RightArrow from "../../assets/right_arrow.svg?react";
 import editPencilImg from "../../assets/edit_pencil.svg";
 import cookieImg from "../../assets/cookie.svg";
 import dogImg from "../../assets/dogIcon.svg";
 import domisaHeartImg from "../../assets/domisaHeartIcon.svg";
 import catImg from "../../assets/catIcon.svg";
-import heartImg from "../../assets/heartIcon.svg";
 import flowerImg from "../../assets/flowerIcon.svg";
 
 // TODO: API 연동 시 GET /api/users/me 응답으로 교체
@@ -199,25 +197,7 @@ function MyPage() {
           {/* 친구 소개 */}
           <div className="flex flex-col gap-3.5">
             <span className="typo-button-text text-grey-900">친구 소개</span>
-            <div className="flex flex-col items-center gap-2.5 px-2.5 py-5 bg-grey-200 rounded-[0.625rem]">
-              <div className="flex items-center gap-1">
-                <span className="typo-button-text text-grey-900">
-                  친구 소개하고{" "}
-                  <span className="text-primary-500">쿠키 2개</span>
-                  {" "}받기
-                </span>
-                <img src={heartImg} alt="" className="w-4 h-4" />
-              </div>
-              <span className="typo-input-text-m text-grey-700">
-                추천인 코드: {user.referralCode}
-              </span>
-              <Button
-                label="친구 소개하기"
-                variant={ButtonVariant.Main}
-                size={ButtonSize.Small}
-                onClick={() => navigate("/introduce-friend")}
-              />
-            </div>
+            <ReferralSection referralCode={user.referralCode} />
           </div>
         </div>
 
