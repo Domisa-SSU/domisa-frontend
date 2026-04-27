@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomActionBar from "../../components/BottomActionBar";
 import NotLoginHeader from "../../components/NotLoginHeader";
-import { useSignupFlow } from "./SignupFlowContext";
+import { useSignupFlow } from "./useSignupFlow";
 import alphacaImg from "./asset/alphacaImg.png";
 import bearImg from "./asset/bearImg.png";
 import bottomArrow from "./asset/bottomArrow.svg";
