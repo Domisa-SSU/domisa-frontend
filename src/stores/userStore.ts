@@ -15,6 +15,16 @@ interface UserState {
     clearAuth: () => void;
 }
 
+const mockAuthMeResponse: AuthMeResponse = {
+    userId: 1,
+    cookieCount: 10,
+    status: {
+        isRegistered: true,
+        hasIntroduction: true,
+        isProfileCompleted: false,
+    },
+};
+
 export const useUserStore = create<UserState>((set) => ({
     userId: null,
     status: null,
@@ -36,6 +46,17 @@ export const useUserStore = create<UserState>((set) => ({
                 isAuthLoaded: true,
             });
         } catch {
+            if (import.meta.env.DEV) {
+                set({
+                    userId: mockAuthMeResponse.userId,
+                    status: mockAuthMeResponse.status,
+                    cookieCount: mockAuthMeResponse.cookieCount,
+                    isLoggedIn: true,
+                    isAuthLoaded: true,
+                });
+                return;
+            }
+
             set({
                 userId: null,
                 status: null,

@@ -10,6 +10,7 @@ import mapImg from "../assets/mapIcon.svg";
 import arrowImg from "../assets/arrowIcon.svg";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUserStore } from "../stores/userStore";
 
 const getThemeByTime = () => {
   const hour = new Date().getHours();
@@ -19,6 +20,7 @@ const getThemeByTime = () => {
 function HomePage() {
   const [theme] = useState(getThemeByTime());
   const navigate = useNavigate();
+  const status = useUserStore((state) => state.status);
 
   const themeClasses =
     theme == "day"
@@ -38,6 +40,12 @@ function HomePage() {
           inviteCard: "bg-home-friend-night",
           coupleTextBackGround: "bg-grey-100",
         };
+
+  const handleDatingClick = () => {
+    if (status?.isProfileCompleted !== true) {
+      navigate("/dating/register");
+    }
+  };
 
   return (
     <div
@@ -67,6 +75,8 @@ function HomePage() {
         </div>
         <div className="flex justify-center gap-2.5 mb-12">
           <button
+            type="button"
+            onClick={handleDatingClick}
             className={`w-44 h-37.5 flex flex-col justify-between items-center ${themeClasses.dateCard} rounded-xl py-5 shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.25)]`}
           >
             <div className="gap-1 flex flex-col">

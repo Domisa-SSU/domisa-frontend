@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomActionBar from "../../components/BottomActionBar";
 import { INTRODUCE_FRIEND_DRAFT_STORAGE_KEY } from "../../constants/storageKeys";
@@ -18,12 +18,6 @@ function IntroduceFriendPage() {
         if (value.length <= limit) {
             setter(value);
         }
-    };
-
-    const handleTextareaInput = (event: FormEvent<HTMLTextAreaElement>) => {
-        const target = event.currentTarget;
-        target.style.height = "0px";
-        target.style.height = `${target.scrollHeight}px`;
     };
 
     useEffect(() => {
@@ -60,9 +54,8 @@ function IntroduceFriendPage() {
                                 onChange={(event) =>
                                     handleLimitedChange(event.target.value, 35, setShortIntro)
                                 }
-                                onInput={handleTextareaInput}
                                 rows={3}
-                                className={`min-h-[5.5rem] w-full resize-none overflow-hidden rounded-[0.625rem] px-[0.625rem] py-2 placeholder:text-grey-600 focus:outline-none ${
+                                className={`h-[5.5rem] w-full resize-none overflow-y-auto rounded-[0.625rem] px-[0.625rem] py-2 placeholder:text-grey-600 focus:outline-none ${
                                     shortIntro.length > 0
                                         ? "bg-primary-100 typo-input-text text-primary-500"
                                         : "bg-grey-300 typo-input-text-m text-grey-600"
@@ -84,9 +77,8 @@ function IntroduceFriendPage() {
                                 onChange={(event) =>
                                     handleLimitedChange(event.target.value, 75, setCharmPoint)
                                 }
-                                onInput={handleTextareaInput}
                                 rows={4}
-                                className={`min-h-[6.75rem] w-full resize-none overflow-hidden rounded-[0.625rem] px-[0.625rem] py-2 placeholder:text-grey-600 focus:outline-none ${
+                                className={`h-[6.75rem] w-full resize-none overflow-y-auto rounded-[0.625rem] px-[0.625rem] py-2 placeholder:text-grey-600 focus:outline-none ${
                                     charmPoint.length > 0
                                         ? "bg-primary-100 typo-input-text text-primary-500"
                                         : "bg-grey-300 typo-input-text-m text-grey-600"
@@ -111,9 +103,8 @@ function IntroduceFriendPage() {
                                 onChange={(event) =>
                                     handleLimitedChange(event.target.value, 75, setFunnyEpisode)
                                 }
-                                onInput={handleTextareaInput}
                                 rows={4}
-                                className={`min-h-[6.75rem] w-full resize-none overflow-hidden rounded-[0.625rem] px-[0.625rem] py-2 placeholder:text-grey-600 focus:outline-none ${
+                                className={`h-[6.75rem] w-full resize-none overflow-y-auto rounded-[0.625rem] px-[0.625rem] py-2 placeholder:text-grey-600 focus:outline-none ${
                                     funnyEpisode.length > 0
                                         ? "bg-primary-100 typo-input-text text-primary-500"
                                         : "bg-grey-300 typo-input-text-m text-grey-600"
