@@ -11,6 +11,7 @@ import MyPage from "./pages/MyPage/MyPage";
 import MyCookiePage from "./pages/MyPage/MyCookiePage";
 import EditProfilePage from "./pages/MyPage/EditProfilePage";
 import DatingCardEditPage from "./pages/MyPage/DatingCardEditPage";
+import DatingRegisterPage from "./pages/DatingPage/DatingRegisterPage";
 import RequireIntroducePage from "./pages/DatingPage/RequireIntroducePage";
 import { useUserStore } from "./stores/userStore";
 import "./App.css";
@@ -57,6 +58,10 @@ function App() {
           <Route
             path="/dating/require-introduce"
             element={<RequireIntroducePage></RequireIntroducePage>}
+          ></Route>
+          <Route
+            path="/dating/register"
+            element={<DatingRegisterPage></DatingRegisterPage>}
           ></Route>
           <Route path="/my" element={<MyPage></MyPage>}></Route>
           <Route path="/my/cookie" element={<MyCookiePage></MyCookiePage>}></Route>
