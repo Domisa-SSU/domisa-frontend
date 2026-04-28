@@ -11,12 +11,18 @@ type ReferralSectionProps = {
 function ReferralSection({ referralCode }: ReferralSectionProps) {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(referralCode).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+    navigator.clipboard.writeText(referralCode)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => {
+        setCopyFailed(true);
+        setTimeout(() => setCopyFailed(false), 2000);
+      });
   };
 
   return (
@@ -43,7 +49,7 @@ function ReferralSection({ referralCode }: ReferralSectionProps) {
             <path d="M1 8.5V2C1 1.17157 1.67157 0.5 2.5 0.5H7" stroke="#FF6C9D" strokeWidth="1.2" strokeLinecap="round"/>
           </svg>
           <span className="typo-comment-2 text-primary-500">
-            {copied ? "복사됨!" : "코드 복사"}
+            {copyFailed ? "복사 실패" : copied ? "복사됨!" : "코드 복사"}
           </span>
         </button>
       </div>
