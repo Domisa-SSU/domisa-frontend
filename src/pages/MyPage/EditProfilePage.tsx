@@ -132,6 +132,7 @@ function EditProfilePage() {
   const [gender, setGender] = useState(mockUser.gender);
   const [birthYear, setBirthYear] = useState(mockUser.birthYear);
   const [contactMethod, setContactMethod] = useState(mockUser.contactMethod);
+  // TODO: API 연동 시 contactValue가 전화번호인 경우 "010-XXXX-XXXX" 형태로 파싱하여 초기값 설정
   const [phoneMiddle, setPhoneMiddle] = useState('');
   const [phoneLast, setPhoneLast] = useState('');
   const [contactValue, setContactValue] = useState(mockUser.contactValue);
