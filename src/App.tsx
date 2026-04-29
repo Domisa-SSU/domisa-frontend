@@ -10,6 +10,7 @@ import MyPage from "./pages/MyPage/MyPage";
 import MyCookiePage from "./pages/MyPage/MyCookiePage";
 import EditProfilePage from "./pages/MyPage/EditProfilePage";
 import DatingCardEditPage from "./pages/MyPage/DatingCardEditPage";
+import DatingPage from "./pages/DatingPage/DatingPage";
 import DatingRegisterPage from "./pages/DatingPage/DatingRegisterPage";
 import RequireIntroducePage from "./pages/DatingPage/RequireIntroducePage";
 import { useAuthMeQuery } from "./queries/auth";
@@ -48,6 +49,10 @@ function App() {
           <Route
             path="/auth/signup/next"
             element={<SignupCharacterSelectPage></SignupCharacterSelectPage>}
+          ></Route>
+          <Route
+            path="/dating"
+            element={<DatingPage></DatingPage>}
           ></Route>
           <Route
             path="/dating/require-introduce"

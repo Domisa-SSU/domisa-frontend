@@ -8,6 +8,8 @@ import {
   createProfileImageUploadUrl,
   uploadProfileImageToS3,
 } from "../../api/s3";
+import arrowIcon from "../../assets/arrowIcon.svg";
+import flowerIcon from "../../assets/flowerIcon.svg";
 import heartIcon from "../../assets/heartIcon.svg";
 import Button from "../../components/Button/Button";
 import { ButtonVariant } from "../../components/Button/ButtonEnums";
@@ -17,6 +19,7 @@ import { DatingRegisterFlowProvider } from "./DatingRegisterFlowContext";
 import smileIcon from "./assets/smileIcon.svg";
 import sumnailIcon from "./assets/sumnailIcon.png";
 import uploadIcon from "./assets/uploadIcon.svg";
+import eyeIcon from "../SignupPage/asset/eyeIcon.svg";
 import { useDatingRegisterFlow } from "./useDatingRegisterFlow";
 
 const MBTI_PAIRS: [string, string][] = [
@@ -31,6 +34,8 @@ const ROMANTIC_STYLE_PLACEHOLDER =
   "공강 때 요거바라 가서 요거트 먹고, 같이 학교 산책하는 연애";
 const IDEAL_TYPE_MAX_LENGTH = 75;
 const IDEAL_TYPE_PLACEHOLDER = "대화가 잘 통하고 같이 있으면 편한 사람";
+const WAITING_SOLO_COUNT = 124;
+const SHOULD_MOCK_DATING_REGISTER_SUBMIT = true;
 
 function DatingRegisterMbtiStep() {
   const { formData, selectMbtiLetter, goNextStep } = useDatingRegisterFlow();
@@ -180,17 +185,31 @@ function DatingRegisterCompleteModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
       <div className="absolute inset-0 bg-grey-900/70" />
-      <div className="relative z-10 flex w-full max-w-[21.25rem] flex-col items-center gap-6 rounded-[0.875rem] bg-grey-100 px-5 py-8 text-center">
-        <div className="flex flex-col items-center gap-2">
-          <img src={heartIcon} alt="" className="h-7 w-7" />
+      <div className="relative z-10 flex w-full max-w-[21.25rem] flex-col items-center justify-center gap-5 rounded-[0.875rem] bg-grey-100 px-5 pt-[1.875rem] pb-5 text-center">
+        <div className="flex flex-col items-center gap-[0.9375rem]">
           <h2 className="typo-subtitle-header-2 text-grey-900">
-            프로필 등록 완료
+            등록 완료!
+            <br />
+            바로 시작해볼까요?
           </h2>
-          <p className="typo-input-text-m text-grey-700">
-            소개팅 카드를 등록했어요
-          </p>
+          <div className="flex items-center justify-center gap-1">
+            <p className="typo-input-text-m text-grey-700">
+              {WAITING_SOLO_COUNT}명의 솔로가 기다리고 있어요
+            </p>
+            <img src={flowerIcon} alt="" aria-hidden="true" className="h-3.5 w-3.5" />
+          </div>
         </div>
-        <Button label="확인" variant={ButtonVariant.Main} onClick={onConfirm} />
+        <button
+          type="button"
+          onClick={onConfirm}
+          className="flex h-[3.125rem] w-full max-w-[18.75rem] items-center justify-center rounded-[0.875rem] bg-primary-500 px-2.5 py-2.5"
+        >
+          <span className="flex items-center gap-1 typo-button-text-b text-grey-100">
+            솔로 둘러보기
+            <img src={eyeIcon} alt="" aria-hidden="true" className="h-[1.125rem] w-[1.125rem]" />
+            <img src={arrowIcon} alt="" aria-hidden="true" className="h-3 w-3" />
+          </span>
+        </button>
       </div>
     </div>
   );
@@ -230,6 +249,12 @@ function DatingRegisterPhotoStep() {
     setIsSubmitting(true);
     setErrorMessage("");
 
+    if (SHOULD_MOCK_DATING_REGISTER_SUBMIT) {
+      setIsCompleteModalOpen(true);
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const profileImageUpload = await createProfileImageUploadUrl({
         contentType: formData.photoFile.type,
@@ -266,7 +291,7 @@ function DatingRegisterPhotoStep() {
 
   const handleCompleteConfirm = () => {
     resetRegisterFlow();
-    navigate("/");
+    navigate("/dating");
   };
 
   return (
