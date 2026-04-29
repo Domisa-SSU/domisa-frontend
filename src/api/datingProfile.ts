@@ -35,6 +35,11 @@ const isCreateDatingProfileResponse = (
   );
 };
 
+/**
+ * API 제목: 소개팅 카드 생성
+ * POST /api/users/profiles
+ * 소개팅 카드 정보를 생성한다. 현재 응답 status는 isCardCompleted 필드를 사용한다.
+ */
 export const createDatingProfile = async (
   payload: CreateDatingProfileRequest,
 ) => {

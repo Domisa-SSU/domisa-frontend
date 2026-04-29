@@ -79,6 +79,11 @@ const isCheckNicknameAvailabilityResponse = (
   return typeof response.isAvailable === "boolean";
 };
 
+/**
+ * API 제목: 회원가입
+ * POST /api/users/register
+ * 회원가입 입력 정보를 등록하고, 등록 후 유저 ID와 서비스 진행 상태를 받는다.
+ */
 export const registerUser = async (payload: RegisterUserRequest) => {
   const { data } = await apiClient.post<unknown>("/api/users/register", payload);
 
@@ -89,6 +94,11 @@ export const registerUser = async (payload: RegisterUserRequest) => {
   return data;
 };
 
+/**
+ * API 제목: 닉네임 중복 조회
+ * GET /api/users/check-nickname
+ * 회원가입과 프로필 수정에서 닉네임 중복 여부를 확인한다.
+ */
 export const checkNicknameAvailability = async (nickname: string) => {
   const { data } = await apiClient.get<unknown>("/api/users/check-nickname", {
     params: { nickname },

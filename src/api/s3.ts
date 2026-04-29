@@ -31,6 +31,11 @@ const isCreateProfileImageUploadUrlResponse = (
   );
 };
 
+/**
+ * API 제목: 프로필 이미지 Presigned URL 발급
+ * POST /api/users/me/profile-image/upload-url
+ * 프로필 이미지를 S3에 PUT 업로드하기 위한 presigned URL과 objectKey를 발급받는다.
+ */
 export const createProfileImageUploadUrl = async (
   payload: CreateProfileImageUploadUrlRequest,
 ) => {
@@ -46,6 +51,11 @@ export const createProfileImageUploadUrl = async (
   return data;
 };
 
+/**
+ * API 제목: 프로필 이미지 S3 업로드
+ * PUT {presignedUrl}
+ * 백엔드가 아닌 S3 presigned URL로 선택한 이미지 파일을 직접 업로드한다.
+ */
 export const uploadProfileImageToS3 = async ({
   presignedUrl,
   file,
@@ -66,6 +76,11 @@ export const uploadProfileImageToS3 = async ({
   }
 };
 
+/**
+ * API 제목: 프로필 이미지 업로드 완료
+ * POST /api/users/me/profile-image/complete
+ * S3 업로드가 끝난 뒤 백엔드에 업로드 완료를 알린다.
+ */
 export const completeProfileImageUpload = async (
   payload: CompleteProfileImageUploadRequest,
 ) => {
