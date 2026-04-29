@@ -10,7 +10,7 @@ import mapImg from "../assets/mapIcon.svg";
 import arrowImg from "../assets/arrowIcon.svg";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUserStore } from "../stores/userStore";
+import { useAuthMeQuery } from "../queries/auth";
 
 const getThemeByTime = () => {
   const hour = new Date().getHours();
@@ -20,7 +20,8 @@ const getThemeByTime = () => {
 function HomePage() {
   const [theme] = useState(getThemeByTime());
   const navigate = useNavigate();
-  const status = useUserStore((state) => state.status);
+  const { data: authMe } = useAuthMeQuery();
+  const status = authMe?.status;
 
   const themeClasses =
     theme == "day"

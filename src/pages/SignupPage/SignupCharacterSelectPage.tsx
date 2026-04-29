@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { isAxiosError } from "axios";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import BottomActionBar from "../../components/BottomActionBar";
 import NotLoginHeader from "../../components/NotLoginHeader";
+import type { AnimalProfile, ContactType } from "../../api/users";
+import { useRegisterUserMutation } from "../../queries/users";
 import { useSignupFlow } from "./useSignupFlow";
 import alphacaImg from "./asset/alphacaImg.png";
 import bearImg from "./asset/bearImg.png";
@@ -33,8 +36,42 @@ const animalOptions = [
     { name: "카피바라", image: capibaraImg },
 ];
 
+const animalProfileMap: Record<string, AnimalProfile> = {
+    강아지: "DOG",
+    고양이: "CAT",
+    곰: "BEAR",
+    나무늘보: "SLOTH",
+    햄스터: "HAMSTER",
+    늑대: "WOLF",
+    토끼: "RABBIT",
+    사슴: "DEER",
+    수달: "OTTER",
+    알파카: "ALPACA",
+    여우: "FOX",
+    카피바라: "CAPYBARA",
+};
+
+const contactTypeMap: Record<string, ContactType> = {
+    전화번호: "PHONE",
+    "카카오톡 ID": "KAKAO",
+    "인스타 ID": "INSTAGRAM",
+};
+
+const getRegisterErrorMessage = (error: unknown) => {
+    if (isAxiosError(error)) {
+        const message = (error.response?.data as { message?: unknown } | undefined)?.message;
+
+        if (typeof message === "string") {
+            return message;
+        }
+    }
+
+    return "회원가입에 실패했어요. 다시 시도해주세요.";
+};
+
 function SignupCharacterSelectPage() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const {
         signupFormData,
         selectedAnimal,
@@ -43,7 +80,12 @@ function SignupCharacterSelectPage() {
     } = useSignupFlow();
     const [showScrollHint, setShowScrollHint] = useState(false);
     const [bottomBarHeight, setBottomBarHeight] = useState(0);
+    const [errorMessage, setErrorMessage] = useState("");
     const bottomBarRef = useRef<HTMLDivElement>(null);
+    const {
+        mutateAsync: registerUser,
+        isPending: isRegistering,
+    } = useRegisterUserMutation();
 
     useEffect(() => {
         const updateScrollHint = () => {
@@ -84,15 +126,54 @@ function SignupCharacterSelectPage() {
         return () => resizeObserver.disconnect();
     }, []);
 
-    const handleCompleteSignup = () => {
-        const signupPayload = {
-            ...signupFormData,
-            animalType: selectedAnimal,
-        };
+    const handleCompleteSignup = async () => {
+        const gender =
+            signupFormData.gender === "남성"
+                ? true
+                : signupFormData.gender === "여성"
+                  ? false
+                  : null;
+        const contactType = contactTypeMap[signupFormData.contactMethod];
+        const animalProfile = animalProfileMap[selectedAnimal];
 
-        console.log("[mock] signup complete payload", signupPayload);
-        resetSignupFlow();
-        navigate("/");
+        if (gender === null || !contactType || !animalProfile) {
+            setErrorMessage("입력 정보를 다시 확인해주세요.");
+            return;
+        }
+
+        const contactContent =
+            contactType === "PHONE"
+                ? `${signupFormData.phonePrefix}${signupFormData.phoneMiddle}${signupFormData.phoneLast}`
+                : signupFormData.contactValue.trim();
+
+        try {
+            setErrorMessage("");
+
+            await registerUser({
+                nickname: signupFormData.nickname.trim(),
+                gender,
+                birthYear: Number(signupFormData.birthYear),
+                inviteCode: signupFormData.referralCode.trim() || null,
+                contact: {
+                    type: contactType,
+                    content: contactContent,
+                },
+                animalProfile,
+            });
+
+            const isIntroduceFriendFlow =
+                searchParams.get("flow") === "introduce-friend";
+
+            resetSignupFlow();
+            navigate(
+                isIntroduceFriendFlow
+                    ? "/introduce-friend/generating"
+                    : "/dating/require-introduce",
+                { replace: true },
+            );
+        } catch (error) {
+            setErrorMessage(getRegisterErrorMessage(error));
+        }
     };
 
     return (
@@ -154,15 +235,22 @@ function SignupCharacterSelectPage() {
             )}
             <BottomActionBar
                 ref={bottomBarRef}
-                label="다음"
-                disabled={false}
+                label={isRegistering ? "가입 중..." : "다음"}
+                disabled={isRegistering}
                 onClick={handleCompleteSignup}
                 topContent={
-                    <p className="flex items-center typo-button-text text-primary-500">
-                        {`저는 ${selectedAnimal}상`}
-                        <img src={eyeIcon} alt="" aria-hidden="true" className="h-[1em] w-[1em]" />
-                        이에요
-                    </p>
+                    <div className="flex flex-col items-center gap-1">
+                        {errorMessage && (
+                            <p className="typo-comment-2 text-warning">
+                                {errorMessage}
+                            </p>
+                        )}
+                        <p className="flex items-center typo-button-text text-primary-500">
+                            {`저는 ${selectedAnimal}상`}
+                            <img src={eyeIcon} alt="" aria-hidden="true" className="h-[1em] w-[1em]" />
+                            이에요
+                        </p>
+                    </div>
                 }
             />
         </div>

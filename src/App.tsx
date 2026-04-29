@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import IntroduceFriendGeneratingPage from "./pages/IntroduceFriendPage/IntroduceFriendGeneratingPage";
@@ -13,18 +12,13 @@ import EditProfilePage from "./pages/MyPage/EditProfilePage";
 import DatingCardEditPage from "./pages/MyPage/DatingCardEditPage";
 import DatingRegisterPage from "./pages/DatingPage/DatingRegisterPage";
 import RequireIntroducePage from "./pages/DatingPage/RequireIntroducePage";
-import { useUserStore } from "./stores/userStore";
+import { useAuthMeQuery } from "./queries/auth";
 import "./App.css";
 
 function App() {
-  const fetchMe = useUserStore((state) => state.fetchMe);
-  const isAuthLoaded = useUserStore((state) => state.isAuthLoaded);
+  const { isPending } = useAuthMeQuery();
 
-  useEffect(() => {
-    void fetchMe();
-  }, [fetchMe]);
-
-  if (!isAuthLoaded) {
+  if (isPending) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-grey-100">
         <div

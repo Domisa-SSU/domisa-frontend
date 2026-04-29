@@ -1,32 +1,186 @@
+import { useEffect, useRef, useState } from "react";
 import friendSignUpImg from "../IntroduceFriendPage/assets/friendSignUpImg.png";
 import {
     INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY,
+    KAKAO_OAUTH_FLOW_STORAGE_KEY,
+    KAKAO_OAUTH_STATE_STORAGE_KEY,
     KAKAO_LOGIN_TOAST_STORAGE_KEY,
 } from "../../constants/storageKeys";
 import loginImg from "./asset/loginImg.png";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import kakaoIconImg from "./asset/kakaoLogo.svg";
+import { useKakaoLoginMutation } from "../../queries/auth";
+import type { UserStatus } from "../../types/user";
+
+const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
+const INTRODUCE_FRIEND_FLOW = "introduce-friend";
+const SHOULD_CALL_BACKEND_LOGIN = false;
+
+const createKakaoOAuthState = () => {
+    if (window.crypto?.getRandomValues) {
+        const randomValues = new Uint32Array(4);
+        window.crypto.getRandomValues(randomValues);
+        return Array.from(randomValues, (value) => value.toString(36)).join("");
+    }
+
+    return `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+};
+
+const clearKakaoOAuthContext = () => {
+    sessionStorage.removeItem(KAKAO_OAUTH_STATE_STORAGE_KEY);
+    sessionStorage.removeItem(KAKAO_OAUTH_FLOW_STORAGE_KEY);
+};
+
+const getNextPathAfterLogin = (
+    status: UserStatus,
+    isIntroduceFriendFlow: boolean,
+) => {
+    if (!status.isRegistered) {
+        return isIntroduceFriendFlow
+            ? "/auth/signup?flow=introduce-friend"
+            : "/auth/signup";
+    }
+
+    if (!status.hasIntroduction) {
+        return "/dating/require-introduce";
+    }
+
+    if (!status.isProfileCompleted) {
+        return "/dating/register";
+    }
+
+    return isIntroduceFriendFlow ? "/introduce-friend/generating" : "/";
+};
 
 function Kakao() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const isIntroduceFriendFlow = searchParams.get("flow") === "introduce-friend";
+    const authorizationCode = searchParams.get("code");
+    const kakaoError = searchParams.get("error");
+    const kakaoErrorDescription = searchParams.get("error_description");
+    const callbackState = searchParams.get("state");
+    const storedOAuthFlow = sessionStorage.getItem(KAKAO_OAUTH_FLOW_STORAGE_KEY);
+    const isIntroduceFriendFlow =
+        searchParams.get("flow") === INTRODUCE_FRIEND_FLOW ||
+        storedOAuthFlow === INTRODUCE_FRIEND_FLOW;
+    const processedCodeRef = useRef<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState("");
+    const {
+        mutateAsync: loginWithKakao,
+        isPending: isLoggingIn,
+    } = useKakaoLoginMutation();
 
     const loginImage = isIntroduceFriendFlow ? friendSignUpImg : loginImg;
     const nextPath = isIntroduceFriendFlow
         ? "/introduce-friend/generating"
         : "/auth/signup";
     const headerTitle = isIntroduceFriendFlow ? "친구 소개하기" : "로그인";
+    const currentAuthPath = isIntroduceFriendFlow
+        ? "/auth?flow=introduce-friend"
+        : "/auth";
+
+    useEffect(() => {
+        if (kakaoError || kakaoErrorDescription) {
+            clearKakaoOAuthContext();
+            setErrorMessage(
+                kakaoError === "access_denied"
+                    ? "카카오 로그인이 취소되었어요."
+                    : "카카오 로그인에 실패했어요. 다시 시도해주세요.",
+            );
+            navigate(currentAuthPath, { replace: true });
+            return;
+        }
+
+        if (!authorizationCode || processedCodeRef.current === authorizationCode) {
+            return;
+        }
+
+        const storedOAuthState = sessionStorage.getItem(KAKAO_OAUTH_STATE_STORAGE_KEY);
+
+        if (!callbackState || !storedOAuthState || callbackState !== storedOAuthState) {
+            clearKakaoOAuthContext();
+            setErrorMessage("카카오 로그인 요청을 확인할 수 없어요. 다시 시도해주세요.");
+            navigate(currentAuthPath, { replace: true });
+            return;
+        }
+
+        processedCodeRef.current = authorizationCode;
+        setErrorMessage("");
+        console.log("[Kakao OAuth] authorization code:", authorizationCode);
+
+        if (!SHOULD_CALL_BACKEND_LOGIN) {
+            clearKakaoOAuthContext();
+            setErrorMessage("카카오 인가 코드가 콘솔에 출력됐어요.");
+            navigate(currentAuthPath, { replace: true });
+            return;
+        }
+
+        loginWithKakao({ authorizationCode })
+            .then((response) => {
+                clearKakaoOAuthContext();
+
+                const nextPathAfterLogin = getNextPathAfterLogin(
+                    response.status,
+                    isIntroduceFriendFlow,
+                );
+
+                if (isIntroduceFriendFlow) {
+                    sessionStorage.setItem(
+                        INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY,
+                        "logged-in",
+                    );
+                }
+
+                if (nextPathAfterLogin === "/auth/signup") {
+                    sessionStorage.setItem(KAKAO_LOGIN_TOAST_STORAGE_KEY, "true");
+                }
+
+                navigate(nextPathAfterLogin, { replace: true });
+            })
+            .catch((error) => {
+                console.error(error);
+                clearKakaoOAuthContext();
+                processedCodeRef.current = null;
+                setErrorMessage("카카오 로그인에 실패했어요. 다시 시도해주세요.");
+                navigate(currentAuthPath, { replace: true });
+            });
+    }, [
+        authorizationCode,
+        callbackState,
+        currentAuthPath,
+        kakaoError,
+        kakaoErrorDescription,
+        isIntroduceFriendFlow,
+        loginWithKakao,
+        navigate,
+    ]);
 
     const handleKakaoLogin = () => {
-        // TODO: API 연동 시 카카오 OAuth 성공 콜백 안으로 이동
-        if (isIntroduceFriendFlow) {
-            sessionStorage.setItem(INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY, "logged-in");
-        } else {
-            sessionStorage.setItem(KAKAO_LOGIN_TOAST_STORAGE_KEY, "true");
+        const kakaoRestApiKey = import.meta.env.VITE_KAKAO_REST_API_KEY;
+
+        if (!kakaoRestApiKey) {
+            setErrorMessage("카카오 로그인 설정이 없습니다.");
+            return;
         }
-        navigate(nextPath);
+
+        const state = createKakaoOAuthState();
+        const redirectUri = `${window.location.origin}/auth`;
+        const authorizeParams = new URLSearchParams({
+            response_type: "code",
+            client_id: kakaoRestApiKey,
+            redirect_uri: redirectUri,
+            state,
+        });
+
+        sessionStorage.setItem(KAKAO_OAUTH_STATE_STORAGE_KEY, state);
+        sessionStorage.setItem(
+            KAKAO_OAUTH_FLOW_STORAGE_KEY,
+            isIntroduceFriendFlow ? INTRODUCE_FRIEND_FLOW : "default",
+        );
+        setErrorMessage("");
+
+        window.location.assign(`${KAKAO_AUTHORIZE_URL}?${authorizeParams.toString()}`);
     };
 
     const handleSkip = () => {
@@ -72,6 +226,7 @@ function Kakao() {
                                 <button
                                     type="button"
                                     onClick={handleKakaoLogin}
+                                    disabled={isLoggingIn}
                                     className="relative flex h-12 w-full items-center justify-center rounded-[0.375rem] bg-[#FEE500] px-[0.875rem]"
                                 >
                                     <img
@@ -80,9 +235,14 @@ function Kakao() {
                                         className="absolute left-[0.875rem] h-[1.125rem] w-[1.125rem]"
                                     />
                                     <span className="text-[1.125rem] font-semibold leading-[1.5] text-[rgba(0,0,0,0.85)]">
-                                        카카오 로그인
+                                        {isLoggingIn ? "로그인 처리 중..." : "카카오 로그인"}
                                     </span>
                                 </button>
+                                {errorMessage && (
+                                    <p className="typo-comment-2 text-warning">
+                                        {errorMessage}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -103,6 +263,7 @@ function Kakao() {
                         <button
                             type="button"
                             onClick={handleKakaoLogin}
+                            disabled={isLoggingIn}
                             className="relative mx-auto flex h-12 w-full max-w-[20.9375rem] items-center justify-center rounded-[0.375rem] bg-[#FEE500] px-[0.875rem]"
                         >
                             <img
@@ -111,9 +272,14 @@ function Kakao() {
                                 className="absolute left-[0.875rem] h-[1.125rem] w-[1.125rem]"
                             />
                             <span className="text-[1.125rem] font-semibold leading-[1.5] text-[rgba(0,0,0,0.85)]">
-                                카카오 로그인
+                                {isLoggingIn ? "로그인 처리 중..." : "카카오 로그인"}
                             </span>
                         </button>
+                        {errorMessage && (
+                            <p className="mt-2 text-center typo-comment-2 text-warning">
+                                {errorMessage}
+                            </p>
+                        )}
                     </div>
                 </>
             )}
