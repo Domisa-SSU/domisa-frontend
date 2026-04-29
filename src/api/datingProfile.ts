@@ -1,10 +1,5 @@
 import { apiClient } from "./client";
 
-type PresignedUrlResponse = {
-  uploadUrl: string;
-  objectKey: string;
-};
-
 type CreateDatingProfileRequest = {
   mbti: string;
   datingStyle: string;
@@ -19,21 +14,6 @@ export type CreateDatingProfileResponse = {
     hasIntroduction: boolean;
     isCardCompleted: boolean;
   };
-};
-
-const isPresignedUrlResponse = (
-  value: unknown,
-): value is PresignedUrlResponse => {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const response = value as Record<string, unknown>;
-
-  return (
-    typeof response.uploadUrl === "string" &&
-    typeof response.objectKey === "string"
-  );
 };
 
 const isCreateDatingProfileResponse = (
@@ -53,39 +33,6 @@ const isCreateDatingProfileResponse = (
     typeof status.hasIntroduction === "boolean" &&
     typeof status.isCardCompleted === "boolean"
   );
-};
-
-export const getProfileImagePresignedUrl = async (contentType: string) => {
-  const { data } = await apiClient.post<unknown>(
-    "/api/users/me/profile-image/presigned-url",
-    { contentType },
-  );
-
-  if (!isPresignedUrlResponse(data)) {
-    throw new Error("Invalid profile image presigned URL response");
-  }
-
-  return data;
-};
-
-export const uploadProfileImageToS3 = async ({
-  uploadUrl,
-  file,
-}: {
-  uploadUrl: string;
-  file: File;
-}) => {
-  const response = await fetch(uploadUrl, {
-    method: "PUT",
-    headers: {
-      "Content-Type": file.type,
-    },
-    body: file,
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to upload profile image");
-  }
 };
 
 export const createDatingProfile = async (

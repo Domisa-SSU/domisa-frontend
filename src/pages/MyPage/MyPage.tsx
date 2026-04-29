@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import NotLoginHeader from '../../components/NotLoginHeader';
 import Toast from '../../components/Toast';
 import { EDIT_PROFILE_TOAST_STORAGE_KEY } from '../../constants/storageKeys';
+import { useLogoutMutation } from '../../queries/auth';
 import ReferralSection from '../../components/ReferralSection';
 import RightArrow from '../../assets/right_arrow.svg?react';
 import editPencilImg from '../../assets/edit_pencil.svg';
@@ -44,6 +45,11 @@ const contactLabel: Record<'INSTAGRAM' | 'KAKAO' | 'PHONE', string> = {
 function MyPage() {
   const { user, status } = mockResponse;
   const navigate = useNavigate();
+  const {
+    mutateAsync: logout,
+    isPending: isLoggingOut,
+  } = useLogoutMutation();
+  const [logoutErrorMessage, setLogoutErrorMessage] = useState('');
   const [showEditProfileToast, setShowEditProfileToast] = useState(() => {
     const shouldShow = sessionStorage.getItem(EDIT_PROFILE_TOAST_STORAGE_KEY) === 'true';
     if (shouldShow) {
@@ -223,12 +229,20 @@ function MyPage() {
           {/* 로그아웃 / 탈퇴하기 */}
           <div className="relative h-[3.5625rem] w-full typo-comment-1 text-grey-600">
             <button
+              disabled={isLoggingOut}
               className="absolute left-1/2 -translate-x-1/2 top-5 underline underline-offset-4"
-              onClick={() => {
-                // TODO: 로그아웃 API 호출 후 로그인 페이지로 이동
+              onClick={async () => {
+                try {
+                  setLogoutErrorMessage('');
+                  await logout();
+                  navigate('/', { replace: true });
+                } catch (error) {
+                  console.error(error);
+                  setLogoutErrorMessage('로그아웃에 실패했어요. 다시 시도해주세요.');
+                }
               }}
             >
-              로그아웃
+              {isLoggingOut ? '로그아웃 중' : '로그아웃'}
             </button>
             <button
               className="absolute right-0 top-5 underline underline-offset-4 whitespace-nowrap"
@@ -239,6 +253,11 @@ function MyPage() {
               탈퇴하기
             </button>
           </div>
+          {logoutErrorMessage && (
+            <p className="typo-comment-2 text-center text-warning">
+              {logoutErrorMessage}
+            </p>
+          )}
         </div>
       </div>
     </div>

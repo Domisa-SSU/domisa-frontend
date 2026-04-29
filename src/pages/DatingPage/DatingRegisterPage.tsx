@@ -1,16 +1,18 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
+import { createDatingProfile } from "../../api/datingProfile";
 import {
-  createDatingProfile,
-  getProfileImagePresignedUrl,
+  completeProfileImageUpload,
+  createProfileImageUploadUrl,
   uploadProfileImageToS3,
-} from "../../api/datingProfile";
+} from "../../api/s3";
 import heartIcon from "../../assets/heartIcon.svg";
 import Button from "../../components/Button/Button";
 import { ButtonVariant } from "../../components/Button/ButtonEnums";
 import NotLoginHeader from "../../components/NotLoginHeader";
-import { useUserStore } from "../../stores/userStore";
+import { authMeQueryKey } from "../../queries/auth";
 import { DatingRegisterFlowProvider } from "./DatingRegisterFlowContext";
 import smileIcon from "./assets/smileIcon.svg";
 import sumnailIcon from "./assets/sumnailIcon.png";
@@ -196,8 +198,8 @@ function DatingRegisterCompleteModal({
 
 function DatingRegisterPhotoStep() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const updateStatus = useUserStore((state) => state.updateStatus);
   const { formData, setPhotoFile, resetRegisterFlow } = useDatingRegisterFlow();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -229,26 +231,29 @@ function DatingRegisterPhotoStep() {
     setErrorMessage("");
 
     try {
-      const { uploadUrl, objectKey } = await getProfileImagePresignedUrl(
-        formData.photoFile.type,
-      );
+      const profileImageUpload = await createProfileImageUploadUrl({
+        contentType: formData.photoFile.type,
+        fileSize: formData.photoFile.size,
+      });
 
       await uploadProfileImageToS3({
-        uploadUrl,
+        presignedUrl: profileImageUpload.presignedUrl,
         file: formData.photoFile,
       });
 
-      const response = await createDatingProfile({
+      await completeProfileImageUpload({
+        uploadKey: profileImageUpload.objectKey,
+      });
+
+      await createDatingProfile({
         mbti: formData.mbti,
         datingStyle: formData.romanticStyle,
         idealType: formData.idealType,
-        imageKey: objectKey,
+        imageKey: profileImageUpload.objectKey,
       });
 
-      updateStatus({
-        isRegistered: response.status.isRegistered,
-        hasIntroduction: response.status.hasIntroduction,
-        isProfileCompleted: response.status.isCardCompleted,
+      await queryClient.invalidateQueries({
+        queryKey: authMeQueryKey,
       });
       setIsCompleteModalOpen(true);
     } catch (error) {

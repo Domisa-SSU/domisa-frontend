@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import BottomActionBar from '../../components/BottomActionBar';
 import NotLoginHeader from '../../components/NotLoginHeader';
 import { EDIT_PROFILE_TOAST_STORAGE_KEY } from '../../constants/storageKeys';
+import { useCheckNicknameMutation } from '../../queries/users';
 import ProfileChangeIcon from '../../assets/profile_change.svg?react';
 import xIcon from '../../assets/X.svg';
 import forbiddenIcon from '../SignupPage/asset/forbiddenIcon.svg';
@@ -136,6 +137,10 @@ function EditProfilePage() {
   const [phoneMiddle, setPhoneMiddle] = useState('');
   const [phoneLast, setPhoneLast] = useState('');
   const [contactValue, setContactValue] = useState(mockUser.contactValue);
+  const {
+    mutateAsync: checkNicknameAvailability,
+    isPending: isCheckingNickname,
+  } = useCheckNicknameMutation();
 
   const isFormValid = useMemo(() => {
     const isContactFilled =
@@ -170,6 +175,33 @@ function EditProfilePage() {
   ) => {
     if (value.length <= limit) {
       setter(value);
+    }
+  };
+
+  const handleCheckNickname = async () => {
+    const trimmedNickname = nickname.trim();
+
+    if (trimmedNickname.length === 0) {
+      setIsNicknameChecked(false);
+      setNicknameErrorMessage('닉네임을 입력해주세요');
+      return;
+    }
+
+    if (trimmedNickname === mockUser.nickname) {
+      setIsNicknameChecked(true);
+      setNicknameErrorMessage('');
+      return;
+    }
+
+    try {
+      const { isAvailable } = await checkNicknameAvailability(trimmedNickname);
+
+      setIsNicknameChecked(isAvailable);
+      setNicknameErrorMessage(isAvailable ? '' : '이미 사용 중인 닉네임입니다');
+    } catch (error) {
+      console.error(error);
+      setIsNicknameChecked(false);
+      setNicknameErrorMessage('닉네임 확인에 실패했어요. 다시 시도해주세요');
     }
   };
 
@@ -213,8 +245,10 @@ function EditProfilePage() {
                   value={nickname}
                   maxLength={4}
                   onChange={(event) => {
-                    handleLimitedChange(event.target.value, 4, setNickname);
-                    setIsNicknameChecked(false);
+                    const nextNickname = event.target.value;
+
+                    handleLimitedChange(nextNickname, 4, setNickname);
+                    setIsNicknameChecked(nextNickname.trim() === mockUser.nickname);
                     setNicknameErrorMessage('');
                   }}
                   className={`${fieldClassName} pr-[5.5rem] ${
@@ -224,19 +258,13 @@ function EditProfilePage() {
                 />
                 <button
                   type="button"
-                  onClick={() => {
-                    if (nickname.trim().length === 0) {
-                      setIsNicknameChecked(false);
-                      setNicknameErrorMessage('닉네임을 입력해주세요');
-                      return;
-                    }
-                    // TODO: 닉네임 중복 확인 API 호출로 교체 (nickname.trim() 전송)
-                    setNicknameErrorMessage('');
-                    setIsNicknameChecked(true);
-                  }}
+                  disabled={isCheckingNickname}
+                  onClick={handleCheckNickname}
                   className="absolute right-[0.31rem] top-1/2 flex -translate-y-1/2 items-center justify-center rounded-[0.625rem] border-[0.8px] border-primary-200 bg-grey-100 px-4 py-2"
                 >
-                  <span className="typo-comment-2 text-primary-300">확인</span>
+                  <span className="typo-comment-2 text-primary-300">
+                    {isCheckingNickname ? '확인 중' : '확인'}
+                  </span>
                 </button>
               </div>
               <div className="min-h-[0.875rem]">
