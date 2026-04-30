@@ -106,12 +106,12 @@ function UserNotificationItem({ notification }: UserNotificationItemProps) {
 
   return (
     <div
-      className={`flex h-[65px] items-center gap-[10px] border-b border-grey-500 px-5 ${
+      className={`flex h-[4.0625rem] items-center gap-2.5 border-b border-grey-500 px-5 ${
         isRead ? "bg-grey-100" : "bg-primary-100"
       }`}
     >
       {/* 아바타 플레이스홀더 */}
-      <div className="size-12 shrink-0 rounded-[15px] bg-grey-300" />
+      <div className="size-12 shrink-0 rounded-[0.9375rem] bg-grey-300" />
 
       <div className="flex flex-1 items-center justify-between">
         <span
@@ -123,7 +123,7 @@ function UserNotificationItem({ notification }: UserNotificationItemProps) {
         </span>
 
         {!isRead && (
-          <div className="flex size-[18px] shrink-0 items-center justify-center rounded-[8.4px] bg-warning">
+          <div className="flex size-[1.125rem] shrink-0 items-center justify-center rounded-[0.525rem] bg-warning">
             <span className="typo-comment-2 text-grey-100">N</span>
           </div>
         )}
@@ -140,7 +140,7 @@ function SystemNotificationItem({ notification }: SystemNotificationItemProps) {
   const { content } = notification;
 
   return (
-    <div className="flex h-[65px] items-center gap-[5px] border-b border-grey-500 px-5">
+    <div className="flex h-[4.0625rem] items-center gap-[0.3125rem] border-b border-grey-500 px-5">
       <span className="typo-comment-1-m text-grey-900">{content}</span>
       <span aria-hidden="true">🍪</span>
     </div>
@@ -154,10 +154,10 @@ function NotificationPage() {
     <div className="min-h-screen bg-grey-100">
       <NotLoginHeader title="알림" />
 
-      <div className="mx-auto w-full max-w-[22.6875rem] flex flex-col gap-[10px] pt-[10px]">
+      <div className="mx-auto w-full max-w-[22.6875rem] flex flex-col gap-2.5 pt-2.5">
         {groups.map(({ dateLabel, items }) => (
           <div key={dateLabel} className="flex flex-col">
-            <div className="px-5 py-[10px]">
+            <div className="px-5 py-2.5">
               <span className="typo-comment-2 text-grey-700">{dateLabel}</span>
             </div>
 
