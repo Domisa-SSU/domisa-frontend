@@ -1,10 +1,9 @@
-import { useState } from "react";
 import icon from "../assets/domisaHeartIcon.svg"
 import { useNavigate } from "react-router-dom";
 
 
 function Header({dayText} : {dayText : string}) {
-    const [festivalDate] = useState(3);
+    const festivalDate = 3;
     const navigate = useNavigate();
 
     return (

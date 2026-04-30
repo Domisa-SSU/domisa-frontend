@@ -54,7 +54,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
     userId: 1,
     type: "INTRODUCTION",
     title: "소개서가 도착했어요",
-    content: "금보리차님이 나에게 호감을 보냈어요!",
+    content: "금보리차님의 소개서가 도착했어요!",
     isRead: true,
     createdAt: "2026-04-28T15:00:00",
   },

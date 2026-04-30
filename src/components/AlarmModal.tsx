@@ -1,6 +1,6 @@
 import ArrowIcon from '../assets/arrowIcon.svg';
 import XIcon from '../assets/X.svg';
-import type { Notification } from '../types/notification';
+import type { Notification, NotificationType } from '../types/notification';
 
 type AlarmModalProps = {
   notification: Notification;
@@ -8,7 +8,7 @@ type AlarmModalProps = {
   onConfirm: () => void;
 };
 
-const modalTitleByType: Record<string, string | undefined> = {
+const modalTitleByType: Partial<Record<NotificationType, string>> = {
   LIKE: '누군가 나에게 호감을 보냈어요!',
   MATCH: '쌍방 매칭이 이뤄졌어요!',
   COOKIE: '내 친구가 등록했어요!\n쿠키 2개 지급 완료',
