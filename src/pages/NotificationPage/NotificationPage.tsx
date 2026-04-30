@@ -1,3 +1,4 @@
+import cookieIllerst from "../../assets/cookieIllerst.png";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import type { Notification, NotificationType } from "../../types/notification";
 
@@ -142,7 +143,7 @@ function SystemNotificationItem({ notification }: SystemNotificationItemProps) {
   return (
     <div className="flex h-[4.0625rem] items-center gap-[0.3125rem] border-b border-grey-500 px-5">
       <span className="typo-comment-1-m text-grey-900">{content}</span>
-      <span aria-hidden="true">🍪</span>
+      <img src={cookieIllerst} alt="쿠키" className="size-[0.9rem]" />
     </div>
   );
 }
