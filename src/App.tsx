@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import IntroduceFriendGeneratingPage from "./pages/IntroduceFriendPage/IntroduceFriendGeneratingPage";
 import IntroduceFriendPage from "./pages/IntroduceFriendPage/IntroduceFriendPage";
+import ReceiveIntroducePage from "./pages/IntroduceFriendPage/ReceiveIntroducePage";
 import Kakao from "./pages/LoginPage/Kakao";
 import SignupCharacterSelectPage from "./pages/SignupPage/SignupCharacterSelectPage";
 import SignupPage from "./pages/SignupPage/SignupPage";
@@ -10,6 +11,7 @@ import MyPage from "./pages/MyPage/MyPage";
 import MyCookiePage from "./pages/MyPage/MyCookiePage";
 import EditProfilePage from "./pages/MyPage/EditProfilePage";
 import DatingCardEditPage from "./pages/MyPage/DatingCardEditPage";
+import DatingPage from "./pages/DatingPage/DatingPage";
 import DatingRegisterPage from "./pages/DatingPage/DatingRegisterPage";
 import NotificationPage from "./pages/NotificationPage/NotificationPage";
 import RequireIntroducePage from "./pages/DatingPage/RequireIntroducePage";
@@ -45,10 +47,18 @@ function App() {
             path="/introduce-friend/generating"
             element={<IntroduceFriendGeneratingPage></IntroduceFriendGeneratingPage>}
           ></Route>
+          <Route
+            path="/introduce/:linkCode"
+            element={<ReceiveIntroducePage></ReceiveIntroducePage>}
+          ></Route>
           <Route path="/auth/signup" element={<SignupPage></SignupPage>}></Route>
           <Route
             path="/auth/signup/next"
             element={<SignupCharacterSelectPage></SignupCharacterSelectPage>}
+          ></Route>
+          <Route
+            path="/dating"
+            element={<DatingPage></DatingPage>}
           ></Route>
           <Route
             path="/dating/require-introduce"

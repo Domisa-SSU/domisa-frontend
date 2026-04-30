@@ -4,6 +4,7 @@ import {
     INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY,
     KAKAO_OAUTH_FLOW_STORAGE_KEY,
     KAKAO_OAUTH_STATE_STORAGE_KEY,
+    KAKAO_RETURN_TO_STORAGE_KEY,
     KAKAO_LOGIN_TOAST_STORAGE_KEY,
 } from "../../constants/storageKeys";
 import loginImg from "./asset/loginImg.png";
@@ -16,6 +17,30 @@ import type { UserStatus } from "../../types/user";
 const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
 const INTRODUCE_FRIEND_FLOW = "introduce-friend";
 const SHOULD_CALL_BACKEND_LOGIN = false;
+
+const getSafeReturnTo = (value: string | null) => {
+    if (!value || !value.startsWith("/") || value.startsWith("//")) {
+        return null;
+    }
+
+    return value;
+};
+
+const createSignupPath = (isIntroduceFriendFlow: boolean, returnTo: string | null) => {
+    const params = new URLSearchParams();
+
+    if (isIntroduceFriendFlow) {
+        params.set("flow", INTRODUCE_FRIEND_FLOW);
+    }
+
+    if (returnTo) {
+        params.set("returnTo", returnTo);
+    }
+
+    const search = params.toString();
+
+    return `/auth/signup${search ? `?${search}` : ""}`;
+};
 
 const createKakaoOAuthState = () => {
     if (window.crypto?.getRandomValues) {
@@ -30,16 +55,20 @@ const createKakaoOAuthState = () => {
 const clearKakaoOAuthContext = () => {
     sessionStorage.removeItem(KAKAO_OAUTH_STATE_STORAGE_KEY);
     sessionStorage.removeItem(KAKAO_OAUTH_FLOW_STORAGE_KEY);
+    sessionStorage.removeItem(KAKAO_RETURN_TO_STORAGE_KEY);
 };
 
 const getNextPathAfterLogin = (
     status: UserStatus,
     isIntroduceFriendFlow: boolean,
+    returnTo: string | null,
 ) => {
     if (!status.isRegistered) {
-        return isIntroduceFriendFlow
-            ? "/auth/signup?flow=introduce-friend"
-            : "/auth/signup";
+        return createSignupPath(isIntroduceFriendFlow, returnTo);
+    }
+
+    if (returnTo) {
+        return returnTo;
     }
 
     if (!status.hasIntroduction) {
@@ -61,6 +90,10 @@ function Kakao() {
     const kakaoErrorDescription = searchParams.get("error_description");
     const callbackState = searchParams.get("state");
     const storedOAuthFlow = sessionStorage.getItem(KAKAO_OAUTH_FLOW_STORAGE_KEY);
+    const returnTo = getSafeReturnTo(
+        searchParams.get("returnTo") ??
+        sessionStorage.getItem(KAKAO_RETURN_TO_STORAGE_KEY),
+    );
     const isIntroduceFriendFlow =
         searchParams.get("flow") === INTRODUCE_FRIEND_FLOW ||
         storedOAuthFlow === INTRODUCE_FRIEND_FLOW;
@@ -81,9 +114,13 @@ function Kakao() {
         : "/auth";
 
     useEffect(() => {
+        const setDeferredErrorMessage = (message: string) => {
+            window.setTimeout(() => setErrorMessage(message), 0);
+        };
+
         if (kakaoError || kakaoErrorDescription) {
             clearKakaoOAuthContext();
-            setErrorMessage(
+            setDeferredErrorMessage(
                 kakaoError === "access_denied"
                     ? "카카오 로그인이 취소되었어요."
                     : "카카오 로그인에 실패했어요. 다시 시도해주세요.",
@@ -100,18 +137,18 @@ function Kakao() {
 
         if (!callbackState || !storedOAuthState || callbackState !== storedOAuthState) {
             clearKakaoOAuthContext();
-            setErrorMessage("카카오 로그인 요청을 확인할 수 없어요. 다시 시도해주세요.");
+            setDeferredErrorMessage("카카오 로그인 요청을 확인할 수 없어요. 다시 시도해주세요.");
             navigate(currentAuthPath, { replace: true });
             return;
         }
 
         processedCodeRef.current = authorizationCode;
-        setErrorMessage("");
+        setDeferredErrorMessage("");
         console.log("[Kakao OAuth] authorization code:", authorizationCode);
 
         if (!SHOULD_CALL_BACKEND_LOGIN) {
             clearKakaoOAuthContext();
-            setErrorMessage("카카오 인가 코드가 콘솔에 출력됐어요.");
+            setDeferredErrorMessage("카카오 인가 코드가 콘솔에 출력됐어요.");
             navigate(currentAuthPath, { replace: true });
             return;
         }
@@ -123,6 +160,7 @@ function Kakao() {
                 const nextPathAfterLogin = getNextPathAfterLogin(
                     response.status,
                     isIntroduceFriendFlow,
+                    returnTo,
                 );
 
                 if (isIntroduceFriendFlow) {
@@ -132,7 +170,7 @@ function Kakao() {
                     );
                 }
 
-                if (nextPathAfterLogin === "/auth/signup") {
+                if (nextPathAfterLogin.startsWith("/auth/signup")) {
                     sessionStorage.setItem(KAKAO_LOGIN_TOAST_STORAGE_KEY, "true");
                 }
 
@@ -154,6 +192,7 @@ function Kakao() {
         isIntroduceFriendFlow,
         loginWithKakao,
         navigate,
+        returnTo,
     ]);
 
     const handleKakaoLogin = () => {
@@ -178,6 +217,13 @@ function Kakao() {
             KAKAO_OAUTH_FLOW_STORAGE_KEY,
             isIntroduceFriendFlow ? INTRODUCE_FRIEND_FLOW : "default",
         );
+
+        if (returnTo) {
+            sessionStorage.setItem(KAKAO_RETURN_TO_STORAGE_KEY, returnTo);
+        } else {
+            sessionStorage.removeItem(KAKAO_RETURN_TO_STORAGE_KEY);
+        }
+
         setErrorMessage("");
 
         window.location.assign(`${KAKAO_AUTHORIZE_URL}?${authorizeParams.toString()}`);

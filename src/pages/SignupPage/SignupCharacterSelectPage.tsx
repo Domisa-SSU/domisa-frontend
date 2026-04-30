@@ -69,6 +69,14 @@ const getRegisterErrorMessage = (error: unknown) => {
     return "회원가입에 실패했어요. 다시 시도해주세요.";
 };
 
+const getSafeReturnTo = (value: string | null) => {
+    if (!value || !value.startsWith("/") || value.startsWith("//")) {
+        return null;
+    }
+
+    return value;
+};
+
 function SignupCharacterSelectPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -163,10 +171,13 @@ function SignupCharacterSelectPage() {
 
             const isIntroduceFriendFlow =
                 searchParams.get("flow") === "introduce-friend";
+            const returnTo = getSafeReturnTo(searchParams.get("returnTo"));
 
             resetSignupFlow();
             navigate(
-                isIntroduceFriendFlow
+                returnTo
+                    ? returnTo
+                    : isIntroduceFriendFlow
                     ? "/introduce-friend/generating"
                     : "/dating/require-introduce",
                 { replace: true },

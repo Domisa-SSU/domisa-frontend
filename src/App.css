@@ -41,3 +41,12 @@
 .animate-generating-dots > span:nth-child(3) {
   animation-delay: 0.24s;
 }
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
