@@ -11,6 +11,7 @@ import MyCookiePage from "./pages/MyPage/MyCookiePage";
 import EditProfilePage from "./pages/MyPage/EditProfilePage";
 import DatingCardEditPage from "./pages/MyPage/DatingCardEditPage";
 import DatingRegisterPage from "./pages/DatingPage/DatingRegisterPage";
+import NotificationPage from "./pages/NotificationPage/NotificationPage";
 import RequireIntroducePage from "./pages/DatingPage/RequireIntroducePage";
 import { useAuthMeQuery } from "./queries/auth";
 import "./App.css";
@@ -61,6 +62,7 @@ function App() {
           <Route path="/my/cookie" element={<MyCookiePage></MyCookiePage>}></Route>
           <Route path="/my/edit-profile" element={<EditProfilePage></EditProfilePage>}></Route>
           <Route path="/my/dating-card" element={<DatingCardEditPage></DatingCardEditPage>}></Route>
+          <Route path="/notifications" element={<NotificationPage />}></Route>
         </Routes>
       </SignupFlowProvider>
     </>

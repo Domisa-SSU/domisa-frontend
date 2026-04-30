@@ -9,7 +9,9 @@ function Header({dayText} : {dayText : string}) {
 
     return (
         <div className="px-5 py-2.5 flex justify-between items-center">
-            <img src={icon} alt="" className="w-10.5"/>
+            <button onClick={() => navigate("/notifications")}>
+                <img src={icon} alt="알림" className="w-10.5"/>
+            </button>
             <h1 className="text-primary-500 typo-button-text-b">{`축제 ${festivalDate}일차 낮`}</h1>
             <button className={`typo-comment-1 ${dayText}`} onClick={() => {navigate("/auth")}}>로그인</button>
         </div>
