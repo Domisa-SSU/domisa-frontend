@@ -1,6 +1,6 @@
-import ArrowIcon from "../assets/arrowIcon.svg";
-import XIcon from "../assets/X.svg";
-import type { Notification } from "../types/notification";
+import ArrowIcon from '../assets/arrowIcon.svg';
+import XIcon from '../assets/X.svg';
+import type { Notification } from '../types/notification';
 
 type AlarmModalProps = {
   notification: Notification;
@@ -9,10 +9,9 @@ type AlarmModalProps = {
 };
 
 const modalTitleByType: Record<string, string | undefined> = {
-  LIKE: "누군가 나에게 호감을 보냈어요!",
-  MATCH: "쌍방 매칭이 이뤄졌어요!",
-  COOKIE: "내 친구가 등록했어요!\n쿠키 20개 지급 완료",
-  REFERRAL: "내 친구가 등록했어요!\n쿠키 20개 지급 완료",
+  LIKE: '누군가 나에게 호감을 보냈어요!',
+  MATCH: '쌍방 매칭이 이뤄졌어요!',
+  COOKIE: '내 친구가 등록했어요!\n쿠키 2개 지급 완료',
 };
 
 function AlarmModal({ notification, onClose, onConfirm }: AlarmModalProps) {
@@ -46,15 +45,25 @@ function AlarmModal({ notification, onClose, onConfirm }: AlarmModalProps) {
         </div>
 
         {/* 확인 버튼 */}
-        <button
-          type="button"
-          onClick={onConfirm}
-          className="flex h-[3.125rem] w-[18.75rem] shrink-0 items-center justify-center gap-1 rounded-[0.875rem] bg-primary-500 typo-button-text-b text-grey-100"
-        >
-          <span>확인하러 가기</span>
-          <span className="text-[1.125rem] leading-none">👀</span>
-          <img src={ArrowIcon} alt="" width={13} height={12} />
-        </button>
+        {notification.type === 'COOKIE' ? (
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="flex h-[3.125rem] w-[18.75rem] shrink-0 items-center justify-center rounded-[0.875rem] bg-grey-400 typo-button-text-b text-grey-800"
+          >
+            확인했어요
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="flex h-[3.125rem] w-[18.75rem] shrink-0 items-center justify-center gap-1 rounded-[0.875rem] bg-primary-500 typo-button-text-b text-grey-100"
+          >
+            <span>확인하러 가기</span>
+            <span className="text-[1.125rem] leading-none">👀</span>
+            <img src={ArrowIcon} alt="" width={13} height={12} />
+          </button>
+        )}
       </div>
     </div>
   );

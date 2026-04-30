@@ -138,12 +138,25 @@ type SystemNotificationItemProps = {
 };
 
 function SystemNotificationItem({ notification }: SystemNotificationItemProps) {
-  const { content } = notification;
+  const { content, isRead } = notification;
 
   return (
-    <div className="flex h-[4.0625rem] items-center gap-[0.3125rem] border-b border-grey-500 px-5">
-      <span className="typo-comment-1-m text-grey-900">{content}</span>
-      <img src={cookieIllerst} alt="쿠키" className="size-[0.9rem]" />
+    <div
+      className={`flex h-[4.0625rem] items-center justify-between gap-[0.3125rem] border-b border-grey-500 px-5 ${
+        isRead ? "bg-grey-100" : "bg-primary-100"
+      }`}
+    >
+      <span className={`typo-comment-1-m ${isRead ? "text-grey-900" : "text-primary-600"}`}>
+        {content}
+      </span>
+      <div className="flex shrink-0 items-center gap-1">
+        <img src={cookieIllerst} alt="쿠키" className="size-[0.9rem]" />
+        {!isRead && (
+          <div className="flex size-[1.125rem] items-center justify-center rounded-[0.525rem] bg-warning">
+            <span className="typo-comment-2 text-grey-100">N</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
