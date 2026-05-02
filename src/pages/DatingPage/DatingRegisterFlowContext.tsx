@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import {
+  type DatingRegisterContactMethod,
   DatingRegisterFlowContext,
   initialDatingRegisterFormData,
 } from "./DatingRegisterFlowState";
@@ -52,6 +53,19 @@ export function DatingRegisterFlowProvider({
           idealType: nextIdealType,
         }));
       },
+      setContactMethod: (nextContactMethod: DatingRegisterContactMethod) => {
+        setFormData((prev) => ({
+          ...prev,
+          contactMethod: nextContactMethod,
+          contactValue: "",
+        }));
+      },
+      setContactValue: (nextContactValue: string) => {
+        setFormData((prev) => ({
+          ...prev,
+          contactValue: nextContactValue,
+        }));
+      },
       setPhotoFile: (nextPhotoFile: File) => {
         revokePhotoPreviewUrl();
         const nextPhotoPreviewUrl = URL.createObjectURL(nextPhotoFile);
@@ -63,8 +77,20 @@ export function DatingRegisterFlowProvider({
           photoPreviewUrl: nextPhotoPreviewUrl,
         }));
       },
+      setNotificationPhone: (nextNotificationPhone: string) => {
+        setFormData((prev) => ({
+          ...prev,
+          notificationPhone: nextNotificationPhone,
+        }));
+      },
+      setIsSmsOptedOut: (nextIsSmsOptedOut: boolean) => {
+        setFormData((prev) => ({
+          ...prev,
+          isSmsOptedOut: nextIsSmsOptedOut,
+        }));
+      },
       goNextStep: () => {
-        setCurrentStep((prev) => Math.min(prev + 1, 4));
+        setCurrentStep((prev) => Math.min(prev + 1, 6));
       },
       goPrevStep: () => {
         setCurrentStep((prev) => Math.max(prev - 1, 1));
