@@ -5,27 +5,17 @@ import { getAuthMe, loginWithKakao, logout } from "../api/auth";
 import type { AuthMeResponse } from "../types/user";
 
 export const authMeQueryKey = ["auth", "me"] as const;
-
-const mockAuthMeResponse: AuthMeResponse = {
-  userId: "1",
-  cookies: 10,
-  status: {
-    isRegistered: true,
-    hasIntroduction: true,
-    isProfileCompleted: false,
-  },
-};
+const unauthenticatedStatusCodes = new Set([401, 403]);
 
 const getAuthMeOrNull = async (): Promise<AuthMeResponse | null> => {
   try {
     return await getAuthMe();
   } catch (error) {
-    if (isAxiosError(error) && error.response?.status === 401) {
+    if (
+      isAxiosError(error) &&
+      unauthenticatedStatusCodes.has(error.response?.status ?? 0)
+    ) {
       return null;
-    }
-
-    if (import.meta.env.DEV) {
-      return mockAuthMeResponse;
     }
 
     throw error;
@@ -37,6 +27,9 @@ export const useAuthMeQuery = () =>
     queryKey: authMeQueryKey,
     queryFn: getAuthMeOrNull,
     retry: false,
+    staleTime: 30_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
 export const useKakaoLoginMutation = () => {

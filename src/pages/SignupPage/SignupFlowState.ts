@@ -9,7 +9,7 @@ export type SignupFormData = {
 export const initialSignupFormData: SignupFormData = {
     nickname: "",
     gender: "",
-    birthYear: "2003",
+    birthYear: "",
 };
 
 export type SignupFlowContextValue = {

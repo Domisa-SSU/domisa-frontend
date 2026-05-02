@@ -60,7 +60,7 @@ function HomePage() {
       <MessageSlider></MessageSlider>
 
       <section className="flex-1">
-        <Header dayText={themeClasses.text}></Header>
+        <Header dayText={themeClasses.text} isLoggedIn={Boolean(authMe)}></Header>
         <div className="mb-5"></div>
         <div className="flex flex-col items-center gap-4 mb-8">
           <img src={logo} alt="" className="w-[13.4rem]" />
