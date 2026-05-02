@@ -7,6 +7,16 @@ export type ReceivedIntroduction = {
   q3: string;
 };
 
+export type CreateIntroductionLinkRequest = {
+  q1: string;
+  q2: string;
+  q3: string;
+};
+
+export type CreateIntroductionLinkResponse = {
+  linkCode: string;
+};
+
 const DUMMY_LINK_CODE = "test-code";
 const DUMMY_INTRODUCTION_ID = 1;
 
@@ -32,6 +42,38 @@ const isReceivedIntroduction = (
     typeof introduction.q2 === "string" &&
     typeof introduction.q3 === "string"
   );
+};
+
+const isCreateIntroductionLinkResponse = (
+  value: unknown,
+): value is CreateIntroductionLinkResponse => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return typeof response.linkCode === "string";
+};
+
+/**
+ * API 제목: 친구 소개서 공유 링크 생성
+ * POST /api/datings/introduction-links
+ * 친구 소개서 답변을 저장하고 공유 가능한 linkCode를 발급받는다.
+ */
+export const createIntroductionLink = async (
+  payload: CreateIntroductionLinkRequest,
+) => {
+  const { data } = await apiClient.post<unknown>(
+    "/api/datings/introduction-links",
+    payload,
+  );
+
+  if (!isCreateIntroductionLinkResponse(data)) {
+    throw new Error("Invalid introduction link response");
+  }
+
+  return data;
 };
 
 /**
