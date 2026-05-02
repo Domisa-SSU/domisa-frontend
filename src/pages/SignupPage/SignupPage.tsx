@@ -11,7 +11,7 @@ import pinkCheckIcon from "./asset/pinkCheckIcon.svg";
 import selectArrow from "./asset/selectArrow.svg";
 
 const birthYears = Array.from({ length: 21 }, (_, index) => `${2006 - index}`);
-const contactMethods = ["인스타 ID", "카카오톡 ID"];
+const shouldMockNicknameAvailability = import.meta.env.DEV;
 
 const fieldClassName =
     "h-10 w-full rounded-[0.625rem] border-[1.2px] border-transparent bg-primary-100 px-[0.875rem] typo-input-text-m text-primary-500 placeholder:text-grey-600 focus:outline-none";
@@ -29,8 +29,6 @@ function SignupPage() {
     const [nicknameErrorMessage, setNicknameErrorMessage] = useState("");
     const [gender, setGender] = useState(signupFormData.gender);
     const [birthYear, setBirthYear] = useState(signupFormData.birthYear);
-    const [contactMethod, setContactMethod] = useState(signupFormData.contactMethod);
-    const [contactValue, setContactValue] = useState(signupFormData.contactValue);
     const {
         mutateAsync: checkNicknameAvailability,
         isPending: isCheckingNickname,
@@ -47,25 +45,18 @@ function SignupPage() {
     });
 
     const isFormValid = useMemo(() => {
-        const isContactFilled = contactMethod.length > 0 && contactValue.trim().length > 0;
-
         return (
             nickname.trim().length > 0 &&
             isNicknameChecked &&
             gender.length > 0 &&
-            birthYear.length > 0 &&
-            isContactFilled
+            birthYear.length > 0
         );
     }, [
         birthYear,
-        contactMethod,
-        contactValue,
         gender,
         isNicknameChecked,
         nickname,
     ]);
-
-    const isContactMethodSelected = contactMethod.length > 0;
 
     const handleLimitedChange = (
         value: string,
@@ -83,6 +74,12 @@ function SignupPage() {
         if (trimmedNickname.length === 0) {
             setIsNicknameChecked(false);
             setNicknameErrorMessage("닉네임을 입력해주세요");
+            return;
+        }
+
+        if (shouldMockNicknameAvailability) {
+            setIsNicknameChecked(true);
+            setNicknameErrorMessage("");
             return;
         }
 
@@ -105,8 +102,6 @@ function SignupPage() {
             nickname,
             gender,
             birthYear,
-            contactMethod,
-            contactValue,
         });
 
         const nextSearch = searchParams.toString();
@@ -240,48 +235,6 @@ function SignupPage() {
                             <span className="pointer-events-none absolute right-[0.875rem] top-1/2 -translate-y-1/2 text-grey-600">
                                 <img src={selectArrow} alt="" className="h-[0.3125rem] w-[0.625rem]" />
                             </span>
-                        </div>
-                    </section>
-
-                    <section className="flex flex-col gap-[0.875rem]">
-                        <h2 className="typo-comment-1 text-grey-900">연락처를 입력해주세요</h2>
-                        <div className="grid grid-cols-[7.75rem_minmax(0,1fr)] gap-2.5">
-                            <div className="relative">
-                                <select
-                                    value={contactMethod}
-                                    onChange={(event) => {
-                                        const nextMethod = event.target.value;
-                                        setContactMethod(nextMethod);
-                                        setContactValue("");
-                                    }}
-                                    className={`${selectClassName} ${
-                                        contactMethod ? "text-primary-500" : "text-grey-600"
-                                    }`}
-                                >
-                                    <option value="">선택</option>
-                                    {contactMethods.map((item) => (
-                                        <option key={item} value={item}>
-                                            {item}
-                                        </option>
-                                    ))}
-                                </select>
-                                <span className="pointer-events-none absolute right-[0.875rem] top-1/2 -translate-y-1/2 text-grey-600">
-                                    <img src={selectArrow} alt="" className="h-[0.3125rem] w-[0.625rem]" />
-                                </span>
-                            </div>
-                            <input
-                                value={contactValue}
-                                onChange={(event) => setContactValue(event.target.value)}
-                                disabled={!isContactMethodSelected}
-                                className={`${fieldClassName} ${isContactMethodSelected ? "" : "opacity-50"}`}
-                                placeholder={
-                                    contactMethod === "인스타 ID"
-                                        ? "인스타 ID를 입력해주세요"
-                                        : contactMethod === "카카오톡 ID"
-                                          ? "카카오톡 ID를 입력해주세요"
-                                          : ""
-                                }
-                            />
                         </div>
                     </section>
                 </div>

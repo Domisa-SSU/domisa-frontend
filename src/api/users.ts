@@ -2,8 +2,6 @@ import { apiClient } from "./client";
 import { isBackendStatusDto, normalizeUserStatus } from "./status";
 import type { UserStatus } from "../types/user";
 
-export type ContactType = "PHONE" | "KAKAO" | "INSTAGRAM";
-
 export type AnimalProfile =
   | "DOG"
   | "CAT"
@@ -22,10 +20,6 @@ type RegisterUserRequest = {
   nickname: string;
   gender: boolean;
   birthYear: number;
-  contact: {
-    type: ContactType;
-    content: string;
-  };
   animalProfile: AnimalProfile;
 };
 

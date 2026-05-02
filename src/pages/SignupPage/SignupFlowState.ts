@@ -4,16 +4,12 @@ export type SignupFormData = {
     nickname: string;
     gender: string;
     birthYear: string;
-    contactMethod: string;
-    contactValue: string;
 };
 
 export const initialSignupFormData: SignupFormData = {
     nickname: "",
     gender: "",
     birthYear: "2003",
-    contactMethod: "",
-    contactValue: "",
 };
 
 export type SignupFlowContextValue = {
