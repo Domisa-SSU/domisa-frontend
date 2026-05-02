@@ -15,6 +15,7 @@ import Button from "../../components/Button/Button";
 import { ButtonVariant } from "../../components/Button/ButtonEnums";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import { authMeQueryKey } from "../../queries/auth";
+import type { DatingRegisterContactMethod } from "./DatingRegisterFlowState";
 import { DatingRegisterFlowProvider } from "./DatingRegisterFlowContext";
 import smileIcon from "./assets/smileIcon.svg";
 import sumnailIcon from "./assets/sumnailIcon.png";
@@ -29,11 +30,22 @@ const MBTI_PAIRS: [string, string][] = [
   ["P", "J"],
 ];
 
+const TOTAL_REGISTER_STEPS = 6;
+const CONTACT_METHODS: DatingRegisterContactMethod[] = ["INSTAGRAM", "KAKAO"];
+const CONTACT_METHOD_LABELS: Record<DatingRegisterContactMethod, string> = {
+  INSTAGRAM: "인스타 ID",
+  KAKAO: "카카오톡 ID",
+};
+const CONTACT_METHOD_PLACEHOLDERS: Record<DatingRegisterContactMethod, string> = {
+  INSTAGRAM: "인스타 ID를 입력하세요",
+  KAKAO: "카카오톡 ID를 입력하세요",
+};
 const ROMANTIC_STYLE_MAX_LENGTH = 75;
 const ROMANTIC_STYLE_PLACEHOLDER =
   "공강 때 요거바라 가서 요거트 먹고, 같이 학교 산책하는 연애";
 const IDEAL_TYPE_MAX_LENGTH = 75;
 const IDEAL_TYPE_PLACEHOLDER = "대화가 잘 통하고 같이 있으면 편한 사람";
+const NOTIFICATION_PHONE_MAX_LENGTH = 11;
 const WAITING_SOLO_COUNT = 124;
 const SHOULD_MOCK_DATING_REGISTER_SUBMIT = true;
 
@@ -175,6 +187,86 @@ function DatingRegisterIdealTypeStep() {
   );
 }
 
+function DatingRegisterContactStep() {
+  const {
+    formData,
+    setContactMethod,
+    setContactValue,
+    goNextStep,
+  } = useDatingRegisterFlow();
+  const isInstagram = formData.contactMethod === "INSTAGRAM";
+  const isComplete = formData.contactValue.trim().length > 0;
+
+  const handleContactChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextValue = event.target.value;
+    setContactValue(isInstagram ? nextValue.replace(/^@+/, "") : nextValue);
+  };
+
+  return (
+    <>
+      <main className="px-5 pt-[1.625rem] pb-[8.125rem]">
+        <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-[1.875rem]">
+          <h1 className="typo-title-header-1 text-grey-900">
+            최종 매칭 시 상대에게
+            <br />
+            공유할 연락처를 입력해주세요..
+          </h1>
+
+          <div className="grid grid-cols-2 gap-[0.875rem]">
+            {CONTACT_METHODS.map((method) => {
+              const isSelected = formData.contactMethod === method;
+
+              return (
+                <button
+                  key={method}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => setContactMethod(method)}
+                  className={`flex h-[2.875rem] items-center justify-center rounded-[0.625rem] px-2.5 typo-button-text transition-colors ${
+                    isSelected
+                      ? "border-[1.8px] border-primary-500 bg-primary-100 text-primary-600"
+                      : "bg-grey-200 text-grey-700"
+                  }`}
+                >
+                  {CONTACT_METHOD_LABELS[method]}
+                </button>
+              );
+            })}
+          </div>
+
+          <label className="flex flex-col gap-2.5">
+            <span className="typo-comment-2 text-primary-600">
+              {CONTACT_METHOD_LABELS[formData.contactMethod]}
+            </span>
+            <div className="flex h-9 items-center gap-2 border-b-[1.8px] border-primary-500">
+              {isInstagram && formData.contactValue.length > 0 && (
+                <span className="typo-header-3 text-grey-900">@</span>
+              )}
+              <input
+                value={formData.contactValue}
+                onChange={handleContactChange}
+                placeholder={CONTACT_METHOD_PLACEHOLDERS[formData.contactMethod]}
+                className="min-w-0 flex-1 bg-transparent typo-header-3 text-grey-900 placeholder:text-grey-600 focus:outline-none"
+              />
+            </div>
+          </label>
+        </div>
+      </main>
+
+      <section className="fixed inset-x-0 bottom-0 bg-grey-100 px-5 pt-2.5 pb-[2.75rem]">
+        <div className="mx-auto w-full max-w-[22.625rem]">
+          <Button
+            label="다음"
+            variant={ButtonVariant.Main}
+            disabled={!isComplete}
+            onClick={goNextStep}
+          />
+        </div>
+      </section>
+    </>
+  );
+}
+
 type DatingRegisterCompleteModalProps = {
   onConfirm: () => void;
 };
@@ -216,19 +308,8 @@ function DatingRegisterCompleteModal({
 }
 
 function DatingRegisterPhotoStep() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { formData, setPhotoFile, resetRegisterFlow } = useDatingRegisterFlow();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
-
-  const isFormComplete =
-    formData.mbti.length === 4 &&
-    formData.romanticStyle.trim().length > 0 &&
-    formData.idealType.trim().length > 0 &&
-    !!formData.photoFile;
+  const { formData, setPhotoFile, goNextStep } = useDatingRegisterFlow();
 
   const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -237,61 +318,7 @@ function DatingRegisterPhotoStep() {
       return;
     }
 
-    setErrorMessage("");
     setPhotoFile(file);
-  };
-
-  const handleSubmit = async () => {
-    if (!isFormComplete || !formData.photoFile || isSubmitting) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    setErrorMessage("");
-
-    if (SHOULD_MOCK_DATING_REGISTER_SUBMIT) {
-      setIsCompleteModalOpen(true);
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      const profileImageUpload = await createProfileImageUploadUrl({
-        contentType: formData.photoFile.type,
-        fileSize: formData.photoFile.size,
-      });
-
-      await uploadProfileImageToS3({
-        presignedUrl: profileImageUpload.presignedUrl,
-        file: formData.photoFile,
-      });
-
-      await completeProfileImageUpload({
-        uploadKey: profileImageUpload.objectKey,
-      });
-
-      await createDatingProfile({
-        mbti: formData.mbti,
-        datingStyle: formData.romanticStyle,
-        idealType: formData.idealType,
-        imageKey: profileImageUpload.objectKey,
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: authMeQueryKey,
-      });
-      setIsCompleteModalOpen(true);
-    } catch (error) {
-      console.error(error);
-      setErrorMessage("프로필 등록에 실패했어요. 다시 시도해주세요.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleCompleteConfirm = () => {
-    resetRegisterFlow();
-    navigate("/dating");
   };
 
   return (
@@ -356,10 +383,160 @@ function DatingRegisterPhotoStep() {
               className="hidden"
               onChange={handlePhotoChange}
             />
-            {errorMessage && (
-              <p className="typo-comment-1-m text-warning">{errorMessage}</p>
-            )}
           </section>
+        </div>
+      </main>
+
+      <section className="fixed inset-x-0 bottom-0 bg-grey-100 px-5 pt-2.5 pb-[2.75rem]">
+        <div className="mx-auto w-full max-w-[22.625rem]">
+          <Button
+            label="다음"
+            variant={ButtonVariant.Main}
+            disabled={!formData.photoFile}
+            onClick={goNextStep}
+          />
+        </div>
+      </section>
+    </>
+  );
+}
+
+function DatingRegisterNotificationPhoneStep() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const {
+    formData,
+    setNotificationPhone,
+    setIsSmsOptedOut,
+    resetRegisterFlow,
+  } = useDatingRegisterFlow();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+
+  const isPhoneComplete =
+    formData.notificationPhone.length >= 10 || formData.isSmsOptedOut;
+  const isFormComplete =
+    formData.mbti.length === 4 &&
+    formData.romanticStyle.trim().length > 0 &&
+    formData.idealType.trim().length > 0 &&
+    formData.contactValue.trim().length > 0 &&
+    !!formData.photoFile &&
+    isPhoneComplete;
+
+  const handlePhoneChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setNotificationPhone(
+      event.target.value
+        .replace(/[^0-9]/g, "")
+        .slice(0, NOTIFICATION_PHONE_MAX_LENGTH),
+    );
+  };
+
+  const handleSubmit = async () => {
+    if (!isFormComplete || !formData.photoFile || isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage("");
+
+    if (SHOULD_MOCK_DATING_REGISTER_SUBMIT) {
+      setIsCompleteModalOpen(true);
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const profileImageUpload = await createProfileImageUploadUrl({
+        contentType: formData.photoFile.type,
+        fileSize: formData.photoFile.size,
+      });
+
+      await uploadProfileImageToS3({
+        presignedUrl: profileImageUpload.presignedUrl,
+        file: formData.photoFile,
+      });
+
+      await completeProfileImageUpload({
+        uploadKey: profileImageUpload.objectKey,
+      });
+
+      await createDatingProfile({
+        mbti: formData.mbti,
+        datingStyle: formData.romanticStyle,
+        idealType: formData.idealType,
+        imageKey: profileImageUpload.objectKey,
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: authMeQueryKey,
+      });
+      setIsCompleteModalOpen(true);
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("프로필 등록에 실패했어요. 다시 시도해주세요.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCompleteConfirm = () => {
+    resetRegisterFlow();
+    navigate("/dating");
+  };
+
+  return (
+    <>
+      <main className="px-5 pt-[1.625rem] pb-[8.125rem]">
+        <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-[1.875rem]">
+          <h1 className="typo-title-header-1 text-grey-900">
+            새로운 호감이나 매칭이 이루어졌을 때
+            <br />
+            문자로 알려드릴게요
+          </h1>
+
+          <label className="flex flex-col gap-2.5">
+            <span className="typo-comment-2 text-primary-600">전화번호</span>
+            <input
+              value={formData.notificationPhone}
+              onChange={handlePhoneChange}
+              disabled={formData.isSmsOptedOut}
+              inputMode="numeric"
+              maxLength={NOTIFICATION_PHONE_MAX_LENGTH}
+              placeholder="전화번호를 입력하세요"
+              className={`h-9 border-b-[1.8px] border-primary-500 bg-transparent typo-header-3 text-grey-900 placeholder:text-grey-600 focus:outline-none ${
+                formData.isSmsOptedOut ? "opacity-50" : ""
+              }`}
+            />
+          </label>
+
+          <button
+            type="button"
+            aria-pressed={formData.isSmsOptedOut}
+            onClick={() => setIsSmsOptedOut(!formData.isSmsOptedOut)}
+            className="flex items-center gap-2.5 self-start"
+          >
+            <span
+              className={`flex h-[1.5625rem] w-[1.5625rem] items-center justify-center rounded-[0.3125rem] typo-comment-1-b ${
+                formData.isSmsOptedOut
+                  ? "bg-grey-400 text-grey-100"
+                  : "border-[1.8px] border-grey-500 bg-grey-100 text-transparent"
+              }`}
+            >
+              ✓
+            </span>
+            <span
+              className={`typo-button-text ${
+                formData.isSmsOptedOut ? "text-grey-600" : "text-grey-700"
+              }`}
+            >
+              문자 알림 안 받을래요
+            </span>
+          </button>
+
+          {errorMessage && (
+            <p className="typo-comment-1-m text-warning">{errorMessage}</p>
+          )}
         </div>
       </main>
 
@@ -400,14 +577,16 @@ function DatingRegisterContent() {
       <div className="h-1 w-full bg-grey-100">
         <div
           className="h-full bg-primary-500 transition-[width] duration-500 ease-out"
-          style={{ width: `${currentStep * 25}%` }}
+          style={{ width: `${(currentStep / TOTAL_REGISTER_STEPS) * 100}%` }}
         />
       </div>
 
       {currentStep === 1 && <DatingRegisterMbtiStep />}
       {currentStep === 2 && <DatingRegisterRomanticStyleStep />}
       {currentStep === 3 && <DatingRegisterIdealTypeStep />}
-      {currentStep >= 4 && <DatingRegisterPhotoStep />}
+      {currentStep === 4 && <DatingRegisterContactStep />}
+      {currentStep === 5 && <DatingRegisterPhotoStep />}
+      {currentStep === 6 && <DatingRegisterNotificationPhoneStep />}
     </div>
   );
 }
