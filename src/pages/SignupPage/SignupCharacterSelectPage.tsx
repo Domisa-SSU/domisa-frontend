@@ -3,7 +3,7 @@ import { isAxiosError } from "axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BottomActionBar from "../../components/BottomActionBar";
 import NotLoginHeader from "../../components/NotLoginHeader";
-import type { AnimalProfile, ContactType } from "../../api/users";
+import type { AnimalProfile } from "../../api/users";
 import { useRegisterUserMutation } from "../../queries/users";
 import { useSignupFlow } from "./useSignupFlow";
 import alphacaImg from "./asset/alphacaImg.png";
@@ -49,12 +49,6 @@ const animalProfileMap: Record<string, AnimalProfile> = {
     알파카: "ALPACA",
     여우: "FOX",
     카피바라: "CAPYBARA",
-};
-
-const contactTypeMap: Record<string, ContactType> = {
-    전화번호: "PHONE",
-    "카카오톡 ID": "KAKAO",
-    "인스타 ID": "INSTAGRAM",
 };
 
 const getRegisterErrorMessage = (error: unknown) => {
@@ -141,18 +135,12 @@ function SignupCharacterSelectPage() {
                 : signupFormData.gender === "여성"
                   ? false
                   : null;
-        const contactType = contactTypeMap[signupFormData.contactMethod];
         const animalProfile = animalProfileMap[selectedAnimal];
 
-        if (gender === null || !contactType || !animalProfile) {
+        if (gender === null || !animalProfile) {
             setErrorMessage("입력 정보를 다시 확인해주세요.");
             return;
         }
-
-        const contactContent =
-            contactType === "PHONE"
-                ? `${signupFormData.phonePrefix}${signupFormData.phoneMiddle}${signupFormData.phoneLast}`
-                : signupFormData.contactValue.trim();
 
         try {
             setErrorMessage("");
@@ -161,11 +149,6 @@ function SignupCharacterSelectPage() {
                 nickname: signupFormData.nickname.trim(),
                 gender,
                 birthYear: Number(signupFormData.birthYear),
-                inviteCode: signupFormData.referralCode.trim() || null,
-                contact: {
-                    type: contactType,
-                    content: contactContent,
-                },
                 animalProfile,
             });
 
@@ -195,7 +178,7 @@ function SignupCharacterSelectPage() {
             <div className="px-5 pt-[9.5rem] pb-[9.5rem]">
                 <div className="mx-auto flex w-full max-w-[22.5625rem] flex-col gap-5">
                     <h1 className="typo-title-header-1 text-grey-900">
-                        본인과 닮은 동물을 선택해주세요
+                        <span className="text-primary-600">본인과 닮은 동물</span>을 선택해주세요
                     </h1>
 
                     <div className="grid grid-cols-3 gap-x-[1.875rem] gap-y-5">

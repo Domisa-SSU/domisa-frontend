@@ -11,8 +11,6 @@ import pinkCheckIcon from "./asset/pinkCheckIcon.svg";
 import selectArrow from "./asset/selectArrow.svg";
 
 const birthYears = Array.from({ length: 21 }, (_, index) => `${2006 - index}`);
-const contactMethods = ["인스타 ID", "전화번호", "카카오톡 ID"];
-const phonePrefix = "010";
 
 const fieldClassName =
     "h-10 w-full rounded-[0.625rem] border-[1.2px] border-transparent bg-primary-100 px-[0.875rem] typo-input-text-m text-primary-500 placeholder:text-grey-600 focus:outline-none";
@@ -30,11 +28,6 @@ function SignupPage() {
     const [nicknameErrorMessage, setNicknameErrorMessage] = useState("");
     const [gender, setGender] = useState(signupFormData.gender);
     const [birthYear, setBirthYear] = useState(signupFormData.birthYear);
-    const [referralCode, setReferralCode] = useState(signupFormData.referralCode);
-    const [contactMethod, setContactMethod] = useState(signupFormData.contactMethod);
-    const [phoneMiddle, setPhoneMiddle] = useState(signupFormData.phoneMiddle);
-    const [phoneLast, setPhoneLast] = useState(signupFormData.phoneLast);
-    const [contactValue, setContactValue] = useState(signupFormData.contactValue);
     const {
         mutateAsync: checkNicknameAvailability,
         isPending: isCheckingNickname,
@@ -51,32 +44,18 @@ function SignupPage() {
     });
 
     const isFormValid = useMemo(() => {
-        const isContactFilled =
-            contactMethod === "전화번호"
-                ? phonePrefix.length > 0 &&
-                  phoneMiddle.trim().length > 0 &&
-                  phoneLast.trim().length > 0
-                : contactMethod.length > 0 && contactValue.trim().length > 0;
-
         return (
             nickname.trim().length > 0 &&
             isNicknameChecked &&
             gender.length > 0 &&
-            birthYear.length > 0 &&
-            isContactFilled
+            birthYear.length > 0
         );
     }, [
         birthYear,
-        contactMethod,
-        contactValue,
         gender,
         isNicknameChecked,
         nickname,
-        phoneLast,
-        phoneMiddle,
     ]);
-
-    const isContactMethodSelected = contactMethod.length > 0;
 
     const handleLimitedChange = (
         value: string,
@@ -116,12 +95,6 @@ function SignupPage() {
             nickname,
             gender,
             birthYear,
-            referralCode,
-            contactMethod,
-            phonePrefix,
-            phoneMiddle,
-            phoneLast,
-            contactValue,
         });
 
         const nextSearch = searchParams.toString();
@@ -255,98 +228,6 @@ function SignupPage() {
                             <span className="pointer-events-none absolute right-[0.875rem] top-1/2 -translate-y-1/2 text-grey-600">
                                 <img src={selectArrow} alt="" className="h-[0.3125rem] w-[0.625rem]" />
                             </span>
-                        </div>
-                    </section>
-
-                    <section className="flex flex-col gap-[0.875rem]">
-                        <div className="flex items-center gap-1">
-                            <h2 className="typo-comment-1 text-grey-900">추천인 코드</h2>
-                            <p className="typo-comment-2 text-primary-300">(선택)</p>
-                        </div>
-                        <input
-                            value={referralCode}
-                            onChange={(event) => setReferralCode(event.target.value)}
-                            className={fieldClassName}
-                            placeholder="추천인 코드를 입력해주세요"
-                        />
-                    </section>
-
-                    <section className="flex flex-col gap-[0.875rem]">
-                        <h2 className="typo-comment-1 text-grey-900">연락처를 입력해주세요</h2>
-                        <div className="grid grid-cols-[7.75rem_minmax(0,1fr)] gap-2.5">
-                            <div className="relative">
-                                <select
-                                    value={contactMethod}
-                                    onChange={(event) => {
-                                        const nextMethod = event.target.value;
-                                        setContactMethod(nextMethod);
-                                        setContactValue("");
-                                        setPhoneMiddle("");
-                                        setPhoneLast("");
-                                    }}
-                                    className={`${selectClassName} ${
-                                        contactMethod ? "text-primary-500" : "text-grey-600"
-                                    }`}
-                                >
-                                    <option value="">선택</option>
-                                    {contactMethods.map((item) => (
-                                        <option key={item} value={item}>
-                                            {item}
-                                        </option>
-                                    ))}
-                                </select>
-                                <span className="pointer-events-none absolute right-[0.875rem] top-1/2 -translate-y-1/2 text-grey-600">
-                                    <img src={selectArrow} alt="" className="h-[0.3125rem] w-[0.625rem]" />
-                                </span>
-                            </div>
-                            {contactMethod === "전화번호" ? (
-                                <div className="grid grid-cols-3 gap-[0.3125rem]">
-                                    <div
-                                        aria-disabled="true"
-                                        className="flex h-10 w-full items-center rounded-[0.625rem] bg-primary-100 px-[0.875rem] typo-input-text-m text-primary-500"
-                                    >
-                                        {phonePrefix}
-                                    </div>
-                                    <input
-                                        value={phoneMiddle}
-                                        onChange={(event) =>
-                                            setPhoneMiddle(
-                                                event.target.value.replace(/[^0-9]/g, "").slice(0, 4),
-                                            )
-                                        }
-                                        disabled={!isContactMethodSelected}
-                                        className={`${fieldClassName} ${isContactMethodSelected ? "" : "opacity-50"}`}
-                                        inputMode="numeric"
-                                        maxLength={4}
-                                    />
-                                    <input
-                                        value={phoneLast}
-                                        onChange={(event) =>
-                                            setPhoneLast(
-                                                event.target.value.replace(/[^0-9]/g, "").slice(0, 4),
-                                            )
-                                        }
-                                        disabled={!isContactMethodSelected}
-                                        className={`${fieldClassName} ${isContactMethodSelected ? "" : "opacity-50"}`}
-                                        inputMode="numeric"
-                                        maxLength={4}
-                                    />
-                                </div>
-                            ) : (
-                                <input
-                                    value={contactValue}
-                                    onChange={(event) => setContactValue(event.target.value)}
-                                    disabled={!isContactMethodSelected}
-                                    className={`${fieldClassName} ${isContactMethodSelected ? "" : "opacity-50"}`}
-                                    placeholder={
-                                        contactMethod === "인스타 ID"
-                                            ? "인스타 ID를 입력해주세요"
-                                            : contactMethod === "카카오톡 ID"
-                                              ? "카카오톡 ID를 입력해주세요"
-                                              : ""
-                                    }
-                                />
-                            )}
                         </div>
                     </section>
                 </div>

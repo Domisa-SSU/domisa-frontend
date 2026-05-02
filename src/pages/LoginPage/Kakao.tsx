@@ -16,7 +16,7 @@ import type { UserStatus } from "../../types/user";
 
 const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
 const INTRODUCE_FRIEND_FLOW = "introduce-friend";
-const SHOULD_CALL_BACKEND_LOGIN = false;
+const canBypassKakaoLogin = import.meta.env.DEV;
 
 const getSafeReturnTo = (value: string | null) => {
     if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -144,14 +144,6 @@ function Kakao() {
 
         processedCodeRef.current = authorizationCode;
         setDeferredErrorMessage("");
-        console.log("[Kakao OAuth] authorization code:", authorizationCode);
-
-        if (!SHOULD_CALL_BACKEND_LOGIN) {
-            clearKakaoOAuthContext();
-            setDeferredErrorMessage("카카오 인가 코드가 콘솔에 출력됐어요.");
-            navigate(currentAuthPath, { replace: true });
-            return;
-        }
 
         loginWithKakao({ authorizationCode })
             .then((response) => {
@@ -234,6 +226,12 @@ function Kakao() {
         navigate(nextPath);
     };
 
+    const handleSignupBypass = () => {
+        clearKakaoOAuthContext();
+        setErrorMessage("");
+        navigate(createSignupPath(isIntroduceFriendFlow, returnTo));
+    };
+
     return (
         <div
             className="relative min-h-screen overflow-hidden"
@@ -284,6 +282,15 @@ function Kakao() {
                                         {isLoggingIn ? "로그인 처리 중..." : "카카오 로그인"}
                                     </span>
                                 </button>
+                                {canBypassKakaoLogin ? (
+                                    <button
+                                        type="button"
+                                        onClick={handleSignupBypass}
+                                        className="typo-comment-1 text-grey-100 underline underline-offset-[0.18rem]"
+                                    >
+                                        회원가입 UI 확인하기
+                                    </button>
+                                ) : null}
                                 {errorMessage && (
                                     <p className="typo-comment-2 text-warning">
                                         {errorMessage}
@@ -321,6 +328,15 @@ function Kakao() {
                                 {isLoggingIn ? "로그인 처리 중..." : "카카오 로그인"}
                             </span>
                         </button>
+                        {canBypassKakaoLogin ? (
+                            <button
+                                type="button"
+                                onClick={handleSignupBypass}
+                                className="mx-auto mt-3 block typo-comment-1 text-grey-100 underline underline-offset-[0.18rem]"
+                            >
+                                회원가입 UI 확인하기
+                            </button>
+                        ) : null}
                         {errorMessage && (
                             <p className="mt-2 text-center typo-comment-2 text-warning">
                                 {errorMessage}

@@ -5,7 +5,6 @@ import NotLoginHeader from "../../components/NotLoginHeader";
 import Toast from "../../components/Toast";
 import RightArrow from "../../assets/right_arrow.svg?react";
 import {
-    INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY,
     INTRODUCE_FRIEND_DRAFT_STORAGE_KEY,
 } from "../../constants/storageKeys";
 import copyIcon from "../SignupPage/asset/copyIcon.svg";
@@ -20,7 +19,6 @@ type IntroduceFriendDraft = {
 
 type CreateInvitationResponse = {
     invitationCode: string;
-    referralCode: string;
 };
 
 const MOCK_INVITATION_URL_BASE = "http://example.com/blind-date";
@@ -31,7 +29,6 @@ const requestCreateInvitation = (draft: IntroduceFriendDraft | null) => {
             console.log("[mock] create introduce friend invitation", draft);
             resolve({
                 invitationCode: "12345",
-                referralCode: "2837198",
             });
         }, 1200);
     });
@@ -51,17 +48,11 @@ const getIntroduceFriendDraft = () => {
     }
 };
 
-const getIntroduceFriendAuthState = () => {
-    return sessionStorage.getItem(INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY) === "logged-in";
-};
-
 function IntroduceFriendGeneratingPage() {
     const navigate = useNavigate();
     const [isInvitationReady, setIsInvitationReady] = useState(false);
     const [isResultVisible, setIsResultVisible] = useState(false);
     const [invitationUrl, setInvitationUrl] = useState("");
-    const [referralCode, setReferralCode] = useState("");
-    const [isLoggedIn] = useState(getIntroduceFriendAuthState);
     const [showCopyToast, setShowCopyToast] = useState(false);
 
     useEffect(() => {
@@ -71,7 +62,6 @@ function IntroduceFriendGeneratingPage() {
         requestCreateInvitation(draft).then((response) => {
             if (isMounted) {
                 setInvitationUrl(`${MOCK_INVITATION_URL_BASE}/${response.invitationCode}`);
-                setReferralCode(response.referralCode);
                 setIsInvitationReady(true);
             }
         });
@@ -121,14 +111,8 @@ function IntroduceFriendGeneratingPage() {
             <div className="relative min-h-screen bg-grey-100">
                 <NotLoginHeader title="친구 소개하기" />
 
-                <main
-                    className={`px-5 ${
-                        isLoggedIn
-                            ? "pt-[clamp(3rem,10vh,5.75rem)] pb-[12rem]"
-                            : "pt-[clamp(3rem,10vh,5.75rem)] pb-[9.5rem]"
-                    }`}
-                >
-                    <div className="mx-auto flex w-full max-w-[22.5625rem] flex-col items-center gap-[clamp(2rem,6vh,3.125rem)]">
+                <main className="absolute inset-0 flex items-center px-5">
+                    <div className="mx-auto flex w-full max-w-[22.5625rem] -translate-y-[2.125rem] flex-col items-center gap-[3.125rem]">
                         <div className="flex w-full flex-col items-center gap-[0.375rem] text-center">
                             <div className="flex items-center justify-center gap-1">
                                 <h1 className="typo-title-header-1 text-grey-900">
@@ -146,7 +130,7 @@ function IntroduceFriendGeneratingPage() {
                             </p>
                         </div>
 
-                        <div className="flex w-full flex-col gap-[clamp(2rem,6vh,3.125rem)]">
+                        <div className="flex w-full flex-col gap-[3.125rem]">
                             <section className="flex flex-col gap-[0.875rem]">
                                 <div className="flex h-10 items-center overflow-hidden rounded-[0.625rem] bg-grey-300 px-2.5 py-2">
                                     <p className="min-w-0 truncate typo-input-text-r text-grey-900">
@@ -169,39 +153,6 @@ function IntroduceFriendGeneratingPage() {
                                     </span>
                                 </button>
                             </section>
-
-                            {isLoggedIn && (
-                                <section className="flex flex-col gap-[0.875rem]">
-                                    <div className="flex flex-col gap-[0.3125rem]">
-                                        <h2 className="text-[1rem] font-semibold leading-7 text-grey-900 opacity-50">
-                                            추천인 코드
-                                        </h2>
-                                        <p className="typo-comment-2 text-primary-300">
-                                            * 친구가 추천인 코드를 입력하면 쿠키 20개를 받아요
-                                        </p>
-                                    </div>
-                                    <div className="flex h-10 items-center overflow-hidden rounded-[0.625rem] bg-grey-300 px-2.5 py-2">
-                                        <p className="min-w-0 truncate typo-input-text-r text-grey-900">
-                                            {referralCode}
-                                        </p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleCopy(referralCode)}
-                                        className="flex h-10 items-center justify-center gap-1.5 rounded-[0.625rem] bg-primary-100 px-2.5 py-2"
-                                    >
-                                        <img
-                                            src={copyIcon}
-                                            alt=""
-                                            aria-hidden="true"
-                                            className="h-3.5 w-[0.8125rem]"
-                                        />
-                                        <span className="typo-input-text text-primary-500">
-                                            복사하기
-                                        </span>
-                                    </button>
-                                </section>
-                            )}
                         </div>
                     </div>
                 </main>
