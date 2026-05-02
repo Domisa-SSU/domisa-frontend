@@ -218,7 +218,7 @@ function SignupPage() {
                                     birthYear ? "text-primary-500" : "text-grey-600"
                                 }`}
                             >
-                                <option value="">출생 연도를 선택해주세요</option>
+                                <option value="">출생 연도</option>
                                 {birthYears.map((year) => (
                                     <option key={year} value={year}>
                                         {year}
