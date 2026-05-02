@@ -49,6 +49,24 @@ const NOTIFICATION_PHONE_MAX_LENGTH = 11;
 const WAITING_SOLO_COUNT = 124;
 const SHOULD_MOCK_DATING_REGISTER_SUBMIT = true;
 
+const formatPhoneNumber = (phoneNumber: string) => {
+  const digitsOnly = phoneNumber
+    .replace(/[^0-9]/g, "")
+    .slice(0, NOTIFICATION_PHONE_MAX_LENGTH);
+
+  if (digitsOnly.length <= 3) {
+    return digitsOnly;
+  }
+
+  if (digitsOnly.length <= 7) {
+    return `${digitsOnly.slice(0, 3)}-${digitsOnly.slice(3)}`;
+  }
+
+  return `${digitsOnly.slice(0, 3)}-${digitsOnly.slice(3, 7)}-${digitsOnly.slice(
+    7,
+  )}`;
+};
+
 function DatingRegisterMbtiStep() {
   const { formData, selectMbtiLetter, goNextStep } = useDatingRegisterFlow();
   const isMbtiComplete = formData.mbti.length === 4;
@@ -240,13 +258,13 @@ function DatingRegisterContactStep() {
             </span>
             <div className="flex h-9 items-center gap-2 border-b-[1.8px] border-primary-500">
               {isInstagram && formData.contactValue.length > 0 && (
-                <span className="typo-header-3 text-grey-900">@</span>
+                <span className="typo-header-3 text-primary-500">@</span>
               )}
               <input
                 value={formData.contactValue}
                 onChange={handleContactChange}
                 placeholder={CONTACT_METHOD_PLACEHOLDERS[formData.contactMethod]}
-                className="min-w-0 flex-1 bg-transparent typo-header-3 text-grey-900 placeholder:text-grey-600 focus:outline-none"
+                className="min-w-0 flex-1 bg-transparent typo-header-3 text-primary-500 placeholder:text-grey-600 focus:outline-none"
               />
             </div>
           </label>
@@ -496,16 +514,24 @@ function DatingRegisterNotificationPhoneStep() {
           </h1>
 
           <label className="flex flex-col gap-2.5">
-            <span className="typo-comment-2 text-primary-600">전화번호</span>
+            <span
+              className={`typo-comment-2 ${
+                formData.isSmsOptedOut ? "text-grey-400" : "text-primary-600"
+              }`}
+            >
+              전화번호
+            </span>
             <input
-              value={formData.notificationPhone}
+              value={formatPhoneNumber(formData.notificationPhone)}
               onChange={handlePhoneChange}
               disabled={formData.isSmsOptedOut}
               inputMode="numeric"
-              maxLength={NOTIFICATION_PHONE_MAX_LENGTH}
+              maxLength={13}
               placeholder="전화번호를 입력하세요"
-              className={`h-9 border-b-[1.8px] border-primary-500 bg-transparent typo-header-3 text-grey-900 placeholder:text-grey-600 focus:outline-none ${
-                formData.isSmsOptedOut ? "opacity-50" : ""
+              className={`h-9 border-b-[1.8px] bg-transparent typo-header-3 focus:outline-none ${
+                formData.isSmsOptedOut
+                  ? "border-grey-400 text-grey-400 placeholder:text-grey-400"
+                  : "border-primary-500 text-primary-500 placeholder:text-grey-600"
               }`}
             />
           </label>
@@ -519,7 +545,7 @@ function DatingRegisterNotificationPhoneStep() {
             <span
               className={`flex h-[1.5625rem] w-[1.5625rem] items-center justify-center rounded-[0.3125rem] typo-comment-1-b ${
                 formData.isSmsOptedOut
-                  ? "bg-grey-400 text-grey-100"
+                  ? "bg-primary-500 text-grey-100"
                   : "border-[1.8px] border-grey-500 bg-grey-100 text-transparent"
               }`}
             >
@@ -527,7 +553,7 @@ function DatingRegisterNotificationPhoneStep() {
             </span>
             <span
               className={`typo-button-text ${
-                formData.isSmsOptedOut ? "text-grey-600" : "text-grey-700"
+                formData.isSmsOptedOut ? "text-primary-600" : "text-grey-700"
               }`}
             >
               문자 알림 안 받을래요
