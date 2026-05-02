@@ -11,7 +11,6 @@ import pinkCheckIcon from "./asset/pinkCheckIcon.svg";
 import selectArrow from "./asset/selectArrow.svg";
 
 const birthYears = Array.from({ length: 21 }, (_, index) => `${2006 - index}`);
-const shouldMockNicknameAvailability = import.meta.env.DEV;
 
 const fieldClassName =
     "h-10 w-full rounded-[0.625rem] border-[1.2px] border-transparent bg-primary-100 px-[0.875rem] typo-input-text-m text-primary-500 placeholder:text-grey-600 focus:outline-none";
@@ -74,12 +73,6 @@ function SignupPage() {
         if (trimmedNickname.length === 0) {
             setIsNicknameChecked(false);
             setNicknameErrorMessage("닉네임을 입력해주세요");
-            return;
-        }
-
-        if (shouldMockNicknameAvailability) {
-            setIsNicknameChecked(true);
-            setNicknameErrorMessage("");
             return;
         }
 
