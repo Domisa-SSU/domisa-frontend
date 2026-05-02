@@ -16,7 +16,6 @@ import type { UserStatus } from "../../types/user";
 
 const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
 const INTRODUCE_FRIEND_FLOW = "introduce-friend";
-const SHOULD_CALL_BACKEND_LOGIN = false;
 
 const getSafeReturnTo = (value: string | null) => {
     if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -144,14 +143,6 @@ function Kakao() {
 
         processedCodeRef.current = authorizationCode;
         setDeferredErrorMessage("");
-        console.log("[Kakao OAuth] authorization code:", authorizationCode);
-
-        if (!SHOULD_CALL_BACKEND_LOGIN) {
-            clearKakaoOAuthContext();
-            setDeferredErrorMessage("카카오 인가 코드가 콘솔에 출력됐어요.");
-            navigate(currentAuthPath, { replace: true });
-            return;
-        }
 
         loginWithKakao({ authorizationCode })
             .then((response) => {
