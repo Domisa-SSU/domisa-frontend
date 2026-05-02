@@ -14,6 +14,7 @@ import reloadIcon from "./assets/reloadIcon.svg";
 import datingHeartIcon from "./assets/datingHeartIcon.svg";
 import datingHeartUnderIcon from "./assets/datingHeartUnderIcon.svg";
 import datingArrowIcon from "./assets/datingArrowIcon.svg";
+import cardBackImage from "./assets/cardBackImage.png";
 
 const datingHomeQueryKey = ["dating", "home"] as const;
 
@@ -96,13 +97,12 @@ function TimerPanel({ remainingSeconds }: { remainingSeconds: number }) {
 
 function ClosedDatingCard() {
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-[0.3125rem] border-[0.25rem] border-grey-100 bg-[#171720] shadow-[0_1px_5px_rgba(0,0,0,0.25)]">
-      <div className="absolute -left-1 top-4 h-16 w-8 rotate-[35deg] bg-primary-300" />
-      <div className="absolute left-8 top-0 h-20 w-7 rotate-[35deg] bg-primary-200" />
-      <div className="absolute inset-x-2 top-[3.35rem] -rotate-[9deg] rounded-full bg-primary-500 px-1 py-0.5 text-center text-[0.42rem] font-bold leading-none text-grey-100">
-        DOMISA LOVE
-      </div>
-      <div className="absolute bottom-2 right-2 h-8 w-8 rounded-full border border-primary-300 opacity-50" />
+    <div className="h-full w-full rounded-[0.3125rem] bg-[#FFFFFF] p-[0.3125rem] shadow-[0_1px_5px_rgba(0,0,0,0.25)]">
+      <img
+        src={cardBackImage}
+        alt=""
+        className="h-full w-full rounded-[0.1875rem] object-cover"
+      />
     </div>
   );
 }
@@ -125,18 +125,28 @@ function DatingCardButton({
   card,
   isOpen,
   onOpen,
+  onViewDetail,
 }: {
   card: DatingHomeCard;
   isOpen: boolean;
   onOpen: (id: string) => void;
+  onViewDetail: (id: string) => void;
 }) {
+  const handleClick = () => {
+    if (isOpen) {
+      onViewDetail(card.id);
+      return;
+    }
+
+    onOpen(card.id);
+  };
+
   return (
     <button
       type="button"
-      onClick={() => onOpen(card.id)}
-      disabled={isOpen}
-      className="h-[7.6875rem] w-[5.3125rem] shrink-0 rounded-[0.3125rem] text-left disabled:cursor-default"
-      aria-label={isOpen ? "열린 소개팅 카드" : "소개팅 카드 열기"}
+      onClick={handleClick}
+      className="h-[7.6875rem] w-[5.3125rem] shrink-0 rounded-[0.3125rem] text-left"
+      aria-label={isOpen ? "소개팅 카드 상세 보기" : "소개팅 카드 열기"}
     >
       {isOpen ? <OpenDatingCard variant={card.variant} /> : <ClosedDatingCard />}
     </button>
@@ -147,10 +157,12 @@ function MainCardSection({
   cards,
   openedCardIds,
   onOpenCard,
+  onViewCardDetail,
 }: {
   cards: DatingHomeCard[];
   openedCardIds: Set<string>;
   onOpenCard: (id: string) => void;
+  onViewCardDetail: (id: string) => void;
 }) {
   return (
     <section className="flex flex-col items-center gap-[0.9375rem]">
@@ -181,6 +193,7 @@ function MainCardSection({
             card={card}
             isOpen={openedCardIds.has(card.id)}
             onOpen={onOpenCard}
+            onViewDetail={onViewCardDetail}
           />
         ))}
       </div>
@@ -343,6 +356,10 @@ function DatingPage() {
     });
   };
 
+  const handleViewCardDetail = (id: string) => {
+    navigate(`/dating/cards/${encodeURIComponent(id)}`);
+  };
+
   const visibleCards = useMemo(() => data.cards.slice(0, 8), [data.cards]);
   const openedCardIds = useMemo(
     () =>
@@ -354,17 +371,22 @@ function DatingPage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f9f9f9_0%,#ff88b0_61.8%,#ff73a2_100%)]">
-      <header className="bg-grey-100">
-        <HeaderTop rightLabel="내정보" onRightClick={() => navigate("/my")} />
+      <header className="fixed inset-x-0 top-0 z-40 bg-grey-100">
+        <HeaderTop
+          showNotificationIcon
+          rightLabel="내정보"
+          onRightClick={() => navigate("/my")}
+        />
         <DatingSubHeader />
       </header>
 
-      <main className="mx-auto flex w-full max-w-[25.1875rem] flex-col gap-[1.875rem] px-[0.8125rem] pb-12 pt-[1.1875rem]">
+      <main className="mx-auto flex w-full max-w-[25.1875rem] flex-col gap-[1.875rem] px-[0.8125rem] pb-12 pt-[7.5875rem]">
         <TimerPanel remainingSeconds={remainingSeconds} />
         <MainCardSection
           cards={visibleCards}
           openedCardIds={openedCardIds}
           onOpenCard={handleOpenCard}
+          onViewCardDetail={handleViewCardDetail}
         />
         <div className="flex flex-col gap-[1.875rem] px-[0.4375rem]">
           <LikePreviewSection
