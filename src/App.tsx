@@ -12,6 +12,7 @@ import MyCookiePage from "./pages/MyPage/MyCookiePage";
 import EditProfilePage from "./pages/MyPage/EditProfilePage";
 import DatingCardEditPage from "./pages/MyPage/DatingCardEditPage";
 import DatingPage from "./pages/DatingPage/DatingPage";
+import DatingCardDetailPage from "./pages/DatingPage/DatingCardDetailPage";
 import DatingRegisterPage from "./pages/DatingPage/DatingRegisterPage";
 import NotificationPage from "./pages/NotificationPage/NotificationPage";
 import RequireIntroducePage from "./pages/DatingPage/RequireIntroducePage";
@@ -59,6 +60,10 @@ function App() {
           <Route
             path="/dating"
             element={<DatingPage></DatingPage>}
+          ></Route>
+          <Route
+            path="/dating/cards/:cardId"
+            element={<DatingCardDetailPage></DatingCardDetailPage>}
           ></Route>
           <Route
             path="/dating/require-introduce"
