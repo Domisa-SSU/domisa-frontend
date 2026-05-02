@@ -1,4 +1,5 @@
 import { apiClient } from "./client";
+import { isBackendStatusDto, normalizeUserStatus } from "./status";
 import type { AuthMeResponse, UserStatus } from "../types/user";
 
 type LoginWithKakaoRequest = {
@@ -13,43 +14,42 @@ type LogoutResponse = {
     message: string;
 };
 
-const isUserStatus = (value: unknown): value is UserStatus => {
+const parseAuthMeResponse = (value: unknown): AuthMeResponse | null => {
     if (!value || typeof value !== "object") {
-        return false;
-    }
-
-    const status = value as Record<string, unknown>;
-
-    return (
-        typeof status.isRegistered === "boolean" &&
-        typeof status.hasIntroduction === "boolean" &&
-        typeof status.isProfileCompleted === "boolean"
-    );
-};
-
-const isAuthMeResponse = (value: unknown): value is AuthMeResponse => {
-    if (!value || typeof value !== "object") {
-        return false;
+        return null;
     }
 
     const response = value as Record<string, unknown>;
 
-    return (
-        typeof response.userId === "number" &&
-        isUserStatus(response.status)
-    );
+    if (
+        typeof response.userId !== "string" ||
+        typeof response.cookies !== "number" ||
+        !isBackendStatusDto(response.status)
+    ) {
+        return null;
+    }
+
+    return {
+        userId: response.userId,
+        cookies: response.cookies,
+        status: normalizeUserStatus(response.status),
+    };
 };
 
-const isLoginWithKakaoResponse = (
-    value: unknown,
-): value is LoginWithKakaoResponse => {
+const parseLoginWithKakaoResponse = (value: unknown): LoginWithKakaoResponse | null => {
     if (!value || typeof value !== "object") {
-        return false;
+        return null;
     }
 
     const response = value as Record<string, unknown>;
 
-    return isUserStatus(response.status);
+    if (!isBackendStatusDto(response.status)) {
+        return null;
+    }
+
+    return {
+        status: normalizeUserStatus(response.status),
+    };
 };
 
 const isLogoutResponse = (value: unknown): value is LogoutResponse => {
@@ -69,12 +69,13 @@ const isLogoutResponse = (value: unknown): value is LogoutResponse => {
  */
 export const getAuthMe = async () => {
     const { data } = await apiClient.get<unknown>("/api/auth/me");
+    const authMe = parseAuthMeResponse(data);
 
-    if (!isAuthMeResponse(data)) {
+    if (!authMe) {
         throw new Error("Invalid auth me response");
     }
 
-    return data;
+    return authMe;
 };
 
 /**
@@ -84,12 +85,13 @@ export const getAuthMe = async () => {
  */
 export const loginWithKakao = async (payload: LoginWithKakaoRequest) => {
     const { data } = await apiClient.post<unknown>("/api/auth/login", payload);
+    const loginResponse = parseLoginWithKakaoResponse(data);
 
-    if (!isLoginWithKakaoResponse(data)) {
+    if (!loginResponse) {
         throw new Error("Invalid kakao login response");
     }
 
-    return data;
+    return loginResponse;
 };
 
 /**

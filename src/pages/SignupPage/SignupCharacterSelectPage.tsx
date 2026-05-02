@@ -52,7 +52,6 @@ const animalProfileMap: Record<string, AnimalProfile> = {
 };
 
 const contactTypeMap: Record<string, ContactType> = {
-    전화번호: "PHONE",
     "카카오톡 ID": "KAKAO",
     "인스타 ID": "INSTAGRAM",
 };
@@ -149,10 +148,7 @@ function SignupCharacterSelectPage() {
             return;
         }
 
-        const contactContent =
-            contactType === "PHONE"
-                ? `${signupFormData.phonePrefix}${signupFormData.phoneMiddle}${signupFormData.phoneLast}`
-                : signupFormData.contactValue.trim();
+        const contactContent = signupFormData.contactValue.trim();
 
         try {
             setErrorMessage("");
@@ -161,7 +157,6 @@ function SignupCharacterSelectPage() {
                 nickname: signupFormData.nickname.trim(),
                 gender,
                 birthYear: Number(signupFormData.birthYear),
-                inviteCode: signupFormData.referralCode.trim() || null,
                 contact: {
                     type: contactType,
                     content: contactContent,

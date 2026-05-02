@@ -7,7 +7,8 @@ import type { AuthMeResponse } from "../types/user";
 export const authMeQueryKey = ["auth", "me"] as const;
 
 const mockAuthMeResponse: AuthMeResponse = {
-  userId: 1,
+  userId: "1",
+  cookies: 10,
   status: {
     isRegistered: true,
     hasIntroduction: true,
