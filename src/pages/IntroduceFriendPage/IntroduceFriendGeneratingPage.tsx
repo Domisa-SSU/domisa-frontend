@@ -7,6 +7,7 @@ import RightArrow from "../../assets/right_arrow.svg?react";
 import {
     INTRODUCE_FRIEND_DRAFT_STORAGE_KEY,
 } from "../../constants/storageKeys";
+import { createIntroductionLink } from "../../api/introduction";
 import copyIcon from "../SignupPage/asset/copyIcon.svg";
 import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
 import requireIcon from "./assets/requireIcon.png";
@@ -17,21 +18,25 @@ type IntroduceFriendDraft = {
     funnyEpisode: string;
 };
 
-type CreateInvitationResponse = {
-    invitationCode: string;
-};
+let pendingIntroductionLinkRequest:
+    | {
+        draftKey: string;
+        promise: Promise<string>;
+    }
+    | null = null;
 
-const MOCK_INVITATION_URL_BASE = "http://example.com/blind-date";
+const isIntroduceFriendDraft = (value: unknown): value is IntroduceFriendDraft => {
+    if (!value || typeof value !== "object") {
+        return false;
+    }
 
-const requestCreateInvitation = (draft: IntroduceFriendDraft | null) => {
-    return new Promise<CreateInvitationResponse>((resolve) => {
-        window.setTimeout(() => {
-            console.log("[mock] create introduce friend invitation", draft);
-            resolve({
-                invitationCode: "12345",
-            });
-        }, 1200);
-    });
+    const draft = value as Record<string, unknown>;
+
+    return (
+        typeof draft.shortIntro === "string" &&
+        typeof draft.charmPoint === "string" &&
+        typeof draft.funnyEpisode === "string"
+    );
 };
 
 const getIntroduceFriendDraft = () => {
@@ -42,10 +47,43 @@ const getIntroduceFriendDraft = () => {
     }
 
     try {
-        return JSON.parse(savedDraft) as IntroduceFriendDraft;
+        const draft = JSON.parse(savedDraft);
+
+        return isIntroduceFriendDraft(draft) ? draft : null;
     } catch {
         return null;
     }
+};
+
+const createInvitationUrl = (draft: IntroduceFriendDraft) => {
+    const draftKey = JSON.stringify(draft);
+
+    if (pendingIntroductionLinkRequest?.draftKey === draftKey) {
+        return pendingIntroductionLinkRequest.promise;
+    }
+
+    const promise = createIntroductionLink({
+        q1: draft.shortIntro,
+        q2: draft.charmPoint,
+        q3: draft.funnyEpisode,
+    })
+        .then((response) => {
+            const linkCode = encodeURIComponent(response.linkCode);
+
+            return `${window.location.origin}/introduce/${linkCode}`;
+        })
+        .finally(() => {
+            if (pendingIntroductionLinkRequest?.draftKey === draftKey) {
+                pendingIntroductionLinkRequest = null;
+            }
+        });
+
+    pendingIntroductionLinkRequest = {
+        draftKey,
+        promise,
+    };
+
+    return promise;
 };
 
 function IntroduceFriendGeneratingPage() {
@@ -53,18 +91,34 @@ function IntroduceFriendGeneratingPage() {
     const [isInvitationReady, setIsInvitationReady] = useState(false);
     const [isResultVisible, setIsResultVisible] = useState(false);
     const [invitationUrl, setInvitationUrl] = useState("");
+    const [isCreationError, setIsCreationError] = useState(false);
     const [showCopyToast, setShowCopyToast] = useState(false);
 
     useEffect(() => {
         let isMounted = true;
         const draft = getIntroduceFriendDraft();
 
-        requestCreateInvitation(draft).then((response) => {
-            if (isMounted) {
-                setInvitationUrl(`${MOCK_INVITATION_URL_BASE}/${response.invitationCode}`);
-                setIsInvitationReady(true);
-            }
-        });
+        if (!draft) {
+            setIsCreationError(true);
+            return () => {
+                isMounted = false;
+            };
+        }
+
+        createInvitationUrl(draft)
+            .then((nextInvitationUrl) => {
+                if (isMounted) {
+                    setInvitationUrl(nextInvitationUrl);
+                    setIsInvitationReady(true);
+                    sessionStorage.removeItem(INTRODUCE_FRIEND_DRAFT_STORAGE_KEY);
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+                if (isMounted) {
+                    setIsCreationError(true);
+                }
+            });
 
         return () => {
             isMounted = false;
@@ -84,6 +138,11 @@ function IntroduceFriendGeneratingPage() {
     }, [showCopyToast]);
 
     const handleNext = () => {
+        if (isCreationError) {
+            navigate("/introduce-friend");
+            return;
+        }
+
         if (isInvitationReady) {
             setIsResultVisible(true);
         }
@@ -181,19 +240,26 @@ function IntroduceFriendGeneratingPage() {
                 <div className="flex flex-col items-center gap-[0.375rem] text-center">
                     <p className="typo-comment-1 text-primary-500">따끈따끈하게</p>
                     <h1 className="typo-title-header-1 text-grey-900">
-                        초대장 요리 중
-                        <span
-                            className={`ml-0.5 inline-flex w-[1.1rem] justify-between ${
-                                isInvitationReady ? "" : "animate-generating-dots"
-                            }`}
-                            aria-hidden="true"
-                        >
-                            <span>.</span>
-                            <span>.</span>
-                            <span>.</span>
-                        </span>
-                        <span className="sr-only">...</span>
+                        {isCreationError ? "초대장 생성에 실패했어요" : "초대장 요리 중"}
+                        {!isCreationError && (
+                            <span
+                                className={`ml-0.5 inline-flex w-[1.1rem] justify-between ${
+                                    isInvitationReady ? "" : "animate-generating-dots"
+                                }`}
+                                aria-hidden="true"
+                            >
+                                <span>.</span>
+                                <span>.</span>
+                                <span>.</span>
+                            </span>
+                        )}
+                        {!isCreationError && <span className="sr-only">...</span>}
                     </h1>
+                    {isCreationError && (
+                        <p className="typo-input-text text-grey-700">
+                            다시 작성 후 시도해주세요
+                        </p>
+                    )}
                 </div>
 
                 <img
@@ -205,8 +271,8 @@ function IntroduceFriendGeneratingPage() {
             </main>
 
             <BottomActionBar
-                label="다음"
-                disabled={!isInvitationReady}
+                label={isCreationError ? "다시 작성하기" : "다음"}
+                disabled={!isInvitationReady && !isCreationError}
                 onClick={handleNext}
             />
         </div>
