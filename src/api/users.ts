@@ -1,20 +1,22 @@
-import { apiClient } from "./client";
-import { isBackendStatusDto, normalizeUserStatus } from "./status";
-import type { UserStatus } from "../types/user";
+import { apiClient } from './client';
+import { isBackendStatusDto, normalizeUserStatus } from './status';
+import type { UserStatus } from '../types/user';
+
+const SHOULD_MOCK_NICKNAME_CHECK = import.meta.env.DEV;
 
 export type AnimalProfile =
-  | "DOG"
-  | "CAT"
-  | "BEAR"
-  | "SLOTH"
-  | "HAMSTER"
-  | "WOLF"
-  | "RABBIT"
-  | "DEER"
-  | "OTTER"
-  | "ALPACA"
-  | "FOX"
-  | "CAPYBARA";
+  | 'DOG'
+  | 'CAT'
+  | 'BEAR'
+  | 'SLOTH'
+  | 'HAMSTER'
+  | 'WOLF'
+  | 'RABBIT'
+  | 'DEER'
+  | 'OTTER'
+  | 'ALPACA'
+  | 'FOX'
+  | 'CAPYBARA';
 
 type RegisterUserRequest = {
   nickname: string;
@@ -34,16 +36,16 @@ export type CheckNicknameAvailabilityResponse = {
 };
 
 const parseRegisterUserResponse = (value: unknown): RegisterUserResponse | null => {
-  if (!value || typeof value !== "object") {
+  if (!value || typeof value !== 'object') {
     return null;
   }
 
   const response = value as Record<string, unknown>;
 
   if (
-    typeof response.userId !== "string" ||
+    typeof response.userId !== 'string' ||
     !isBackendStatusDto(response.status) ||
-    typeof response.totalUserCount !== "number"
+    typeof response.totalUserCount !== 'number'
   ) {
     return null;
   }
@@ -56,18 +58,18 @@ const parseRegisterUserResponse = (value: unknown): RegisterUserResponse | null 
 };
 
 const parseCheckNicknameAvailabilityResponse = (
-  value: unknown,
+  value: unknown
 ): CheckNicknameAvailabilityResponse | null => {
-  if (!value || typeof value !== "object") {
+  if (!value || typeof value !== 'object') {
     return null;
   }
 
   const response = value as Record<string, unknown>;
   const booleanValue = Object.values(response).find(
-    (item): item is boolean => typeof item === "boolean",
+    (item): item is boolean => typeof item === 'boolean'
   );
 
-  if (typeof booleanValue !== "boolean") {
+  if (typeof booleanValue !== 'boolean') {
     return null;
   }
 
@@ -80,11 +82,11 @@ const parseCheckNicknameAvailabilityResponse = (
  * 회원가입 입력 정보를 등록하고, 등록 후 유저 ID와 서비스 진행 상태를 받는다.
  */
 export const registerUser = async (payload: RegisterUserRequest) => {
-  const { data } = await apiClient.post<unknown>("/api/users/register", payload);
+  const { data } = await apiClient.post<unknown>('/api/users/register', payload);
   const registerResponse = parseRegisterUserResponse(data);
 
   if (!registerResponse) {
-    throw new Error("Invalid register user response");
+    throw new Error('Invalid register user response');
   }
 
   return registerResponse;
@@ -96,13 +98,17 @@ export const registerUser = async (payload: RegisterUserRequest) => {
  * 회원가입과 프로필 수정에서 닉네임 중복 여부를 확인한다.
  */
 export const checkNicknameAvailability = async (nickname: string) => {
-  const { data } = await apiClient.get<unknown>("/api/users/check-nickname", {
+  if (SHOULD_MOCK_NICKNAME_CHECK) {
+    return { isAvailable: nickname.trim().length > 0 };
+  }
+
+  const { data } = await apiClient.get<unknown>('/api/users/check-nickname', {
     params: { nickname },
   });
   const availabilityResponse = parseCheckNicknameAvailabilityResponse(data);
 
   if (!availabilityResponse) {
-    throw new Error("Invalid check nickname response");
+    throw new Error('Invalid check nickname response');
   }
 
   return availabilityResponse;
