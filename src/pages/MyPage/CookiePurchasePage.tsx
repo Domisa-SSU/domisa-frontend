@@ -4,9 +4,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import Button from "../../components/Button/Button";
 import { ButtonVariant } from "../../components/Button/ButtonEnums";
-import rightArrow from "../../assets/right_arrow.svg";
+import rightArrowBold from "../../assets/rightArrowBold.svg";
 import copyIcon from "../../assets/copy.svg";
 import forbiddenIcon from "../../assets/toastForbidden.svg";
+import checkIcon from "../../assets/check.svg";
 
 // TODO: API 연동 시 교체
 const MOCK_ORDER = {
@@ -98,17 +99,16 @@ function CookiePurchasePage() {
             </div>
             <button
               type="button"
+              aria-pressed={isNameConfirmed}
               onClick={() => setIsNameConfirmed(!isNameConfirmed)}
               className="flex items-center gap-2.5 pl-2.5"
             >
               <span
-                className={`flex h-[1.5625rem] w-[1.5625rem] items-center justify-center rounded-[0.3125rem] typo-comment-1-b ${
-                  isNameConfirmed
-                    ? "bg-primary-500 text-grey-100"
-                    : "border-[1.8px] border-grey-500 bg-grey-100 text-transparent"
+                className={`flex h-[1.09375rem] w-[1.09375rem] items-center justify-center rounded-[0.3125rem] ${
+                  isNameConfirmed ? "bg-primary-500" : "bg-grey-400"
                 }`}
               >
-                ✓
+                <img src={checkIcon} alt="" className="w-[0.7875rem] h-[0.65625rem]" />
               </span>
               <span
                 className={`typo-button-text ${
@@ -127,10 +127,10 @@ function CookiePurchasePage() {
                 key={label}
                 type="button"
                 onClick={handlePaymentMethodClick}
-                className="flex items-center justify-between h-[3.4375rem] w-full bg-primary-100 border-[1.2px] border-primary-200 rounded-[1.25rem] px-5"
+                className="relative flex items-center justify-center h-[3.4375rem] w-full bg-primary-100 border-[1.2px] border-primary-200 rounded-[1.25rem] px-5"
               >
                 <span className="typo-header-3-b text-primary-500">{label}</span>
-                <img src={rightArrow} alt="" className="w-[0.6875rem] h-[1.0625rem]" />
+                <img src={rightArrowBold} alt="" className="absolute right-5 w-[0.6875rem] h-[1.0625rem]" />
               </button>
             ))}
           </div>
