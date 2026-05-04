@@ -60,8 +60,6 @@ const ROMANTIC_STYLE_PLACEHOLDER = '공강 때 요거바라 가서 요거트 먹
 const IDEAL_TYPE_MAX_LENGTH = 75;
 const IDEAL_TYPE_PLACEHOLDER = '대화가 잘 통하고 같이 있으면 편한 사람';
 const NOTIFICATION_PHONE_MAX_LENGTH = 11;
-const WAITING_SOLO_COUNT = 124;
-const SHOULD_MOCK_DATING_REGISTER_SUBMIT = true;
 const PHOTO_CROP_ASPECT = 362 / 197;
 const PHOTO_CROP_OUTPUT_WIDTH = 1086;
 const PHOTO_CROP_OUTPUT_HEIGHT = 591;
@@ -364,10 +362,14 @@ function DatingRegisterContactStep() {
 }
 
 type DatingRegisterCompleteModalProps = {
+  totalUserCount: number;
   onConfirm: () => void;
 };
 
-function DatingRegisterCompleteModal({ onConfirm }: DatingRegisterCompleteModalProps) {
+function DatingRegisterCompleteModal({
+  totalUserCount,
+  onConfirm,
+}: DatingRegisterCompleteModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
       <div className="absolute inset-0 bg-grey-900/70" />
@@ -380,7 +382,7 @@ function DatingRegisterCompleteModal({ onConfirm }: DatingRegisterCompleteModalP
           </h2>
           <div className="flex items-center justify-center gap-1">
             <p className="typo-input-text-m text-grey-700">
-              {WAITING_SOLO_COUNT}명의 솔로가 기다리고 있어요
+              {totalUserCount}명의 솔로가 기다리고 있어요
             </p>
             <img src={flowerIcon} alt="" aria-hidden="true" className="h-3.5 w-3.5" />
           </div>
@@ -687,6 +689,7 @@ function DatingRegisterNotificationPhoneStep() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+  const [totalUserCount, setTotalUserCount] = useState<number | null>(null);
 
   const isPhoneComplete = formData.notificationPhone.length >= 10 || formData.isSmsOptedOut;
   const isFormComplete =
@@ -710,12 +713,7 @@ function DatingRegisterNotificationPhoneStep() {
 
     setIsSubmitting(true);
     setErrorMessage('');
-
-    if (SHOULD_MOCK_DATING_REGISTER_SUBMIT) {
-      setIsCompleteModalOpen(true);
-      setIsSubmitting(false);
-      return;
-    }
+    setTotalUserCount(null);
 
     try {
       const profileImageUpload = await createProfileImageUploadUrl({
@@ -732,16 +730,20 @@ function DatingRegisterNotificationPhoneStep() {
         uploadKey: profileImageUpload.objectKey,
       });
 
-      await createDatingProfile({
+      const createdProfile = await createDatingProfile({
         mbti: formData.mbti,
         datingStyle: formData.romanticStyle,
         idealType: formData.idealType,
         imageKey: profileImageUpload.objectKey,
+        contactType: formData.contactMethod,
+        contact: formData.contactValue.trim(),
+        notificationPhone: formData.isSmsOptedOut ? null : formData.notificationPhone,
       });
 
       await queryClient.invalidateQueries({
         queryKey: authMeQueryKey,
       });
+      setTotalUserCount(createdProfile.totalUserCount);
       setIsCompleteModalOpen(true);
     } catch (error) {
       console.error(error);
@@ -828,7 +830,12 @@ function DatingRegisterNotificationPhoneStep() {
         </div>
       </section>
 
-      {isCompleteModalOpen && <DatingRegisterCompleteModal onConfirm={handleCompleteConfirm} />}
+      {isCompleteModalOpen && totalUserCount !== null && (
+        <DatingRegisterCompleteModal
+          totalUserCount={totalUserCount}
+          onConfirm={handleCompleteConfirm}
+        />
+      )}
     </>
   );
 }
