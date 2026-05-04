@@ -220,8 +220,9 @@ function MyPage() {
             {/* 친구 소개 */}
             <div className="flex flex-col gap-3.5">
               <span className="typo-button-text text-grey-900">친구 소개</span>
-              <ReferralSection referralCode={user.referralCode} />
+              <ReferralSection />
             </div>
+
           </div>
 
           {showEditProfileToast && <Toast message="정보가 수정되었어요!" />}
