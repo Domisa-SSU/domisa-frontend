@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import friendSignUpImg from "../IntroduceFriendPage/assets/friendSignUpImg.png";
 import {
     INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY,
+    INTRODUCE_FRIEND_DRAFT_STORAGE_KEY,
     KAKAO_OAUTH_FLOW_STORAGE_KEY,
     KAKAO_OAUTH_STATE_STORAGE_KEY,
     KAKAO_RETURN_TO_STORAGE_KEY,
@@ -11,7 +12,7 @@ import loginImg from "./asset/loginImg.png";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import kakaoIconImg from "./asset/kakaoLogo.svg";
-import { useKakaoLoginMutation } from "../../queries/auth";
+import { useAuthMeQuery, useKakaoLoginMutation } from "../../queries/auth";
 import type { UserStatus } from "../../types/user";
 
 const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
@@ -58,6 +59,31 @@ const clearKakaoOAuthContext = () => {
     sessionStorage.removeItem(KAKAO_RETURN_TO_STORAGE_KEY);
 };
 
+const getKakaoRedirectUri = () => `${window.location.origin}/auth`;
+
+const hasValidIntroduceFriendDraft = () => {
+    const savedDraft = sessionStorage.getItem(INTRODUCE_FRIEND_DRAFT_STORAGE_KEY);
+
+    if (!savedDraft) {
+        return false;
+    }
+
+    try {
+        const draft = JSON.parse(savedDraft) as Record<string, unknown>;
+
+        return (
+            typeof draft.shortIntro === "string" &&
+            draft.shortIntro.trim().length > 0 &&
+            typeof draft.charmPoint === "string" &&
+            draft.charmPoint.trim().length > 0 &&
+            typeof draft.funnyEpisode === "string" &&
+            draft.funnyEpisode.trim().length > 0
+        );
+    } catch {
+        return false;
+    }
+};
+
 const getNextPathAfterLogin = (
     status: UserStatus,
     isIntroduceFriendFlow: boolean,
@@ -85,6 +111,7 @@ const getNextPathAfterLogin = (
 function Kakao() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const { data: authMe } = useAuthMeQuery();
     const authorizationCode = searchParams.get("code");
     const kakaoError = searchParams.get("error");
     const kakaoErrorDescription = searchParams.get("error_description");
@@ -112,6 +139,24 @@ function Kakao() {
     const currentAuthPath = isIntroduceFriendFlow
         ? "/auth?flow=introduce-friend"
         : "/auth";
+
+    useEffect(() => {
+        if (!isIntroduceFriendFlow || !authMe || authorizationCode || kakaoError || kakaoErrorDescription) {
+            return;
+        }
+
+        navigate(
+            hasValidIntroduceFriendDraft() ? "/introduce-friend/generating" : "/introduce-friend",
+            { replace: true },
+        );
+    }, [
+        authMe,
+        authorizationCode,
+        isIntroduceFriendFlow,
+        kakaoError,
+        kakaoErrorDescription,
+        navigate,
+    ]);
 
     useEffect(() => {
         const setDeferredErrorMessage = (message: string) => {
@@ -145,7 +190,10 @@ function Kakao() {
         processedCodeRef.current = authorizationCode;
         setDeferredErrorMessage("");
 
-        loginWithKakao({ authorizationCode })
+        loginWithKakao({
+            authorizationCode,
+            redirectUri: getKakaoRedirectUri(),
+        })
             .then((response) => {
                 clearKakaoOAuthContext();
 
@@ -196,7 +244,7 @@ function Kakao() {
         }
 
         const state = createKakaoOAuthState();
-        const redirectUri = `${window.location.origin}/auth`;
+        const redirectUri = getKakaoRedirectUri();
         const authorizeParams = new URLSearchParams({
             response_type: "code",
             client_id: kakaoRestApiKey,
@@ -218,7 +266,12 @@ function Kakao() {
 
         setErrorMessage("");
 
-        window.location.assign(`${KAKAO_AUTHORIZE_URL}?${authorizeParams.toString()}`);
+        window.location.replace(`${KAKAO_AUTHORIZE_URL}?${authorizeParams.toString()}`);
+    };
+
+    const handleHeaderBack = () => {
+        clearKakaoOAuthContext();
+        navigate(isIntroduceFriendFlow ? "/introduce-friend" : "/", { replace: true });
     };
 
     const handleSkip = () => {
@@ -240,7 +293,7 @@ function Kakao() {
             }}
         >
             <div className="absolute inset-x-0 top-0 z-10">
-                <NotLoginHeader title={headerTitle}></NotLoginHeader>
+                <NotLoginHeader title={headerTitle} onBack={handleHeaderBack}></NotLoginHeader>
             </div>
             {isIntroduceFriendFlow ? (
                 <div className="relative min-h-screen px-5 pb-[2.94rem]">

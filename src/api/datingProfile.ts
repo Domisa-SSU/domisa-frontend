@@ -1,10 +1,15 @@
 import { apiClient } from "./client";
 
+type DatingProfileContactType = "KAKAO" | "INSTAGRAM" | "PHONE";
+
 type CreateDatingProfileRequest = {
   mbti: string;
   datingStyle: string;
   idealType: string;
   imageKey: string;
+  contactType: DatingProfileContactType;
+  contact: string;
+  notificationPhone: string | null;
 };
 
 export type CreateDatingProfileResponse = {
@@ -14,6 +19,7 @@ export type CreateDatingProfileResponse = {
     hasIntroduction: boolean;
     isCardCompleted: boolean;
   };
+  totalUserCount: number;
 };
 
 const isCreateDatingProfileResponse = (
@@ -31,7 +37,8 @@ const isCreateDatingProfileResponse = (
     !!status &&
     typeof status.isRegistered === "boolean" &&
     typeof status.hasIntroduction === "boolean" &&
-    typeof status.isCardCompleted === "boolean"
+    typeof status.isCardCompleted === "boolean" &&
+    typeof response.totalUserCount === "number"
   );
 };
 

@@ -4,9 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import {
   fetchDatingHome,
-  initialDatingHomeData,
   type DatingHomeCard,
-  type DatingCardVariant,
 } from "../../api/datingHome";
 import HeaderTop from "../../components/HeaderTop";
 import headerArrow from "../../assets/headerArrow.svg";
@@ -17,15 +15,7 @@ import datingArrowIcon from "./assets/datingArrowIcon.svg";
 import cardBackImage from "./assets/cardBackImage.png";
 
 const datingHomeQueryKey = ["dating", "home"] as const;
-
-const cardFrontStyles: Record<DatingCardVariant, string> = {
-  night: "from-[#1a1b2e] via-[#755377] to-[#ff9bb9]",
-  sunset: "from-[#f3c09d] via-[#b96e6b] to-[#4c2d3b]",
-  sky: "from-[#dcefff] via-[#8ab2c8] to-[#344759]",
-  forest: "from-[#f4c789] via-[#526b62] to-[#1d3540]",
-  lavender: "from-[#f3d9ff] via-[#a88ec3] to-[#554a78]",
-  peach: "from-[#ffe2d2] via-[#ff9cb8] to-[#985d79]",
-};
+const refreshReloadStorageKey = "dating:last-refresh-reload-at";
 
 const formatRemainingTime = (totalSeconds: number) => {
   const safeSeconds = Math.max(totalSeconds, 0);
@@ -46,6 +36,33 @@ const getScrollFadeStatus = (element: HTMLDivElement) => {
     left: currentScrollLeft > 0,
     right: currentScrollLeft < maxScrollLeft - 1,
   };
+};
+
+const getRefreshRemainingSeconds = (
+  refreshAvailableAt: string,
+  now: number,
+) => {
+  const refreshTime = new Date(refreshAvailableAt).getTime();
+
+  if (Number.isNaN(refreshTime)) {
+    return 0;
+  }
+
+  return Math.max(Math.ceil((refreshTime - now) / 1000), 0);
+};
+
+const shouldReloadForRefresh = (
+  canRefresh: boolean,
+  remainingSeconds: number,
+) => canRefresh || remainingSeconds <= 0;
+
+const reloadForRefreshOnce = (refreshAvailableAt: string) => {
+  if (sessionStorage.getItem(refreshReloadStorageKey) === refreshAvailableAt) {
+    return;
+  }
+
+  sessionStorage.setItem(refreshReloadStorageKey, refreshAvailableAt);
+  window.location.reload();
 };
 
 function DatingSubHeader() {
@@ -107,16 +124,14 @@ function ClosedDatingCard() {
   );
 }
 
-function OpenDatingCard({ variant }: { variant: DatingCardVariant }) {
+function OpenDatingCard({ profile }: { profile: string }) {
   return (
     <div className="h-full w-full rounded-[0.3125rem] border-[0.25rem] border-grey-100 bg-grey-100 p-[0.1875rem] shadow-[0_1px_5px_rgba(0,0,0,0.2)]">
-      <div
-        className={`relative h-full w-full overflow-hidden rounded-[0.25rem] bg-gradient-to-br ${cardFrontStyles[variant]}`}
-      >
-        <div className="absolute inset-0 backdrop-blur-[2px]" />
-        <div className="absolute left-1/2 top-5 h-12 w-12 -translate-x-1/2 rounded-full bg-grey-100/35 blur-[0.1875rem]" />
-        <div className="absolute bottom-0 left-1/2 h-16 w-14 -translate-x-1/2 rounded-t-full bg-grey-100/30 blur-[0.125rem]" />
-      </div>
+      <img
+        src={profile}
+        alt=""
+        className="h-full w-full rounded-[0.25rem] object-cover"
+      />
     </div>
   );
 }
@@ -148,7 +163,11 @@ function DatingCardButton({
       className="h-[7.6875rem] w-[5.3125rem] shrink-0 rounded-[0.3125rem] text-left"
       aria-label={isOpen ? "소개팅 카드 상세 보기" : "소개팅 카드 열기"}
     >
-      {isOpen ? <OpenDatingCard variant={card.variant} /> : <ClosedDatingCard />}
+      {isOpen ? (
+        <OpenDatingCard profile={card.profile} />
+      ) : (
+        <ClosedDatingCard />
+      )}
     </button>
   );
 }
@@ -156,14 +175,20 @@ function DatingCardButton({
 function MainCardSection({
   cards,
   openedCardIds,
+  profileNum,
+  freeLikeRemaining,
   onOpenCard,
   onViewCardDetail,
 }: {
   cards: DatingHomeCard[];
   openedCardIds: Set<string>;
+  profileNum: number;
+  freeLikeRemaining: number;
   onOpenCard: (id: string) => void;
   onViewCardDetail: (id: string) => void;
 }) {
+  const heartCount = Math.max(Math.min(freeLikeRemaining, profileNum), 0);
+
   return (
     <section className="flex flex-col items-center gap-[0.9375rem]">
       <div className="flex flex-col items-center gap-2.5 text-center">
@@ -171,12 +196,12 @@ function MainCardSection({
           소개팅카드를 눌러서 열어보세요
         </p>
         <p className="typo-button-text-b text-primary-600">
-          8명 중 3명에게 호감을 보낼 수 있어요
+          {profileNum}명 중 {freeLikeRemaining}명에게 호감을 보낼 수 있어요
         </p>
       </div>
 
       <div className="flex items-center justify-center gap-2">
-        {[0, 1, 2].map((heartIndex) => (
+        {Array.from({ length: heartCount }, (_, heartIndex) => (
           <img
             key={heartIndex}
             src={datingHeartIcon}
@@ -204,8 +229,10 @@ function MainCardSection({
 function LikePreviewCard({ card }: { card: DatingHomeCard }) {
   return (
     <div className="h-[7.6875rem] w-[5.3125rem] shrink-0 rounded-[0.3125rem] border-[0.25rem] border-grey-100 bg-grey-100 p-[0.1875rem] shadow-[0_1px_5px_rgba(0,0,0,0.18)]">
-      <div
-        className={`h-full w-full rounded-[0.25rem] bg-gradient-to-br ${cardFrontStyles[card.variant]} blur-[0.125rem]`}
+      <img
+        src={card.profile}
+        alt=""
+        className="h-full w-full rounded-[0.25rem] object-cover blur-[0.125rem]"
       />
     </div>
   );
@@ -306,27 +333,20 @@ function LikePreviewSection({
 
 function DatingPage() {
   const navigate = useNavigate();
-  const [initialDataUpdatedAt] = useState(() => Date.now());
-  const { data, refetch, dataUpdatedAt, isFetching } = useQuery({
+  const { data, dataUpdatedAt, isError, isPending } = useQuery({
     queryKey: datingHomeQueryKey,
     queryFn: fetchDatingHome,
-    initialData: initialDatingHomeData,
-    initialDataUpdatedAt,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
   const [now, setNow] = useState(() => Date.now());
   const [openedCardState, setOpenedCardState] = useState<{
     dataUpdatedAt: number;
     ids: Set<string>;
   }>(() => ({
-    dataUpdatedAt: dataUpdatedAt,
+    dataUpdatedAt: 0,
     ids: new Set(),
   }));
-
-  const elapsedSeconds = Math.max(
-    Math.floor((now - dataUpdatedAt) / 1000),
-    0,
-  );
-  const remainingSeconds = Math.max(data.remainingSeconds - elapsedSeconds, 0);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -336,11 +356,18 @@ function DatingPage() {
     return () => window.clearInterval(intervalId);
   }, []);
 
+  const remainingSeconds = data
+    ? getRefreshRemainingSeconds(data.refreshAvailableAt, now)
+    : 0;
+
   useEffect(() => {
-    if (remainingSeconds <= 0 && !isFetching) {
-      void refetch();
+    if (
+      data &&
+      shouldReloadForRefresh(data.canRefresh, remainingSeconds)
+    ) {
+      reloadForRefreshOnce(data.refreshAvailableAt);
     }
-  }, [isFetching, refetch, remainingSeconds]);
+  }, [data, remainingSeconds]);
 
   const handleOpenCard = (id: string) => {
     setOpenedCardState((prevOpenedCardState) => {
@@ -360,7 +387,10 @@ function DatingPage() {
     navigate(`/dating/cards/${encodeURIComponent(id)}`);
   };
 
-  const visibleCards = useMemo(() => data.cards.slice(0, 8), [data.cards]);
+  const visibleCards = useMemo(
+    () => data?.cards.slice(0, 8) ?? [],
+    [data?.cards],
+  );
   const openedCardIds = useMemo(
     () =>
       openedCardState.dataUpdatedAt === dataUpdatedAt
@@ -368,6 +398,28 @@ function DatingPage() {
         : new Set<string>(),
     [dataUpdatedAt, openedCardState],
   );
+
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-grey-100">
+        <div
+          role="status"
+          aria-label="소개팅 정보 확인 중"
+          className="h-10 w-10 animate-spin rounded-full border-[0.1875rem] border-primary-200 border-t-primary-500"
+        />
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-grey-100 px-5 text-center">
+        <p className="typo-button-text text-grey-700">
+          소개팅 정보를 불러올 수 없어요
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f9f9f9_0%,#ff88b0_61.8%,#ff73a2_100%)]">
@@ -385,6 +437,8 @@ function DatingPage() {
         <MainCardSection
           cards={visibleCards}
           openedCardIds={openedCardIds}
+          profileNum={data.profileNum}
+          freeLikeRemaining={data.freeLikeRemaining}
           onOpenCard={handleOpenCard}
           onViewCardDetail={handleViewCardDetail}
         />

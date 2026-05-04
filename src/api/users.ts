@@ -2,8 +2,6 @@ import { apiClient } from './client';
 import { isBackendStatusDto, normalizeUserStatus } from './status';
 import type { UserStatus } from '../types/user';
 
-const SHOULD_MOCK_NICKNAME_CHECK = import.meta.env.DEV;
-
 export type AnimalProfile =
   | 'DOG'
   | 'CAT'
@@ -65,15 +63,12 @@ const parseCheckNicknameAvailabilityResponse = (
   }
 
   const response = value as Record<string, unknown>;
-  const booleanValue = Object.values(response).find(
-    (item): item is boolean => typeof item === 'boolean'
-  );
 
-  if (typeof booleanValue !== 'boolean') {
+  if (typeof response.isAvailable !== 'boolean') {
     return null;
   }
 
-  return { isAvailable: booleanValue };
+  return { isAvailable: response.isAvailable };
 };
 
 /**
@@ -98,10 +93,6 @@ export const registerUser = async (payload: RegisterUserRequest) => {
  * 회원가입과 프로필 수정에서 닉네임 중복 여부를 확인한다.
  */
 export const checkNicknameAvailability = async (nickname: string) => {
-  if (SHOULD_MOCK_NICKNAME_CHECK) {
-    return { isAvailable: nickname.trim().length > 0 };
-  }
-
   const { data } = await apiClient.get<unknown>('/api/users/check-nickname', {
     params: { nickname },
   });
