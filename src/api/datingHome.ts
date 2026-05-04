@@ -2,7 +2,7 @@ import { apiClient } from "./client";
 
 export type DatingHomeCard = {
   id: string;
-  userId: number;
+  userId: string;
   profile: string;
 };
 
@@ -45,13 +45,13 @@ const isProfileCard = (value: unknown): value is DatingHomeCard => {
   const profile = value as Record<string, unknown>;
 
   return (
-    typeof profile.userId === "number" &&
+    typeof profile.userId === "string" &&
     typeof profile.profile === "string"
   );
 };
 
 const normalizeProfileCard = (profile: DatingHomeCard): DatingHomeCard => ({
-  id: String(profile.userId),
+  id: profile.userId,
   userId: profile.userId,
   profile: profile.profile,
 });
