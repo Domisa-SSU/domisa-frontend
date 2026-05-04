@@ -223,7 +223,12 @@ function Kakao() {
 
         setErrorMessage("");
 
-        window.location.assign(`${KAKAO_AUTHORIZE_URL}?${authorizeParams.toString()}`);
+        window.location.replace(`${KAKAO_AUTHORIZE_URL}?${authorizeParams.toString()}`);
+    };
+
+    const handleHeaderBack = () => {
+        clearKakaoOAuthContext();
+        navigate(isIntroduceFriendFlow ? "/introduce-friend" : "/", { replace: true });
     };
 
     const handleSkip = () => {
@@ -245,7 +250,7 @@ function Kakao() {
             }}
         >
             <div className="absolute inset-x-0 top-0 z-10">
-                <NotLoginHeader title={headerTitle}></NotLoginHeader>
+                <NotLoginHeader title={headerTitle} onBack={handleHeaderBack}></NotLoginHeader>
             </div>
             {isIntroduceFriendFlow ? (
                 <div className="relative min-h-screen px-5 pb-[2.94rem]">
