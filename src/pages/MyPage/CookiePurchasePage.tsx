@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Toast from "../../components/Toast";
+import BankTransferModal from "./BankTransferModal";
 import { useLocation, useNavigate } from "react-router-dom";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import Button from "../../components/Button/Button";
@@ -34,6 +35,7 @@ function CookiePurchasePage() {
   const [isNameConfirmed, setIsNameConfirmed] = useState(false);
   const [showCopyToast, setShowCopyToast] = useState(false);
   const [showWarningToast, setShowWarningToast] = useState(false);
+  const [showBankModal, setShowBankModal] = useState(false);
 
   useEffect(() => {
     if (!showCopyToast) return;
@@ -47,9 +49,13 @@ function CookiePurchasePage() {
     return () => window.clearTimeout(timerId);
   }, [showWarningToast]);
 
-  const handlePaymentMethodClick = () => {
+  const handlePaymentMethodClick = (label: string) => {
     if (!isNameConfirmed) {
       setShowWarningToast(true);
+      return;
+    }
+    if (label === "계좌이체 하기") {
+      setShowBankModal(true);
     }
   };
 
@@ -126,7 +132,7 @@ function CookiePurchasePage() {
               <button
                 key={label}
                 type="button"
-                onClick={handlePaymentMethodClick}
+                onClick={() => handlePaymentMethodClick(label)}
                 className="relative flex items-center justify-center h-[3.4375rem] w-full bg-primary-100 border-[1.2px] border-primary-200 rounded-[1.25rem] px-5"
               >
                 <span className="typo-header-3-b text-primary-500">{label}</span>
@@ -140,6 +146,12 @@ function CookiePurchasePage() {
 
       {showCopyToast && <Toast message="복사되었습니다" />}
       {showWarningToast && <Toast message="입금자명을 확인해주세요" icon={forbiddenIcon} />}
+      {showBankModal && (
+        <BankTransferModal
+          amount={state.price}
+          onClose={() => setShowBankModal(false)}
+        />
+      )}
 
       {/* 하단 고정 영역 */}
       <section className="fixed inset-x-0 bottom-0 bg-grey-100 px-5 pt-2.5 pb-[2.75rem] flex flex-col items-center gap-2.5">
