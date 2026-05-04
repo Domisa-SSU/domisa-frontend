@@ -1,78 +1,186 @@
-export type DatingCardVariant =
-  | "night"
-  | "sunset"
-  | "sky"
-  | "forest"
-  | "lavender"
-  | "peach";
+import { apiClient } from "./client";
 
 export type DatingHomeCard = {
   id: string;
-  variant: DatingCardVariant;
+  userId: number;
+  profile: string;
 };
 
 export type DatingHomeResponse = {
-  remainingSeconds: number;
+  refreshAvailableAt: string;
+  canRefresh: boolean;
+  profileNum: number;
+  freeLikeRemaining: number;
   cards: DatingHomeCard[];
   receivedLikes: DatingHomeCard[];
   sentLikes: DatingHomeCard[];
 };
 
-const CARD_REFRESH_SECONDS = 7152;
-
-const createCards = (
-  prefix: string,
-  variants: DatingCardVariant[],
-): DatingHomeCard[] =>
-  variants.map((variant, index) => ({
-    id: `${prefix}-${index + 1}`,
-    variant,
-  }));
-
-const rotateCards = (
-  cards: DatingHomeCard[],
-  offset: number,
-): DatingHomeCard[] => {
-  const normalizedOffset = offset % cards.length;
-  return [...cards.slice(normalizedOffset), ...cards.slice(0, normalizedOffset)];
+type RefreshTimeResponse = {
+  refreshAvailableAt: string;
+  canRefresh: boolean;
 };
 
-const mockDatingHomeData: DatingHomeResponse = {
-  remainingSeconds: CARD_REFRESH_SECONDS,
-  cards: createCards("solo", [
-    "night",
-    "sunset",
-    "sky",
-    "forest",
-    "lavender",
-    "peach",
-    "night",
-    "sky",
-  ]),
-  receivedLikes: createCards("received", [
-    "forest",
-    "sunset",
-    "peach",
-    "lavender",
-    "sky",
-    "night",
-    "forest",
-    "sunset",
-  ]),
-  sentLikes: createCards("sent", ["forest", "sunset", "peach", "lavender", "sky"]),
+type ProfilesResponse = {
+  profileNum: number;
+  freeLikeRemaining: number;
+  profiles: DatingHomeCard[];
 };
 
-export const initialDatingHomeData = mockDatingHomeData;
+type ReceivedLikesResponse = {
+  myFanNumber: number;
+  myFans: DatingHomeCard[];
+};
 
-let mockRequestCount = 0;
+type SentLikesResponse = {
+  myTypeNumber: number;
+  myTypes: DatingHomeCard[];
+};
 
-export const fetchDatingHome = async (): Promise<DatingHomeResponse> => {
-  mockRequestCount += 1;
+const isProfileCard = (value: unknown): value is DatingHomeCard => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const profile = value as Record<string, unknown>;
+
+  return (
+    typeof profile.userId === "number" &&
+    typeof profile.profile === "string"
+  );
+};
+
+const normalizeProfileCard = (profile: DatingHomeCard): DatingHomeCard => ({
+  id: String(profile.userId),
+  userId: profile.userId,
+  profile: profile.profile,
+});
+
+const isRefreshTimeResponse = (
+  value: unknown,
+): value is RefreshTimeResponse => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return (
+    typeof response.refreshAvailableAt === "string" &&
+    typeof response.canRefresh === "boolean"
+  );
+};
+
+const isProfilesResponse = (value: unknown): value is ProfilesResponse => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return (
+    typeof response.profileNum === "number" &&
+    typeof response.freeLikeRemaining === "number" &&
+    Array.isArray(response.profiles) &&
+    response.profiles.every(isProfileCard)
+  );
+};
+
+const isReceivedLikesResponse = (
+  value: unknown,
+): value is ReceivedLikesResponse => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return (
+    typeof response.myFanNumber === "number" &&
+    Array.isArray(response.myFans) &&
+    response.myFans.every(isProfileCard)
+  );
+};
+
+const isSentLikesResponse = (value: unknown): value is SentLikesResponse => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return (
+    typeof response.myTypeNumber === "number" &&
+    Array.isArray(response.myTypes) &&
+    response.myTypes.every(isProfileCard)
+  );
+};
+
+export const getDatingRefreshTime = async () => {
+  const { data } = await apiClient.get<unknown>("/api/datings/refresh-time");
+
+  if (!isRefreshTimeResponse(data)) {
+    throw new Error("Invalid dating refresh time response");
+  }
+
+  return data;
+};
+
+export const getDatingProfiles = async () => {
+  const { data } = await apiClient.get<unknown>("/api/datings/profiles");
+
+  if (!isProfilesResponse(data)) {
+    throw new Error("Invalid dating profiles response");
+  }
 
   return {
-    remainingSeconds: CARD_REFRESH_SECONDS,
-    cards: rotateCards(mockDatingHomeData.cards, mockRequestCount),
-    receivedLikes: rotateCards(mockDatingHomeData.receivedLikes, mockRequestCount),
-    sentLikes: rotateCards(mockDatingHomeData.sentLikes, mockRequestCount),
+    profileNum: data.profileNum,
+    freeLikeRemaining: data.freeLikeRemaining,
+    profiles: data.profiles.map(normalizeProfileCard),
+  };
+};
+
+export const getReceivedLikes = async () => {
+  const { data } = await apiClient.get<unknown>("/api/users/likes/received");
+
+  if (!isReceivedLikesResponse(data)) {
+    throw new Error("Invalid received likes response");
+  }
+
+  return {
+    myFanNumber: data.myFanNumber,
+    myFans: data.myFans.map(normalizeProfileCard),
+  };
+};
+
+export const getSentLikes = async () => {
+  const { data } = await apiClient.get<unknown>("/api/users/likes/sent");
+
+  if (!isSentLikesResponse(data)) {
+    throw new Error("Invalid sent likes response");
+  }
+
+  return {
+    myTypeNumber: data.myTypeNumber,
+    myTypes: data.myTypes.map(normalizeProfileCard),
+  };
+};
+
+export const fetchDatingHome = async (): Promise<DatingHomeResponse> => {
+  const [refreshTime, profiles, receivedLikes, sentLikes] = await Promise.all([
+    getDatingRefreshTime(),
+    getDatingProfiles(),
+    getReceivedLikes(),
+    getSentLikes(),
+  ]);
+
+  return {
+    refreshAvailableAt: refreshTime.refreshAvailableAt,
+    canRefresh: refreshTime.canRefresh,
+    profileNum: profiles.profileNum,
+    freeLikeRemaining: profiles.freeLikeRemaining,
+    cards: profiles.profiles,
+    receivedLikes: receivedLikes.myFans,
+    sentLikes: sentLikes.myTypes,
   };
 };
