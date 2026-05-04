@@ -17,7 +17,7 @@ import arrowIcon from '../../assets/arrowIcon.svg';
 // TODO: API 연동 시 GET /api/users/me 응답으로 교체
 const mockResponse = {
   user: {
-    userId: 123,
+    userId: '123',
     nickname: '콩순이짱',
     birthYear: 2003,
     gender: '여',
