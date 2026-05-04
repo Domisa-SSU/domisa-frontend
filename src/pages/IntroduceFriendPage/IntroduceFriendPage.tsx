@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import BottomActionBar from "../../components/BottomActionBar";
 import { INTRODUCE_FRIEND_DRAFT_STORAGE_KEY } from "../../constants/storageKeys";
 import NotLoginHeader from "../../components/NotLoginHeader";
+import { useAuthMeQuery } from "../../queries/auth";
 
 function IntroduceFriendPage() {
     const navigate = useNavigate();
+    const { data: authMe } = useAuthMeQuery();
     const [shortIntro, setShortIntro] = useState("");
     const [charmPoint, setCharmPoint] = useState("");
     const [funnyEpisode, setFunnyEpisode] = useState("");
@@ -18,6 +20,10 @@ function IntroduceFriendPage() {
         if (value.length <= limit) {
             setter(value);
         }
+    };
+
+    const handleNext = () => {
+        navigate(authMe ? "/introduce-friend/generating" : "/auth?flow=introduce-friend");
     };
 
     useEffect(() => {
@@ -120,7 +126,7 @@ function IntroduceFriendPage() {
             <BottomActionBar
                 label="다음"
                 disabled={!isFormValid}
-                onClick={() => navigate("/auth?flow=introduce-friend")}
+                onClick={handleNext}
             />
         </div>
     );
