@@ -58,6 +58,8 @@ const clearKakaoOAuthContext = () => {
     sessionStorage.removeItem(KAKAO_RETURN_TO_STORAGE_KEY);
 };
 
+const getKakaoRedirectUri = () => `${window.location.origin}/auth`;
+
 const getNextPathAfterLogin = (
     status: UserStatus,
     isIntroduceFriendFlow: boolean,
@@ -145,7 +147,10 @@ function Kakao() {
         processedCodeRef.current = authorizationCode;
         setDeferredErrorMessage("");
 
-        loginWithKakao({ authorizationCode })
+        loginWithKakao({
+            authorizationCode,
+            redirectUri: getKakaoRedirectUri(),
+        })
             .then((response) => {
                 clearKakaoOAuthContext();
 
@@ -196,7 +201,7 @@ function Kakao() {
         }
 
         const state = createKakaoOAuthState();
-        const redirectUri = `${window.location.origin}/auth`;
+        const redirectUri = getKakaoRedirectUri();
         const authorizeParams = new URLSearchParams({
             response_type: "code",
             client_id: kakaoRestApiKey,

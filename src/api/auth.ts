@@ -4,6 +4,7 @@ import type { AuthMeResponse, UserStatus } from "../types/user";
 
 type LoginWithKakaoRequest = {
     authorizationCode: string;
+    redirectUri: string;
 };
 
 export type LoginWithKakaoResponse = {
