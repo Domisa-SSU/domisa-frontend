@@ -1,0 +1,143 @@
+import { useEffect, useState } from "react";
+import Toast from "../../components/Toast";
+import { useLocation, useNavigate } from "react-router-dom";
+import NotLoginHeader from "../../components/NotLoginHeader";
+import Button from "../../components/Button/Button";
+import { ButtonVariant } from "../../components/Button/ButtonEnums";
+import rightArrow from "../../assets/right_arrow.svg";
+import copyIcon from "../../assets/copy.svg";
+
+// TODO: API 연동 시 교체
+const MOCK_ORDER = {
+  billing_name: "입금A7K3Q9",
+  order_amount: 2000,
+};
+
+type CookiePurchaseLocationState = {
+  count: number;
+  price: string;
+};
+
+const PAYMENT_METHODS = [
+  { label: "토스페이로 송금하기" },
+  { label: "카카오페이로 송금하기" },
+  { label: "계좌이체 하기" },
+];
+
+function CookiePurchasePage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as CookiePurchaseLocationState | null;
+
+  const [isNameConfirmed, setIsNameConfirmed] = useState(false);
+  const [showCopyToast, setShowCopyToast] = useState(false);
+
+  useEffect(() => {
+    if (!showCopyToast) return;
+    const timerId = window.setTimeout(() => setShowCopyToast(false), 2500);
+    return () => window.clearTimeout(timerId);
+  }, [showCopyToast]);
+
+  useEffect(() => {
+    if (!state) {
+      navigate("/my/cookie", { replace: true });
+    }
+  }, [state, navigate]);
+
+  if (!state) {
+    return null;
+  }
+
+  const { billing_name } = MOCK_ORDER;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(billing_name);
+      setShowCopyToast(true);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-grey-100">
+      <NotLoginHeader title="쿠키 구매" />
+
+      <div className="px-5 pt-9 pb-[8.75rem]">
+        <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-10">
+
+          {/* 입금자명 섹션 */}
+          <div className="flex flex-col gap-5 bg-grey-200 rounded-[0.625rem] px-2.5 py-5">
+            <p className="pl-2.5 typo-button-text text-grey-900">
+              <span className="text-primary-600">입금자명</span>에 아래 코드를 입력해주세요
+            </p>
+            <div className="flex items-center justify-between h-[3.125rem] bg-grey-100 px-2.5 py-2 rounded-[0.625rem]">
+              <span className="typo-comment-1 text-grey-900">{billing_name}</span>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="flex items-center gap-1 bg-primary-100 px-3.5 py-2 rounded-[0.75rem]"
+              >
+                <img src={copyIcon} alt="" className="w-[0.648rem] h-[0.72rem]" />
+                <span className="typo-comment-2 text-primary-500">복사</span>
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsNameConfirmed(!isNameConfirmed)}
+              className="flex items-center gap-2.5 pl-2.5"
+            >
+              <span
+                className={`flex h-[1.5625rem] w-[1.5625rem] items-center justify-center rounded-[0.3125rem] typo-comment-1-b ${
+                  isNameConfirmed
+                    ? "bg-primary-500 text-grey-100"
+                    : "border-[1.8px] border-grey-500 bg-grey-100 text-transparent"
+                }`}
+              >
+                ✓
+              </span>
+              <span
+                className={`typo-button-text ${
+                  isNameConfirmed ? "text-primary-600" : "text-grey-600"
+                }`}
+              >
+                입금자명을 확인했어요
+              </span>
+            </button>
+          </div>
+
+          {/* 결제 방법 */}
+          <div className="flex flex-col gap-[1.875rem]">
+            {PAYMENT_METHODS.map(({ label }) => (
+              <button
+                key={label}
+                type="button"
+                className="flex items-center justify-between h-[3.4375rem] w-full bg-primary-100 border-[1.2px] border-primary-200 rounded-[1.25rem] px-5"
+              >
+                <span className="typo-header-3-b text-primary-500">{label}</span>
+                <img src={rightArrow} alt="" className="w-[0.6875rem] h-[1.0625rem]" />
+              </button>
+            ))}
+          </div>
+
+        </div>
+      </div>
+
+      {showCopyToast && <Toast message="복사되었습니다" />}
+
+      {/* 하단 고정 영역 */}
+      <section className="fixed inset-x-0 bottom-0 bg-grey-100 px-5 pt-2.5 pb-[2.75rem] flex flex-col items-center gap-2.5">
+        <p className="typo-button-text text-grey-900">송금 완료 후, 아래 버튼을 눌러주세요</p>
+        <div className="w-full max-w-[22.625rem]">
+          <Button
+            label="송금 완료"
+            variant={ButtonVariant.Main}
+            disabled={!isNameConfirmed}
+          />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+export default CookiePurchasePage;

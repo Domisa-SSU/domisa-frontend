@@ -9,6 +9,7 @@ import SignupPage from "./pages/SignupPage/SignupPage";
 import { SignupFlowProvider } from "./pages/SignupPage/SignupFlowContext";
 import MyPage from "./pages/MyPage/MyPage";
 import MyCookiePage from "./pages/MyPage/MyCookiePage";
+import CookiePurchasePage from "./pages/MyPage/CookiePurchasePage";
 import EditProfilePage from "./pages/MyPage/EditProfilePage";
 import DatingCardEditPage from "./pages/MyPage/DatingCardEditPage";
 import DatingPage from "./pages/DatingPage/DatingPage";
@@ -75,6 +76,7 @@ function App() {
           ></Route>
           <Route path="/my" element={<MyPage></MyPage>}></Route>
           <Route path="/my/cookie" element={<MyCookiePage></MyCookiePage>}></Route>
+          <Route path="/my/cookie/purchase" element={<CookiePurchasePage></CookiePurchasePage>}></Route>
           <Route path="/my/edit-profile" element={<EditProfilePage></EditProfilePage>}></Route>
           <Route path="/my/dating-card" element={<DatingCardEditPage></DatingCardEditPage>}></Route>
           <Route path="/notifications" element={<NotificationPage />}></Route>
