@@ -34,7 +34,7 @@ const mockResponse = {
   status: {
     isRegistered: true,
     hasIntroduction: true,
-    isProfileCompleted: false, // true면 소개팅 카드 있음
+    isProfileCompleted: true, // true면 소개팅 카드 있음
   },
 };
 
