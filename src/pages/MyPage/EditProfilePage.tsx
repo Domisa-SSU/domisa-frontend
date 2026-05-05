@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomActionBar from '../../components/BottomActionBar';
 import NotLoginHeader from '../../components/NotLoginHeader';
@@ -22,8 +22,13 @@ import rabbitImg from '../SignupPage/asset/rabbitImg.png';
 import sudalImg from '../SignupPage/asset/sudalImg.png';
 import wolfImg from '../SignupPage/asset/wolfImg.png';
 
+type ContactMethodType = 'INSTAGRAM' | 'KAKAO';
+
 const birthYears = Array.from({ length: 21 }, (_, index) => `${2008 - index}`);
-const contactMethods = ['인스타 ID', '전화번호', '카카오톡ID'];
+const contactMethods: { value: ContactMethodType; label: string }[] = [
+  { value: 'INSTAGRAM', label: '인스타 ID' },
+  { value: 'KAKAO', label: '카카오톡ID' },
+];
 const phonePrefix = '010';
 
 const animalOptions = [
@@ -45,14 +50,27 @@ const animalImageMap: Record<string, string> = Object.fromEntries(
   animalOptions.map((a) => [a.name, a.image])
 );
 
+const animalNameByProfile: Record<string, string> = {
+  DOG: '강아지', CAT: '고양이', BEAR: '곰', SLOTH: '나무늘보',
+  HAMSTER: '햄스터', WOLF: '늑대', RABBIT: '토끼', DEER: '사슴',
+  OTTER: '수달', ALPACA: '알파카', FOX: '여우', CAPYBARA: '카피바라',
+};
+
+type AnimalProfile = string;
+
 // TODO: API 연동 시 교체
 const mockUser = {
+  userId: 'user-001',
   nickname: '삑그리고',
-  gender: '여성',
-  birthYear: '2003',
-  contactMethod: '인스타 ID',
-  contactValue: '@1014.1248',
-  animalType: '수달',
+  birthYear: 2003,
+  gender: false, // true = 남성, false = 여성
+  animalProfile: 'OTTER' as AnimalProfile,
+  contact: {
+    type: 'INSTAGRAM' as ContactMethodType,
+    content: '@1014.1248',
+  },
+  profileImageUrl: '',
+  notifPhone: '01012345678',
 };
 
 const fieldClassName =
@@ -125,28 +143,29 @@ function AnimalSelectModal({ current, onConfirm, onClose }: AnimalSelectModalPro
 
 function EditProfilePage() {
   const navigate = useNavigate();
-  const [selectedAnimal, setSelectedAnimal] = useState(mockUser.animalType);
+  const [selectedAnimal, setSelectedAnimal] = useState(animalNameByProfile[mockUser.animalProfile]);
   const [showAnimalModal, setShowAnimalModal] = useState(false);
   const [nickname, setNickname] = useState(mockUser.nickname);
   const [isNicknameChecked, setIsNicknameChecked] = useState(true);
   const [nicknameErrorMessage, setNicknameErrorMessage] = useState('');
-  const [gender, setGender] = useState(mockUser.gender);
-  const [birthYear, setBirthYear] = useState(mockUser.birthYear);
-  const [contactMethod, setContactMethod] = useState(mockUser.contactMethod);
-  // TODO: API 연동 시 contactValue가 전화번호인 경우 "010-XXXX-XXXX" 형태로 파싱하여 초기값 설정
-  const [phoneMiddle, setPhoneMiddle] = useState('');
-  const [phoneLast, setPhoneLast] = useState('');
-  const [contactValue, setContactValue] = useState(mockUser.contactValue);
-  const {
-    mutateAsync: checkNicknameAvailability,
-    isPending: isCheckingNickname,
-  } = useCheckNicknameMutation();
+  const [gender, setGender] = useState(mockUser.gender ? '남성' : '여성');
+  const [birthYear, setBirthYear] = useState(String(mockUser.birthYear));
+  const [contactMethod, setContactMethod] = useState<ContactMethodType | ''>(mockUser.contact.type);
+  // TODO: API 연동 시 notifPhone이 숫자만("01012345678") 형태로 오면 아래처럼 파싱하여 초기값 설정
+  const [notifPhoneMiddle, setNotifPhoneMiddle] = useState(
+    () => mockUser.notifPhone.slice(3, 7)
+  );
+  const [notifPhoneLast, setNotifPhoneLast] = useState(
+    () => mockUser.notifPhone.slice(7, 11)
+  );
+  const notifPhoneMiddleRef = useRef<HTMLInputElement>(null);
+  const notifPhoneLastRef = useRef<HTMLInputElement>(null);
+  const [contactValue, setContactValue] = useState(mockUser.contact.content);
+  const { mutateAsync: checkNicknameAvailability, isPending: isCheckingNickname } =
+    useCheckNicknameMutation();
 
   const isFormValid = useMemo(() => {
-    const isContactFilled =
-      contactMethod === '전화번호'
-        ? phoneMiddle.trim().length > 0 && phoneLast.trim().length > 0
-        : contactMethod.length > 0 && contactValue.trim().length > 0;
+    const isContactFilled = contactMethod.length > 0 && contactValue.trim().length > 0;
 
     return (
       nickname.trim().length > 0 &&
@@ -162,8 +181,6 @@ function EditProfilePage() {
     gender,
     isNicknameChecked,
     nickname,
-    phoneLast,
-    phoneMiddle,
   ]);
 
   const isContactMethodSelected = contactMethod.length > 0;
@@ -335,26 +352,21 @@ function EditProfilePage() {
 
           {/* 연락처 */}
           <section className="flex flex-col gap-[0.875rem]">
-            <h2 className="typo-button-text text-grey-900">연락처를 입력해주세요</h2>
+            <h2 className="typo-button-text text-grey-900">공유할 연락처</h2>
             <div className="grid grid-cols-[7.75rem_minmax(0,1fr)] gap-2.5">
               <div className="relative">
                 <select
                   value={contactMethod}
                   onChange={(event) => {
-                    const nextMethod = event.target.value;
-                    setContactMethod(nextMethod);
+                    setContactMethod(event.target.value as ContactMethodType);
                     setContactValue('');
-                    setPhoneMiddle('');
-                    setPhoneLast('');
                   }}
-                  className={`${selectClassName} ${
-                    contactMethod ? 'text-primary-500' : 'text-grey-600'
-                  }`}
+                  className={`${selectClassName} text-grey-600`}
                 >
                   <option value="">선택</option>
                   {contactMethods.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
+                    <option key={item.value} value={item.value}>
+                      {item.label}
                     </option>
                   ))}
                 </select>
@@ -362,50 +374,60 @@ function EditProfilePage() {
                   <img src={selectArrow} alt="" className="h-[0.3125rem] w-[0.625rem]" />
                 </span>
               </div>
-              {contactMethod === '전화번호' ? (
-                <div className="grid grid-cols-3 gap-[0.3125rem]">
-                  <div
-                    aria-disabled="true"
-                    className="flex h-10 w-full items-center rounded-[0.625rem] bg-primary-100 px-[0.875rem] typo-input-text-m text-primary-500"
-                  >
-                    {phonePrefix}
-                  </div>
-                  <input
-                    value={phoneMiddle}
-                    onChange={(event) =>
-                      setPhoneMiddle(event.target.value.replace(/[^0-9]/g, '').slice(0, 4))
-                    }
-                    disabled={!isContactMethodSelected}
-                    className={`${fieldClassName} ${isContactMethodSelected ? '' : 'opacity-50'}`}
-                    inputMode="numeric"
-                    maxLength={4}
-                  />
-                  <input
-                    value={phoneLast}
-                    onChange={(event) =>
-                      setPhoneLast(event.target.value.replace(/[^0-9]/g, '').slice(0, 4))
-                    }
-                    disabled={!isContactMethodSelected}
-                    className={`${fieldClassName} ${isContactMethodSelected ? '' : 'opacity-50'}`}
-                    inputMode="numeric"
-                    maxLength={4}
-                  />
-                </div>
-              ) : (
-                <input
-                  value={contactValue}
-                  onChange={(event) => setContactValue(event.target.value)}
-                  disabled={!isContactMethodSelected}
-                  className={`${fieldClassName} ${isContactMethodSelected ? '' : 'opacity-50'}`}
-                  placeholder={
-                    contactMethod === '인스타 ID'
-                      ? '인스타 ID를 입력해주세요'
-                      : contactMethod === '카카오톡ID'
-                        ? '카카오톡 ID를 입력해주세요'
-                        : ''
+              <input
+                value={contactValue}
+                onChange={(event) => setContactValue(event.target.value)}
+                disabled={!isContactMethodSelected}
+                className={`${fieldClassName} ${isContactMethodSelected ? '' : 'opacity-50'}`}
+                placeholder={
+                  contactMethod === 'INSTAGRAM'
+                    ? '인스타 ID를 입력해주세요'
+                    : contactMethod === 'KAKAO'
+                      ? '카카오톡 ID를 입력해주세요'
+                      : ''
+                }
+              />
+            </div>
+          </section>
+
+          {/* 알림문자 받을 전화번호 */}
+          <section className="flex flex-col gap-[0.875rem]">
+            <h2 className="typo-button-text text-grey-900">알림문자 받을 전화번호</h2>
+            <div className="grid grid-cols-3 gap-[0.3125rem]">
+              <div
+                aria-disabled="true"
+                className="flex h-10 w-full items-center rounded-[0.625rem] bg-primary-100 px-[0.875rem] typo-input-text-m text-grey-600"
+              >
+                {phonePrefix}
+              </div>
+              <input
+                ref={notifPhoneMiddleRef}
+                value={notifPhoneMiddle}
+                onChange={(event) => {
+                  const next = event.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                  setNotifPhoneMiddle(next);
+                  if (next.length === 4) notifPhoneLastRef.current?.focus();
+                }}
+                className={fieldClassName}
+                inputMode="numeric"
+                maxLength={4}
+              />
+              <input
+                ref={notifPhoneLastRef}
+                value={notifPhoneLast}
+                onChange={(event) => {
+                  const next = event.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                  setNotifPhoneLast(next);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Backspace' && notifPhoneLast === '') {
+                    notifPhoneMiddleRef.current?.focus();
                   }
-                />
-              )}
+                }}
+                className={fieldClassName}
+                inputMode="numeric"
+                maxLength={4}
+              />
             </div>
           </section>
         </div>
