@@ -172,7 +172,9 @@ function EditProfilePage() {
       isNicknameChecked &&
       gender.length > 0 &&
       birthYear.length > 0 &&
-      isContactFilled
+      isContactFilled &&
+      notifPhoneMiddle.length === 4 &&
+      notifPhoneLast.length === 4
     );
   }, [
     birthYear,
@@ -181,6 +183,8 @@ function EditProfilePage() {
     gender,
     isNicknameChecked,
     nickname,
+    notifPhoneMiddle,
+    notifPhoneLast,
   ]);
 
   const isContactMethodSelected = contactMethod.length > 0;
