@@ -9,19 +9,10 @@ import {
 } from "../../api/datingCardDetail";
 import HeaderTop from "../../components/HeaderTop";
 import Toast from "../../components/Toast";
+import catIcon from "../../assets/catIcon.svg";
 import headerArrow from "../../assets/headerArrow.svg";
 import flowerIcon from "../../assets/flowerIcon.svg";
 import inviteCreatedIcon from "../IntroduceFriendPage/assets/inviteCreatedIcon.svg";
-
-function ProfileImageFallback({ label }: { label: string }) {
-  return (
-    <div className="flex h-full w-full items-center justify-center rounded-[1.37rem] bg-[linear-gradient(145deg,#ffe1ed_0%,#f6f6f6_100%)]">
-      <span className="typo-title-header-1-b text-primary-500">
-        {label.slice(0, 1)}
-      </span>
-    </div>
-  );
-}
 
 function CoverImage({ src }: { src: string | null }) {
   const fadeMask = {
@@ -32,18 +23,28 @@ function CoverImage({ src }: { src: string | null }) {
   };
 
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    <div
+      className="absolute inset-0 flex items-center justify-center overflow-hidden"
+      style={fadeMask}
+    >
       {src ? (
-        <img
-          src={src}
-          alt=""
-          className="h-full w-full object-cover blur-[5px]"
-          style={fadeMask}
-        />
+        <>
+          <img
+            src={src}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full scale-[1.08] object-cover brightness-[0.88] saturate-[1.08] blur-[10px]"
+          />
+          <div className="absolute inset-0 bg-black/10" />
+          <img
+            src={src}
+            alt=""
+            className="relative z-10 h-full w-auto max-w-full object-contain"
+          />
+        </>
       ) : (
         <div
-          className="h-full w-full bg-[linear-gradient(135deg,#f6f6f6_0%,#ffcde3_45%,#e0e0e0_100%)] blur-[5px]"
-          style={fadeMask}
+          className="h-full w-full bg-[linear-gradient(135deg,#f6f6f6_0%,#ffcde3_45%,#e0e0e0_100%)]"
         />
       )}
     </div>
@@ -55,26 +56,16 @@ function ProfileSummary({
   birthYearText,
   mbti,
   gender,
-  avatarImageUrl,
 }: {
   nickname: string;
   birthYearText: string;
   mbti: string;
   gender: string;
-  avatarImageUrl: string | null;
 }) {
   return (
     <section className="flex items-center gap-[0.945rem]">
-      <div className="h-[4.568rem] w-[4.568rem] shrink-0 overflow-hidden rounded-[1.37rem] bg-grey-300">
-        {avatarImageUrl ? (
-          <img
-            src={avatarImageUrl}
-            alt=""
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <ProfileImageFallback label={nickname} />
-        )}
+      <div className="h-[4.568rem] w-[4.568rem] shrink-0 overflow-hidden rounded-full bg-primary-100 p-1">
+        <img src={catIcon} alt="" className="h-full w-full object-contain" />
       </div>
       <div className="flex flex-col gap-[0.4725rem]">
         <h1 className="typo-title-header-1 text-grey-900">{nickname}</h1>
@@ -227,7 +218,6 @@ function DatingCardDetailPage() {
             birthYearText={cardDetail.birthYearText}
             mbti={cardDetail.mbti}
             gender={cardDetail.gender}
-            avatarImageUrl={cardDetail.avatarImageUrl}
           />
           <DetailSection
             title="친구 소개서"
