@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Toast from "../../components/Toast";
 import BankTransferModal from "./BankTransferModal";
+import BackConfirmModal from "./BackConfirmModal";
 import { useLocation, useNavigate } from "react-router-dom";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import Button from "../../components/Button/Button";
@@ -36,6 +37,17 @@ function CookiePurchasePage() {
   const [showCopyToast, setShowCopyToast] = useState(false);
   const [showWarningToast, setShowWarningToast] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
+  const [showBackModal, setShowBackModal] = useState(false);
+
+  useEffect(() => {
+    window.history.pushState(null, '', window.location.href);
+    const handlePopState = () => {
+      window.history.pushState(null, '', window.location.href);
+      setShowBackModal(true);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     if (!showCopyToast) return;
@@ -156,6 +168,12 @@ function CookiePurchasePage() {
         <BankTransferModal
           amount={state.price}
           onClose={() => setShowBankModal(false)}
+        />
+      )}
+      {showBackModal && (
+        <BackConfirmModal
+          onConfirm={() => navigate(-2)}
+          onCancel={() => setShowBackModal(false)}
         />
       )}
 
