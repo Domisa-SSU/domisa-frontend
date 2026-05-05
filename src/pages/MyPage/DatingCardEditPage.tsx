@@ -2,11 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import NotLoginHeader from '../../components/NotLoginHeader';
 import Toast from '../../components/Toast';
 import editPencilImg from '../../assets/edit_pencil.svg';
-import toastCheckIcon from '../../assets/toastCheckIcon.svg';
 import ProfileChangeIcon from '../../assets/profile_change.svg?react';
-import photoUploadIcon from '../../assets/photo_upload.svg';
+import PhotoUploadIcon from '../../assets/photo_upload.svg?react';
+import CheckIcon from '../../assets/check.svg?react';
 import xIcon from '../../assets/X.svg';
-import cryIcon from '../../assets/cryIcon.svg';
 
 type DatingCardData = {
   mbti: string;
@@ -38,44 +37,6 @@ const textareaClass = (value: string) =>
       ? 'bg-primary-100 text-primary-500 placeholder:text-primary-300'
       : 'bg-grey-300 text-grey-600 placeholder:text-grey-600'
   }`;
-
-type DeleteConfirmModalProps = {
-  onConfirm: () => void;
-  onCancel: () => void;
-};
-
-function DeleteConfirmModal({ onConfirm, onCancel }: DeleteConfirmModalProps) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-grey-900/70" onClick={onCancel} />
-      <div className="relative z-10 flex w-[21.25rem] flex-col items-center gap-[1.875rem] rounded-[0.875rem] bg-white pb-5 pt-[1.875rem]">
-        <div className="flex flex-col items-center gap-[0.9375rem]">
-          <p className="typo-subtitle-header-2 text-grey-900">정말 삭제하시겠어요?</p>
-          <div className="flex items-center gap-1 typo-input-text-m text-grey-700">
-            <span>소개팅 카드를 삭제하면 소개팅을 할 수 없어요</span>
-            <img src={cryIcon} alt="" className="h-3.5 w-3.5" />
-          </div>
-        </div>
-        <div className="flex w-[18.75rem] gap-2.5">
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="flex h-[3.125rem] flex-1 items-center justify-center rounded-[0.875rem] bg-grey-400"
-          >
-            <span className="typo-button-text-b text-grey-800">삭제</span>
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex h-[3.125rem] flex-1 items-center justify-center rounded-[0.875rem] bg-primary-500"
-          >
-            <span className="typo-button-text-b text-grey-100">아니요</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 type MbtiModalProps = {
   mbti: string;
@@ -155,7 +116,6 @@ function DatingCardEditPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [showMbtiModal, setShowMbtiModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -303,30 +263,18 @@ function DatingCardEditPage() {
 
           {/* 나를 표현하는 사진 */}
           <section className="flex flex-col gap-4">
-            <h2 className="typo-subtitle-header-2 text-grey-900">나를 표현하는 사진</h2>
-            <div className="relative w-full overflow-hidden rounded-[0.875rem] bg-grey-300 aspect-[363/271]">
-              {card.photoUrl && (
-                <img
-                  src={card.photoUrl}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              )}
+            <div className="flex items-center justify-between">
+              <h2 className="typo-subtitle-header-2 text-grey-900">나를 표현하는 사진</h2>
               {isEditing && (
                 <>
-                  <div className="absolute inset-0 bg-black/50" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-1.5 rounded-[1.25rem] bg-grey-100 px-5 py-2"
-                    >
-                      <span className="typo-button-text-b text-primary-500">
-                        다른 사진 선택하기
-                      </span>
-                      <img src={photoUploadIcon} alt="" className="h-[0.875rem] w-[0.875rem]" />
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1.5 rounded-[1.25rem] bg-primary-500 px-5 py-2"
+                  >
+                    <span className="typo-button-text-b text-grey-100">다시 올리기</span>
+                    <PhotoUploadIcon className="h-[0.9rem] w-[0.9rem] text-grey-100" />
+                  </button>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -335,6 +283,15 @@ function DatingCardEditPage() {
                     onChange={handlePhotoChange}
                   />
                 </>
+              )}
+            </div>
+            <div className="relative w-full overflow-hidden rounded-[0.875rem] bg-grey-300 aspect-[363/197]">
+              {card.photoUrl && (
+                <img
+                  src={card.photoUrl}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
               )}
             </div>
           </section>
@@ -350,7 +307,7 @@ function DatingCardEditPage() {
               }`}
             >
               <span className="typo-button-text-b text-grey-100">수정 완료</span>
-              <img src={toastCheckIcon} alt="" className="h-[0.875rem] w-[0.875rem]" />
+              <CheckIcon className="h-3 w-3 text-grey-100" />
             </button>
           ) : (
             <button
@@ -362,15 +319,6 @@ function DatingCardEditPage() {
               <img src={editPencilImg} alt="" className="h-3 w-3" />
             </button>
           )}
-
-          {/* 프로필 삭제하기 */}
-          <button
-            type="button"
-            onClick={() => setShowDeleteModal(true)}
-            className="typo-comment-1 self-end text-right text-grey-600 underline underline-offset-4"
-          >
-            삭제하기
-          </button>
         </div>
       </div>
 
@@ -379,16 +327,6 @@ function DatingCardEditPage() {
           mbti={draft.mbti}
           onConfirm={handleMbtiModalClose}
           onCancel={() => setShowMbtiModal(false)}
-        />
-      )}
-
-      {showDeleteModal && (
-        <DeleteConfirmModal
-          onConfirm={() => {
-            // TODO: API 연동 시 삭제 처리 추가
-            setShowDeleteModal(false);
-          }}
-          onCancel={() => setShowDeleteModal(false)}
         />
       )}
 

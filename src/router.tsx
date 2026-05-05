@@ -12,6 +12,9 @@ import MyCookiePage from "./pages/MyPage/MyCookiePage";
 import CookiePurchasePage from "./pages/MyPage/CookiePurchasePage";
 import EditProfilePage from "./pages/MyPage/EditProfilePage";
 import DatingCardEditPage from "./pages/MyPage/DatingCardEditPage";
+import LikesReceivedPage from "./pages/MyPage/LikesReceivedPage";
+import LikesSentPage from "./pages/MyPage/LikesSentPage";
+import MutualMatchPage from "./pages/MyPage/MutualMatchPage";
 import DatingPage from "./pages/DatingPage/DatingPage";
 import DatingCardDetailPage from "./pages/DatingPage/DatingCardDetailPage";
 import DatingRegisterPage from "./pages/DatingPage/DatingRegisterPage";
@@ -39,6 +42,9 @@ const router = createBrowserRouter([
       { path: "my/cookie/purchase", element: <CookiePurchasePage /> },
       { path: "my/edit-profile", element: <EditProfilePage /> },
       { path: "my/dating-card", element: <DatingCardEditPage /> },
+      { path: "my/likes-received", element: <LikesReceivedPage /> },
+      { path: "my/likes-sent", element: <LikesSentPage /> },
+      { path: "my/mutual-match", element: <MutualMatchPage /> },
       { path: "notifications", element: <NotificationPage /> },
     ],
   },
