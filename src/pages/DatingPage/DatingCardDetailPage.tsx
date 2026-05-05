@@ -28,7 +28,20 @@ function CoverImage({ src }: { src: string | null }) {
       style={fadeMask}
     >
       {src ? (
-        <img src={src} alt="" className="h-full w-full object-cover" />
+        <>
+          <img
+            src={src}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full scale-[1.08] object-cover brightness-[0.88] saturate-[1.08] blur-[10px]"
+          />
+          <div className="absolute inset-0 bg-black/10" />
+          <img
+            src={src}
+            alt=""
+            className="relative z-10 h-full w-auto max-w-full object-contain"
+          />
+        </>
       ) : (
         <div
           className="h-full w-full bg-[linear-gradient(135deg,#f6f6f6_0%,#ffcde3_45%,#e0e0e0_100%)]"
