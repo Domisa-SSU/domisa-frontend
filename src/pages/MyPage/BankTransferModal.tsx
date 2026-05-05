@@ -30,7 +30,7 @@ function BankTransferModal({ amount, onClose }: BankTransferModalProps) {
           <span className="typo-input-text-m text-primary-400">계좌번호</span>
           <div className="flex flex-col items-center gap-[0.3125rem]">
             <span className="typo-subtitle-header-2 text-grey-900">
-              우리 은행 1002-1234-1234
+              케이뱅크 1001-4015-2657
             </span>
             <span className="typo-input-text-m text-grey-700">
               예금주 : 도미사(DOMISA)

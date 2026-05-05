@@ -54,6 +54,12 @@ function CookiePurchasePage() {
       setShowWarningToast(true);
       return;
     }
+    if (label === "토스페이로 송금하기") {
+      const amount = state!.price.replace(/,/g, "");
+      const deepLink = `supertoss://send?bank=케이뱅크&accountNo=100140152657&amount=${amount}`;
+      window.open(deepLink, "_self");
+      return;
+    }
     if (label === "계좌이체 하기") {
       setShowBankModal(true);
     }
