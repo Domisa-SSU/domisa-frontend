@@ -97,14 +97,6 @@ const getNextPathAfterLogin = (
         return returnTo;
     }
 
-    if (!status.hasIntroduction) {
-        return "/dating/require-introduce";
-    }
-
-    if (!status.isProfileCompleted) {
-        return "/dating/register";
-    }
-
     return isIntroduceFriendFlow ? "/introduce-friend/generating" : "/";
 };
 

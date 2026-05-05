@@ -15,9 +15,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDatingMatchCount } from "../api/datingHome";
 import { useAuthMeQuery } from "../queries/auth";
+import { useDeleteMeMutation } from "../queries/users";
 
 const datingMatchCountQueryKey = ["dating", "count"] as const;
 const fallbackMatchCount = 21;
+const shouldShowDeleteMeButton = import.meta.env.DEV;
 
 type HomeTheme = "day" | "night";
 
@@ -28,8 +30,13 @@ const getThemeByTime = (): HomeTheme => {
 
 function HomePage() {
   const [theme] = useState(getThemeByTime());
+  const [deleteMessage, setDeleteMessage] = useState("");
   const navigate = useNavigate();
   const { data: authMe } = useAuthMeQuery();
+  const {
+    mutateAsync: deleteMe,
+    isPending: isDeletingMe,
+  } = useDeleteMeMutation();
   const { data: matchCountData } = useQuery({
     queryKey: datingMatchCountQueryKey,
     queryFn: getDatingMatchCount,
@@ -61,6 +68,20 @@ function HomePage() {
   const handleDatingClick = () => {
     if (status?.isProfileCompleted !== true) {
       navigate("/dating/register");
+      return;
+    }
+
+    navigate("/dating");
+  };
+
+  const handleDeleteMe = async () => {
+    try {
+      setDeleteMessage("");
+      const response = await deleteMe();
+      setDeleteMessage(response.message);
+    } catch (error) {
+      console.error(error);
+      setDeleteMessage("회원탈퇴에 실패했어요.");
     }
   };
 
@@ -150,15 +171,34 @@ function HomePage() {
             <img src={arrowImg} alt="" className="w-3" />
           </button>
         </div>
-        <div
-          aria-disabled="true"
-          className={`pointer-events-none absolute bottom-[8%] left-1/2 flex -translate-x-1/2 items-center justify-center gap-1 whitespace-nowrap typo-comment-2 ${
-            theme == "day" ? "text-grey-700" : "text-grey-400"
-          }`}
-        >
-          <span className="underline">이용약관</span>
-          <span>・</span>
-          <span className="underline">개인정보처리방침</span>
+        <div className="absolute bottom-[6%] left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 whitespace-nowrap">
+          <div
+            aria-disabled="true"
+            className={`pointer-events-none flex items-center justify-center gap-1 typo-comment-2 ${
+              theme == "day" ? "text-grey-700" : "text-grey-400"
+            }`}
+          >
+            <span className="underline">이용약관</span>
+            <span>・</span>
+            <span className="underline">개인정보처리방침</span>
+          </div>
+          {shouldShowDeleteMeButton ? (
+            <>
+              <button
+                type="button"
+                onClick={handleDeleteMe}
+                disabled={isDeletingMe}
+                className={`typo-comment-2 underline underline-offset-4 disabled:opacity-60 ${
+                  theme == "day" ? "text-grey-700" : "text-grey-400"
+                }`}
+              >
+                {isDeletingMe ? "회원탈퇴 중" : "회원탈퇴"}
+              </button>
+              {deleteMessage ? (
+                <p className="typo-comment-2 text-primary-600">{deleteMessage}</p>
+              ) : null}
+            </>
+          ) : null}
         </div>
       </section>
       <MessageSlider></MessageSlider>

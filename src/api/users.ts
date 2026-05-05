@@ -33,6 +33,10 @@ export type CheckNicknameAvailabilityResponse = {
   isAvailable: boolean;
 };
 
+export type DeleteUserResponse = {
+  message: string;
+};
+
 const parseRegisterUserResponse = (value: unknown): RegisterUserResponse | null => {
   if (!value || typeof value !== 'object') {
     return null;
@@ -71,6 +75,20 @@ const parseCheckNicknameAvailabilityResponse = (
   return { isAvailable: response.isAvailable };
 };
 
+const parseDeleteUserResponse = (value: unknown): DeleteUserResponse | null => {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  if (typeof response.message !== 'string') {
+    return null;
+  }
+
+  return { message: response.message };
+};
+
 /**
  * API 제목: 회원가입
  * POST /api/users/register
@@ -103,4 +121,20 @@ export const checkNicknameAvailability = async (nickname: string) => {
   }
 
   return availabilityResponse;
+};
+
+/**
+ * API 제목: 회원탈퇴
+ * DELETE /api/users/me
+ * 현재 로그인한 사용자의 계정을 삭제한다.
+ */
+export const deleteMe = async () => {
+  const { data } = await apiClient.delete<unknown>('/api/users/me');
+  const deleteResponse = parseDeleteUserResponse(data);
+
+  if (!deleteResponse) {
+    throw new Error('Invalid delete user response');
+  }
+
+  return deleteResponse;
 };
