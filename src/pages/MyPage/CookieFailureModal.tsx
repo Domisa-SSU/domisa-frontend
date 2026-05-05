@@ -24,8 +24,7 @@ function CookieFailureModal({ onInquiry, onBack }: CookieFailureModalProps) {
           <button
             type="button"
             onClick={onInquiry}
-            className="flex h-[3.125rem] w-[18.75rem] items-center justify-center rounded-[0.875rem] typo-button-text-b"
-            style={{ backgroundColor: "#fff5c4", color: "#ff8250" }}
+            className="flex h-[3.125rem] w-[18.75rem] items-center justify-center rounded-[0.875rem] bg-[#fff5c4] text-[#ff8250] typo-button-text-b"
           >
             문의하기
           </button>
