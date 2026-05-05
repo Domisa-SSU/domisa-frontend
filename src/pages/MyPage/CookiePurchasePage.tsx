@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Toast from "../../components/Toast";
 import BankTransferModal from "./BankTransferModal";
 import BackConfirmModal from "./BackConfirmModal";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useBlocker, useLocation, useNavigate } from "react-router-dom";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import Button from "../../components/Button/Button";
 import { ButtonVariant } from "../../components/Button/ButtonEnums";
@@ -37,17 +37,7 @@ function CookiePurchasePage() {
   const [showCopyToast, setShowCopyToast] = useState(false);
   const [showWarningToast, setShowWarningToast] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
-  const [showBackModal, setShowBackModal] = useState(false);
-
-  useEffect(() => {
-    window.history.pushState(null, '', window.location.href);
-    const handlePopState = () => {
-      window.history.pushState(null, '', window.location.href);
-      setShowBackModal(true);
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  const blocker = useBlocker(true);
 
   useEffect(() => {
     if (!showCopyToast) return;
@@ -170,10 +160,10 @@ function CookiePurchasePage() {
           onClose={() => setShowBankModal(false)}
         />
       )}
-      {showBackModal && (
+      {blocker.state === "blocked" && (
         <BackConfirmModal
-          onConfirm={() => navigate(-2)}
-          onCancel={() => setShowBackModal(false)}
+          onConfirm={() => blocker.proceed()}
+          onCancel={() => blocker.reset()}
         />
       )}
 
