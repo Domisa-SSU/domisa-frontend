@@ -1,10 +1,10 @@
+import { useNavigate } from "react-router-dom";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import ReferralSection from "../../components/ReferralSection";
 import cookieImg from "../../assets/cookie.svg";
 
 // TODO: API 연동 시 교체
 const COOKIE_COUNT = 10;
-const REFERRAL_CODE = "d9fs3k29";
 
 const COOKIE_PACKAGES = [
   { count: 5, price: "2,000" },
@@ -14,6 +14,8 @@ const COOKIE_PACKAGES = [
 ];
 
 function MyCookiePage() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-grey-100">
       <NotLoginHeader title="보유 쿠키" />
@@ -43,6 +45,7 @@ function MyCookiePage() {
                     <span className="typo-comment-1 text-grey-900">쿠키 {count}개</span>
                   </div>
                   <button
+                    onClick={() => navigate("/my/cookie/purchase", { state: { count, price } })}
                     className="flex items-center justify-center h-8 w-20 rounded-[0.3125rem] typo-comment-2 text-grey-100"
                     style={{
                       background:
@@ -57,7 +60,7 @@ function MyCookiePage() {
           </div>
 
           {/* 친구 소개 */}
-          <ReferralSection referralCode={REFERRAL_CODE} />
+          <ReferralSection />
 
         </div>
       </div>

@@ -1,6 +1,6 @@
 import toastCheckIcon from "../assets/toastCheckIcon.svg";
 
-function Toast({ message }: { message: string }) {
+function Toast({ message, icon = toastCheckIcon }: { message: string; icon?: string }) {
     return (
         <div className="pointer-events-none fixed inset-x-5 bottom-[7.25rem] z-50">
             <div className="animate-toast-fade-out mx-auto flex w-full max-w-[22.5625rem] items-center justify-between rounded-[0.3125rem] bg-[rgba(0,0,0,0.7)] px-5 py-2.5">
@@ -8,7 +8,7 @@ function Toast({ message }: { message: string }) {
                     {message}
                 </p>
                 <img
-                    src={toastCheckIcon}
+                    src={icon}
                     alt=""
                     className="h-[1.5947rem] w-[1.5947rem] shrink-0"
                 />
