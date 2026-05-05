@@ -18,12 +18,7 @@ function ProfileCard({ fan }: { fan: Fan }) {
   return (
     <div className="w-full aspect-[85/123] bg-white rounded-[0.3125rem] flex items-center justify-center">
       <div className="w-[88.235%] aspect-[75/113] overflow-hidden">
-        <img
-          src={fan.profile}
-          alt=""
-          className="w-full h-full object-cover"
-          style={{ filter: 'blur(2.9px)' }}
-        />
+        <img src={fan.profile} alt="" className="w-full h-full object-cover" />
       </div>
     </div>
   );
