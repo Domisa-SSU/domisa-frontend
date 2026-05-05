@@ -6,7 +6,7 @@ import type { Notification, NotificationType } from "../../types/notification";
 const MOCK_NOTIFICATIONS: Notification[] = [
   {
     notificationId: 1,
-    userId: 1,
+    userId: "1",
     type: "LIKE",
     title: "새로운 호감이 도착했어요",
     content: "개구쟁이님이 나에게 호감을 보냈어요!",
@@ -15,7 +15,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     notificationId: 2,
-    userId: 1,
+    userId: "1",
     type: "MATCH",
     title: "쌍방 매칭이 됐어요",
     content: "코개구리님과 쌍방 매칭 됐어요",
@@ -24,7 +24,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     notificationId: 3,
-    userId: 1,
+    userId: "1",
     type: "COOKIE",
     title: "쿠키 지급",
     content: "친구가 추천인 코드로 가입했어요! 쿠키 10개 지급 완료",
@@ -33,7 +33,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     notificationId: 4,
-    userId: 1,
+    userId: "1",
     type: "EVENT",
     title: "이벤트 쿠키 지급",
     content: "축제 이벤트 쿠키 1개 지급 완료",
@@ -42,7 +42,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     notificationId: 5,
-    userId: 1,
+    userId: "1",
     type: "LIKE",
     title: "새로운 호감이 도착했어요",
     content: "레모나셔님이 나에게 호감을 보냈어요!",
@@ -51,7 +51,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     notificationId: 6,
-    userId: 1,
+    userId: "1",
     type: "INTRODUCTION",
     title: "소개서가 도착했어요",
     content: "금보리차님의 소개서가 도착했어요!",
@@ -60,7 +60,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     notificationId: 7,
-    userId: 1,
+    userId: "1",
     type: "REFERRAL",
     title: "가입 보상",
     content: "가입 보상으로 쿠키 3개 지급해드려요",

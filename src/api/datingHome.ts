@@ -2,8 +2,17 @@ import { apiClient } from "./client";
 
 export type DatingHomeCard = {
   id: string;
-  userId: number;
-  profile: string;
+  userId: string;
+  profile: string | null;
+};
+
+export type DatingMatch = {
+  id: string;
+  publicId: string;
+  nickname: string;
+  profile: string | null;
+  contactType: string;
+  contact: string;
 };
 
 export type DatingHomeResponse = {
@@ -14,6 +23,7 @@ export type DatingHomeResponse = {
   cards: DatingHomeCard[];
   receivedLikes: DatingHomeCard[];
   sentLikes: DatingHomeCard[];
+  matches: DatingMatch[];
 };
 
 type RefreshTimeResponse = {
@@ -37,6 +47,29 @@ type SentLikesResponse = {
   myTypes: DatingHomeCard[];
 };
 
+type DatingMatchDto = Omit<DatingMatch, "id">;
+
+export type DatingMatchesResponse = {
+  matchCount: number;
+  matches: DatingMatchDto[];
+};
+
+export type DatingMatchCountResponse = {
+  matchCount: number;
+};
+
+const isDatingMatchCountResponse = (
+  value: unknown,
+): value is DatingMatchCountResponse => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return typeof response.matchCount === "number";
+};
+
 const isProfileCard = (value: unknown): value is DatingHomeCard => {
   if (!value || typeof value !== "object") {
     return false;
@@ -45,15 +78,40 @@ const isProfileCard = (value: unknown): value is DatingHomeCard => {
   const profile = value as Record<string, unknown>;
 
   return (
-    typeof profile.userId === "number" &&
-    typeof profile.profile === "string"
+    typeof profile.userId === "string" &&
+    (typeof profile.profile === "string" || profile.profile === null)
   );
 };
 
 const normalizeProfileCard = (profile: DatingHomeCard): DatingHomeCard => ({
-  id: String(profile.userId),
+  id: profile.userId,
   userId: profile.userId,
   profile: profile.profile,
+});
+
+const isDatingMatchDto = (value: unknown): value is DatingMatchDto => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const match = value as Record<string, unknown>;
+
+  return (
+    typeof match.publicId === "string" &&
+    typeof match.nickname === "string" &&
+    (typeof match.profile === "string" || match.profile === null) &&
+    typeof match.contactType === "string" &&
+    typeof match.contact === "string"
+  );
+};
+
+const normalizeDatingMatch = (match: DatingMatchDto): DatingMatch => ({
+  id: match.publicId,
+  publicId: match.publicId,
+  nickname: match.nickname,
+  profile: match.profile,
+  contactType: match.contactType,
+  contact: match.contact,
 });
 
 const isRefreshTimeResponse = (
@@ -116,11 +174,37 @@ const isSentLikesResponse = (value: unknown): value is SentLikesResponse => {
   );
 };
 
+const isDatingMatchesResponse = (
+  value: unknown,
+): value is DatingMatchesResponse => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return (
+    typeof response.matchCount === "number" &&
+    Array.isArray(response.matches) &&
+    response.matches.every(isDatingMatchDto)
+  );
+};
+
 export const getDatingRefreshTime = async () => {
   const { data } = await apiClient.get<unknown>("/api/datings/refresh-time");
 
   if (!isRefreshTimeResponse(data)) {
     throw new Error("Invalid dating refresh time response");
+  }
+
+  return data;
+};
+
+export const getDatingMatchCount = async () => {
+  const { data } = await apiClient.get<unknown>("/api/datings/count");
+
+  if (!isDatingMatchCountResponse(data)) {
+    throw new Error("Invalid dating count response");
   }
 
   return data;
@@ -166,13 +250,28 @@ export const getSentLikes = async () => {
   };
 };
 
+export const getDatingMatches = async () => {
+  const { data } = await apiClient.get<unknown>("/api/datings/matches");
+
+  if (!isDatingMatchesResponse(data)) {
+    throw new Error("Invalid dating matches response");
+  }
+
+  return {
+    matchCount: data.matchCount,
+    matches: data.matches.map(normalizeDatingMatch),
+  };
+};
+
 export const fetchDatingHome = async (): Promise<DatingHomeResponse> => {
-  const [refreshTime, profiles, receivedLikes, sentLikes] = await Promise.all([
-    getDatingRefreshTime(),
-    getDatingProfiles(),
-    getReceivedLikes(),
-    getSentLikes(),
-  ]);
+  const [refreshTime, profiles, receivedLikes, sentLikes, matches] =
+    await Promise.all([
+      getDatingRefreshTime(),
+      getDatingProfiles(),
+      getReceivedLikes(),
+      getSentLikes(),
+      getDatingMatches(),
+    ]);
 
   return {
     refreshAvailableAt: refreshTime.refreshAvailableAt,
@@ -182,5 +281,6 @@ export const fetchDatingHome = async (): Promise<DatingHomeResponse> => {
     cards: profiles.profiles,
     receivedLikes: receivedLikes.myFans,
     sentLikes: sentLikes.myTypes,
+    matches: matches.matches,
   };
 };

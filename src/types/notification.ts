@@ -8,7 +8,7 @@ export type NotificationType =
 
 export type Notification = {
   notificationId: number;
-  userId: number;
+  userId: string;
   type: NotificationType;
   title: string;
   content: string;

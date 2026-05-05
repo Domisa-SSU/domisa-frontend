@@ -10,12 +10,17 @@ import HeaderTop from "../../components/HeaderTop";
 import headerArrow from "../../assets/headerArrow.svg";
 import reloadIcon from "./assets/reloadIcon.svg";
 import datingHeartIcon from "./assets/datingHeartIcon.svg";
+import datingDeletedHeartIcon from "./assets/datingDeletedHeartIcon.png";
 import datingHeartUnderIcon from "./assets/datingHeartUnderIcon.svg";
 import datingArrowIcon from "./assets/datingArrowIcon.svg";
+import bothIcon from "./assets/bothIcon.png";
 import cardBackImage from "./assets/cardBackImage.png";
+import sumnailIcon from "./assets/sumnailIcon.png";
 
 const datingHomeQueryKey = ["dating", "home"] as const;
 const refreshReloadStorageKey = "dating:last-refresh-reload-at";
+const maxFreeLikeCount = 3;
+const temporaryFreeLikeRemaining = 2;
 
 const formatRemainingTime = (totalSeconds: number) => {
   const safeSeconds = Math.max(totalSeconds, 0);
@@ -124,11 +129,11 @@ function ClosedDatingCard() {
   );
 }
 
-function OpenDatingCard({ profile }: { profile: string }) {
+function OpenDatingCard({ profile }: { profile: string | null }) {
   return (
     <div className="h-full w-full rounded-[0.3125rem] border-[0.25rem] border-grey-100 bg-grey-100 p-[0.1875rem] shadow-[0_1px_5px_rgba(0,0,0,0.2)]">
       <img
-        src={profile}
+        src={profile ?? sumnailIcon}
         alt=""
         className="h-full w-full rounded-[0.25rem] object-cover"
       />
@@ -187,7 +192,11 @@ function MainCardSection({
   onOpenCard: (id: string) => void;
   onViewCardDetail: (id: string) => void;
 }) {
-  const heartCount = Math.max(Math.min(freeLikeRemaining, profileNum), 0);
+  const heartCount = Math.max(Math.min(maxFreeLikeCount, profileNum), 0);
+  const deletedHeartCount = Math.max(
+    Math.min(heartCount - freeLikeRemaining, heartCount),
+    0,
+  );
 
   return (
     <section className="flex flex-col items-center gap-[0.9375rem]">
@@ -204,7 +213,11 @@ function MainCardSection({
         {Array.from({ length: heartCount }, (_, heartIndex) => (
           <img
             key={heartIndex}
-            src={datingHeartIcon}
+            src={
+              heartIndex < deletedHeartCount
+                ? datingDeletedHeartIcon
+                : datingHeartIcon
+            }
             alt=""
             className="h-[1.3125rem] w-[1.5rem]"
           />
@@ -226,19 +239,37 @@ function MainCardSection({
   );
 }
 
-function LikePreviewCard({ card }: { card: DatingHomeCard }) {
+type DatingPreviewItem = Pick<DatingHomeCard, "id" | "profile">;
+
+function DatingPreviewCard({
+  card,
+  isBlurred,
+}: {
+  card: DatingPreviewItem;
+  isBlurred: boolean;
+}) {
   return (
     <div className="h-[7.6875rem] w-[5.3125rem] shrink-0 rounded-[0.3125rem] border-[0.25rem] border-grey-100 bg-grey-100 p-[0.1875rem] shadow-[0_1px_5px_rgba(0,0,0,0.18)]">
       <img
-        src={card.profile}
+        src={card.profile ?? sumnailIcon}
         alt=""
-        className="h-full w-full rounded-[0.25rem] object-cover blur-[0.125rem]"
+        className={`h-full w-full rounded-[0.25rem] object-cover ${
+          isBlurred ? "blur-[0.125rem]" : ""
+        }`}
       />
     </div>
   );
 }
 
-function SectionIconPair({ direction }: { direction: "received" | "sent" }) {
+function SectionIcon({
+  variant,
+}: {
+  variant: "received" | "sent" | "matched";
+}) {
+  if (variant === "matched") {
+    return <img src={bothIcon} alt="" className="h-[1.125rem] w-[1.125rem]" />;
+  }
+
   const heartIcon = (
     <img src={datingHeartUnderIcon} alt="" className="h-[0.8125rem] w-[0.9375rem]" />
   );
@@ -248,7 +279,7 @@ function SectionIconPair({ direction }: { direction: "received" | "sent" }) {
 
   return (
     <span className="flex h-5 w-[2.4375rem] items-center gap-[0.1875rem]">
-      {direction === "received" ? (
+      {variant === "received" ? (
         <>
           {heartIcon}
           {arrowIcon}
@@ -263,14 +294,18 @@ function SectionIconPair({ direction }: { direction: "received" | "sent" }) {
   );
 }
 
-function LikePreviewSection({
+function DatingPreviewSection({
   title,
   cards,
-  direction,
+  variant,
+  emptyMessage,
+  isCardBlurred,
 }: {
   title: string;
-  cards: DatingHomeCard[];
-  direction: "received" | "sent";
+  cards: DatingPreviewItem[];
+  variant: "received" | "sent" | "matched";
+  emptyMessage: string;
+  isCardBlurred: boolean;
 }) {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [scrollFadeStatus, setScrollFadeStatus] = useState(() => ({
@@ -279,6 +314,11 @@ function LikePreviewSection({
   }));
 
   useEffect(() => {
+    if (cards.length === 0) {
+      setScrollFadeStatus({ left: false, right: false });
+      return;
+    }
+
     const scrollContainer = scrollContainerRef.current;
 
     if (!scrollContainer) {
@@ -302,31 +342,45 @@ function LikePreviewSection({
   return (
     <section className="relative flex flex-col gap-2.5">
       <div className="flex items-center gap-1">
-        <h2 className="typo-subtitle-header-2 text-grey-900">{title}</h2>
-        <SectionIconPair direction={direction} />
+        <h2
+          className={`typo-subtitle-header-2 ${
+            variant === "matched" ? "text-[#fff5c4]" : "text-grey-900"
+          }`}
+        >
+          {title}
+        </h2>
+        <SectionIcon variant={variant} />
       </div>
 
-      <div className="relative -mx-1">
-        <div
-          ref={scrollContainerRef}
-          onScroll={(event) => {
-            setScrollFadeStatus(getScrollFadeStatus(event.currentTarget));
-          }}
-          className="overflow-x-auto scrollbar-hide"
-        >
-          <div className="flex w-max gap-[0.699rem] px-1">
-            {cards.map((card) => (
-              <LikePreviewCard key={card.id} card={card} />
-            ))}
+      {cards.length === 0 ? (
+        <p className="typo-comment-1 text-grey-800">{emptyMessage}</p>
+      ) : (
+        <div className="relative -mx-1">
+          <div
+            ref={scrollContainerRef}
+            onScroll={(event) => {
+              setScrollFadeStatus(getScrollFadeStatus(event.currentTarget));
+            }}
+            className="overflow-x-auto scrollbar-hide"
+          >
+            <div className="flex w-max gap-[0.699rem] px-1">
+              {cards.map((card) => (
+                <DatingPreviewCard
+                  key={card.id}
+                  card={card}
+                  isBlurred={isCardBlurred}
+                />
+              ))}
+            </div>
           </div>
+          {scrollFadeStatus.left && (
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-[#ff88b0] to-[rgba(255,136,176,0)]" />
+          )}
+          {scrollFadeStatus.right && (
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-[4.5rem] bg-gradient-to-l from-[#ff88b0] to-[rgba(255,136,176,0)]" />
+          )}
         </div>
-        {scrollFadeStatus.left && (
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-[#ff88b0] to-[rgba(255,136,176,0)]" />
-        )}
-        {scrollFadeStatus.right && (
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-[4.5rem] bg-gradient-to-l from-[#ff88b0] to-[rgba(255,136,176,0)]" />
-        )}
-      </div>
+      )}
     </section>
   );
 }
@@ -438,20 +492,31 @@ function DatingPage() {
           cards={visibleCards}
           openedCardIds={openedCardIds}
           profileNum={data.profileNum}
-          freeLikeRemaining={data.freeLikeRemaining}
+          freeLikeRemaining={temporaryFreeLikeRemaining}
           onOpenCard={handleOpenCard}
           onViewCardDetail={handleViewCardDetail}
         />
         <div className="flex flex-col gap-[1.875rem] px-[0.4375rem]">
-          <LikePreviewSection
+          <DatingPreviewSection
             title="받은 호감"
             cards={data.receivedLikes}
-            direction="received"
+            variant="received"
+            emptyMessage="아직 받은 호감이 없어요"
+            isCardBlurred
           />
-          <LikePreviewSection
+          <DatingPreviewSection
             title="보낸 호감"
             cards={data.sentLikes}
-            direction="sent"
+            variant="sent"
+            emptyMessage="아직 보낸 호감이 없어요"
+            isCardBlurred
+          />
+          <DatingPreviewSection
+            title="쌍방 매칭"
+            cards={data.matches}
+            variant="matched"
+            emptyMessage="아직 매칭된 프로필이 없어요"
+            isCardBlurred={false}
           />
         </div>
       </main>
