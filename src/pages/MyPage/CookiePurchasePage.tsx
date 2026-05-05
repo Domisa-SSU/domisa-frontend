@@ -1,20 +1,22 @@
-import { useEffect, useState } from "react";
-import Toast from "../../components/Toast";
-import BankTransferModal from "./BankTransferModal";
-import BackConfirmModal from "./BackConfirmModal";
-import TransferPendingModal from "./TransferPendingModal";
-import { useBlocker, useLocation, useNavigate } from "react-router-dom";
-import NotLoginHeader from "../../components/NotLoginHeader";
-import Button from "../../components/Button/Button";
-import { ButtonVariant } from "../../components/Button/ButtonEnums";
-import rightArrowBold from "../../assets/rightArrowBold.svg";
-import copyIcon from "../../assets/copy.svg";
-import forbiddenIcon from "../../assets/toastForbidden.svg";
-import checkIcon from "../../assets/check.svg";
+import { useEffect, useState } from 'react';
+import Toast from '../../components/Toast';
+import BankTransferModal from './BankTransferModal';
+import BackConfirmModal from './BackConfirmModal';
+import TransferPendingModal from './TransferPendingModal';
+import CookieSuccessModal from './CookieSuccessModal';
+import CookieFailureModal from './CookieFailureModal';
+import { useBlocker, useLocation, useNavigate } from 'react-router-dom';
+import NotLoginHeader from '../../components/NotLoginHeader';
+import Button from '../../components/Button/Button';
+import { ButtonVariant } from '../../components/Button/ButtonEnums';
+import rightArrowBold from '../../assets/rightArrowBold.svg';
+import copyIcon from '../../assets/copy.svg';
+import forbiddenIcon from '../../assets/toastForbidden.svg';
+import checkIcon from '../../assets/check.svg';
 
 // TODO: API 연동 시 교체
 const MOCK_ORDER = {
-  billing_name: "입금A7K3Q9",
+  billing_name: '입금A7K3Q9',
   order_amount: 2000,
 };
 
@@ -23,11 +25,17 @@ type CookiePurchaseLocationState = {
   price: string;
 };
 
+type CookieModalState = 'none' | 'pending' | 'success' | 'failure';
+
 const PAYMENT_METHODS = [
-  { label: "토스페이로 송금하기" },
-  { label: "카카오페이로 송금하기" },
-  { label: "계좌이체 하기" },
+  { label: '토스페이로 송금하기' },
+  { label: '계좌이체 하기' },
 ];
+
+// TODO: API 연동 시 실제 함수로 교체
+async function purchaseCookieAPI(): Promise<{ cookieCount: number }> {
+  throw new Error('mock failure');
+}
 
 function CookiePurchasePage() {
   const navigate = useNavigate();
@@ -38,8 +46,10 @@ function CookiePurchasePage() {
   const [showCopyToast, setShowCopyToast] = useState(false);
   const [showWarningToast, setShowWarningToast] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
-  const [showPendingModal, setShowPendingModal] = useState(false);
-  const blocker = useBlocker(true);
+  const [cookieModalState, setCookieModalState] = useState<CookieModalState>('none');
+  const [earnedCookieCount, setEarnedCookieCount] = useState(0);
+
+  const blocker = useBlocker(cookieModalState !== 'success' && cookieModalState !== 'failure');
 
   useEffect(() => {
     if (!showCopyToast) return;
@@ -53,25 +63,42 @@ function CookiePurchasePage() {
     return () => window.clearTimeout(timerId);
   }, [showWarningToast]);
 
+  // 2초 지연 후 API 호출
+  useEffect(() => {
+    if (cookieModalState !== 'pending') return;
+
+    const timerId = window.setTimeout(async () => {
+      try {
+        const result = await purchaseCookieAPI();
+        setEarnedCookieCount(result.cookieCount);
+        setCookieModalState('success');
+      } catch {
+        setCookieModalState('failure');
+      }
+    }, 3000);
+
+    return () => window.clearTimeout(timerId);
+  }, [cookieModalState, state]);
+
   const handlePaymentMethodClick = (label: string) => {
     if (!isNameConfirmed) {
       setShowWarningToast(true);
       return;
     }
-    if (label === "토스페이로 송금하기") {
-      const amount = state!.price.replace(/,/g, "");
+    if (label === '토스페이로 송금하기') {
+      const amount = state!.price.replace(/,/g, '');
       const deepLink = `supertoss://send?bank=케이뱅크&accountNo=100140152657&amount=${amount}`;
-      window.open(deepLink, "_self");
+      window.open(deepLink, '_self');
       return;
     }
-    if (label === "계좌이체 하기") {
+    if (label === '계좌이체 하기') {
       setShowBankModal(true);
     }
   };
 
   useEffect(() => {
     if (!state) {
-      navigate("/my/cookie", { replace: true });
+      navigate('/my/cookie', { replace: true });
     }
   }, [state, navigate]);
 
@@ -82,8 +109,7 @@ function CookiePurchasePage() {
   const { billing_name } = MOCK_ORDER;
 
   const handleTransferComplete = () => {
-    setShowPendingModal(true);
-    // TODO: API 호출 추가 시 여기서 호출 후 setShowPendingModal(false) 처리
+    setCookieModalState('pending');
   };
 
   const handleCopy = async () => {
@@ -95,13 +121,16 @@ function CookiePurchasePage() {
     }
   };
 
+  const handleNavigateToCookie = () => {
+    navigate('/my/cookie', { replace: true });
+  };
+
   return (
     <div className="min-h-screen bg-grey-100">
       <NotLoginHeader title="쿠키 구매" />
 
       <div className="px-5 pt-9 pb-[8.75rem]">
         <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-10">
-
           {/* 입금자명 섹션 */}
           <div className="flex flex-col gap-5 bg-grey-200 rounded-[0.625rem] px-2.5 py-5">
             <p className="pl-2.5 typo-button-text text-grey-900">
@@ -126,14 +155,14 @@ function CookiePurchasePage() {
             >
               <span
                 className={`flex h-[1.09375rem] w-[1.09375rem] items-center justify-center rounded-[0.3125rem] ${
-                  isNameConfirmed ? "bg-primary-500" : "bg-grey-400"
+                  isNameConfirmed ? 'bg-primary-500' : 'bg-grey-400'
                 }`}
               >
                 <img src={checkIcon} alt="" className="w-[0.7875rem] h-[0.65625rem]" />
               </span>
               <span
                 className={`typo-button-text ${
-                  isNameConfirmed ? "text-primary-600" : "text-grey-600"
+                  isNameConfirmed ? 'text-primary-600' : 'text-grey-600'
                 }`}
               >
                 입금자명을 확인했어요
@@ -151,28 +180,36 @@ function CookiePurchasePage() {
                 className="relative flex items-center justify-center h-[3.4375rem] w-full bg-primary-100 border-[1.2px] border-primary-200 rounded-[1.25rem] px-5"
               >
                 <span className="typo-header-3-b text-primary-500">{label}</span>
-                <img src={rightArrowBold} alt="" className="absolute right-5 w-[0.6875rem] h-[1.0625rem]" />
+                <img
+                  src={rightArrowBold}
+                  alt=""
+                  className="absolute right-5 w-[0.6875rem] h-[1.0625rem]"
+                />
               </button>
             ))}
           </div>
-
         </div>
       </div>
 
       {showCopyToast && <Toast message="복사되었습니다" />}
       {showWarningToast && <Toast message="입금자명을 확인해주세요" icon={forbiddenIcon} />}
       {showBankModal && (
-        <BankTransferModal
-          amount={state.price}
-          onClose={() => setShowBankModal(false)}
+        <BankTransferModal amount={state.price} onClose={() => setShowBankModal(false)} />
+      )}
+      {cookieModalState === 'pending' && <TransferPendingModal />}
+      {cookieModalState === 'success' && (
+        <CookieSuccessModal cookieCount={earnedCookieCount} onConfirm={handleNavigateToCookie} />
+      )}
+      {cookieModalState === 'failure' && (
+        <CookieFailureModal
+          onInquiry={() => {
+            /* TODO: 문의하기 페이지 연결 */
+          }}
+          onBack={handleNavigateToCookie}
         />
       )}
-      {showPendingModal && <TransferPendingModal />}
-      {blocker.state === "blocked" && (
-        <BackConfirmModal
-          onConfirm={() => blocker.proceed()}
-          onCancel={() => blocker.reset()}
-        />
+      {blocker.state === 'blocked' && (
+        <BackConfirmModal onConfirm={() => blocker.proceed()} onCancel={() => blocker.reset()} />
       )}
 
       {/* 하단 고정 영역 */}
