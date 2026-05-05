@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 * {
   box-sizing: border-box;
@@ -7,10 +7,9 @@
 body {
   background-color: white;
   margin: 0;
-  font-family: "Pretendard";
+  font-family: 'Pretendard';
   overflow-x: hidden;
 }
-
 
 @theme {
   --color-primary-100: #fff6f9;
@@ -34,6 +33,13 @@ body {
   --color-grey-900: #000000;
 
   --color-warning: #ff5a47;
+  --color-warning-ac: #ff1900;
+
+  --color-match-bg: #fffcea;
+  --color-match-hl: #fff5c4;
+  --color-match-sd: #ffd084;
+  --color-match-text: #ff8250;
+  --color-match-ac: #ff4900;
 }
 
 .typo-title-header-1 {

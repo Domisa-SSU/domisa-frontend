@@ -6,6 +6,7 @@ import { EDIT_PROFILE_TOAST_STORAGE_KEY } from '../../constants/storageKeys';
 import { useLogoutMutation } from '../../queries/auth';
 import ReferralSection from '../../components/ReferralSection';
 import RightArrow from '../../assets/right_arrow.svg?react';
+import WithdrawConfirmModal from './WithdrawConfirmModal';
 import editPencilImg from '../../assets/edit_pencil.svg';
 import cookieImg from '../../assets/cookie.svg';
 import dogImg from '../../assets/dogIcon.svg';
@@ -13,6 +14,7 @@ import domisaHeartImg from '../../assets/domisaHeartIcon.svg';
 import catImg from '../../assets/catIcon.svg';
 import flowerImg from '../../assets/flowerIcon.svg';
 import arrowIcon from '../../assets/arrowIcon.svg';
+import heartIconOrange from '../../assets/heartIconOrange.svg';
 
 // TODO: API 연동 시 GET /api/users/me 응답으로 교체
 const mockResponse = {
@@ -45,11 +47,9 @@ const contactLabel: Record<'INSTAGRAM' | 'KAKAO' | 'PHONE', string> = {
 function MyPage() {
   const { user, status } = mockResponse;
   const navigate = useNavigate();
-  const {
-    mutateAsync: logout,
-    isPending: isLoggingOut,
-  } = useLogoutMutation();
+  const { mutateAsync: logout, isPending: isLoggingOut } = useLogoutMutation();
   const [logoutErrorMessage, setLogoutErrorMessage] = useState('');
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showEditProfileToast, setShowEditProfileToast] = useState(() => {
     const shouldShow = sessionStorage.getItem(EDIT_PROFILE_TOAST_STORAGE_KEY) === 'true';
     if (shouldShow) {
@@ -214,6 +214,18 @@ function MyPage() {
                     <RightArrow />
                   </div>
                 </button>
+                <button
+                  onClick={() => navigate('/my/mutual-match')}
+                  className="flex items-center justify-between h-[3.125rem] px-2.5 border border-match-sd rounded-[0.625rem] w-full bg-match-bg"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="typo-button-text text-match-text">쌍방 매칭</span>
+                    <img src={heartIconOrange} alt="" className="w-4 h-4" />
+                  </div>
+                  <div className="flex items-center justify-center h-[2.15rem] w-[1.7rem]">
+                    <RightArrow className="text-match-text" />
+                  </div>
+                </button>
               </div>
             </div>
 
@@ -222,7 +234,6 @@ function MyPage() {
               <span className="typo-button-text text-grey-900">친구 소개</span>
               <ReferralSection />
             </div>
-
           </div>
 
           {showEditProfileToast && <Toast message="정보가 수정되었어요!" />}
@@ -247,20 +258,26 @@ function MyPage() {
             </button>
             <button
               className="absolute right-0 top-5 underline underline-offset-4 whitespace-nowrap"
-              onClick={() => {
-                // TODO: 회원 탈퇴 확인 모달 표시 후 탈퇴 API 호출
-              }}
+              onClick={() => setShowWithdrawModal(true)}
             >
               탈퇴하기
             </button>
           </div>
           {logoutErrorMessage && (
-            <p className="typo-comment-2 text-center text-warning">
-              {logoutErrorMessage}
-            </p>
+            <p className="typo-comment-2 text-center text-warning">{logoutErrorMessage}</p>
           )}
         </div>
       </div>
+
+      {showWithdrawModal && (
+        <WithdrawConfirmModal
+          onConfirm={() => {
+            // TODO: 탈퇴 API 호출
+            setShowWithdrawModal(false);
+          }}
+          onCancel={() => setShowWithdrawModal(false)}
+        />
+      )}
     </div>
   );
 }
