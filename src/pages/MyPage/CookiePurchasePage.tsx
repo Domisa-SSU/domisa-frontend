@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Toast from "../../components/Toast";
 import BankTransferModal from "./BankTransferModal";
 import BackConfirmModal from "./BackConfirmModal";
+import TransferPendingModal from "./TransferPendingModal";
 import { useBlocker, useLocation, useNavigate } from "react-router-dom";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import Button from "../../components/Button/Button";
@@ -37,6 +38,7 @@ function CookiePurchasePage() {
   const [showCopyToast, setShowCopyToast] = useState(false);
   const [showWarningToast, setShowWarningToast] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
+  const [showPendingModal, setShowPendingModal] = useState(false);
   const blocker = useBlocker(true);
 
   useEffect(() => {
@@ -78,6 +80,11 @@ function CookiePurchasePage() {
   }
 
   const { billing_name } = MOCK_ORDER;
+
+  const handleTransferComplete = () => {
+    setShowPendingModal(true);
+    // TODO: API 호출 추가 시 여기서 호출 후 setShowPendingModal(false) 처리
+  };
 
   const handleCopy = async () => {
     try {
@@ -160,6 +167,7 @@ function CookiePurchasePage() {
           onClose={() => setShowBankModal(false)}
         />
       )}
+      {showPendingModal && <TransferPendingModal />}
       {blocker.state === "blocked" && (
         <BackConfirmModal
           onConfirm={() => blocker.proceed()}
@@ -175,6 +183,7 @@ function CookiePurchasePage() {
             label="송금 완료"
             variant={ButtonVariant.Main}
             disabled={!isNameConfirmed}
+            onClick={handleTransferComplete}
           />
         </div>
       </section>
