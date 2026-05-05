@@ -1,3 +1,5 @@
+import testImg from "../assets/testImg.png";
+
 export type DatingCardDetailSectionItem = {
   title: string;
   content: string;
@@ -23,8 +25,8 @@ const mockDatingCardDetails: Record<string, DatingCardDetailResponse> = {
     birthYearText: "2003년생",
     mbti: "INFJ",
     gender: "여",
-    coverImageUrl: null,
-    avatarImageUrl: null,
+    coverImageUrl: testImg,
+    avatarImageUrl: testImg,
     friendIntroduction: [
       {
         title: "친구에 대한 간단한 소개",
