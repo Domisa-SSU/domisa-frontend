@@ -37,6 +37,22 @@ type SentLikesResponse = {
   myTypes: DatingHomeCard[];
 };
 
+export type DatingMatchCountResponse = {
+  matchCount: number;
+};
+
+const isDatingMatchCountResponse = (
+  value: unknown,
+): value is DatingMatchCountResponse => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return typeof response.matchCount === "number";
+};
+
 const isProfileCard = (value: unknown): value is DatingHomeCard => {
   if (!value || typeof value !== "object") {
     return false;
@@ -121,6 +137,16 @@ export const getDatingRefreshTime = async () => {
 
   if (!isRefreshTimeResponse(data)) {
     throw new Error("Invalid dating refresh time response");
+  }
+
+  return data;
+};
+
+export const getDatingMatchCount = async () => {
+  const { data } = await apiClient.get<unknown>("/api/datings/count");
+
+  if (!isDatingMatchCountResponse(data)) {
+    throw new Error("Invalid dating count response");
   }
 
   return data;
