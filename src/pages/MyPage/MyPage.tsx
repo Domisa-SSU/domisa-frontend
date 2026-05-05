@@ -85,7 +85,7 @@ function MyPage() {
               <div className="flex flex-col gap-1.5">
                 <span className="typo-title-header-1 text-grey-900">{user.nickname}</span>
                 <span className="typo-input-text-m text-grey-700">
-                  {String(user.birthYear).slice(2)}년생 {user.gender}
+                  {String(user.birthYear)}년생 {user.gender}
                 </span>
               </div>
             </div>
