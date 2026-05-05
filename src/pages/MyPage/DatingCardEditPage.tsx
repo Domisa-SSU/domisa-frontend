@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import NotLoginHeader from '../../components/NotLoginHeader';
 import Toast from '../../components/Toast';
 import editPencilImg from '../../assets/edit_pencil.svg';
-import toastCheckIcon from '../../assets/toastCheckIcon.svg';
 import ProfileChangeIcon from '../../assets/profile_change.svg?react';
-import photoUploadIcon from '../../assets/photo_upload.svg';
+import PhotoUploadIcon from '../../assets/photo_upload.svg?react';
+import CheckIcon from '../../assets/check.svg?react';
 import xIcon from '../../assets/X.svg';
 
 type DatingCardData = {
@@ -263,30 +263,18 @@ function DatingCardEditPage() {
 
           {/* 나를 표현하는 사진 */}
           <section className="flex flex-col gap-4">
-            <h2 className="typo-subtitle-header-2 text-grey-900">나를 표현하는 사진</h2>
-            <div className="relative w-full overflow-hidden rounded-[0.875rem] bg-grey-300 aspect-[363/271]">
-              {card.photoUrl && (
-                <img
-                  src={card.photoUrl}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              )}
+            <div className="flex items-center justify-between">
+              <h2 className="typo-subtitle-header-2 text-grey-900">나를 표현하는 사진</h2>
               {isEditing && (
                 <>
-                  <div className="absolute inset-0 bg-black/50" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-1.5 rounded-[1.25rem] bg-grey-100 px-5 py-2"
-                    >
-                      <span className="typo-button-text-b text-primary-500">
-                        다른 사진 선택하기
-                      </span>
-                      <img src={photoUploadIcon} alt="" className="h-[0.875rem] w-[0.875rem]" />
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1.5 rounded-[1.25rem] bg-primary-500 px-5 py-2"
+                  >
+                    <span className="typo-button-text-b text-grey-100">다시 올리기</span>
+                    <PhotoUploadIcon className="h-[0.9rem] w-[0.9rem] text-grey-100" />
+                  </button>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -295,6 +283,15 @@ function DatingCardEditPage() {
                     onChange={handlePhotoChange}
                   />
                 </>
+              )}
+            </div>
+            <div className="relative w-full overflow-hidden rounded-[0.875rem] bg-grey-300 aspect-[363/197]">
+              {card.photoUrl && (
+                <img
+                  src={card.photoUrl}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
               )}
             </div>
           </section>
@@ -310,7 +307,7 @@ function DatingCardEditPage() {
               }`}
             >
               <span className="typo-button-text-b text-grey-100">수정 완료</span>
-              <img src={toastCheckIcon} alt="" className="h-[0.875rem] w-[0.875rem]" />
+              <CheckIcon className="h-3 w-3 text-grey-100" />
             </button>
           ) : (
             <button
