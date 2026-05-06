@@ -6,12 +6,33 @@ import ProfileChangeIcon from '../../assets/profile_change.svg?react';
 import PhotoUploadIcon from '../../assets/photo_upload.svg?react';
 import CheckIcon from '../../assets/check.svg?react';
 import xIcon from '../../assets/X.svg';
+import selectArrow from '../SignupPage/asset/selectArrow.svg';
+
+type ContactMethodType = 'INSTAGRAM' | 'KAKAO';
+
+const contactMethods: { value: ContactMethodType; label: string }[] = [
+  { value: 'INSTAGRAM', label: '인스타 ID' },
+  { value: 'KAKAO', label: '카카오톡ID' },
+];
+
+const selectClassName =
+  'h-10 w-full appearance-none rounded-[0.625rem] bg-primary-100 px-[0.875rem] pr-9 typo-input-text-m focus:outline-none';
+
+const formatPhoneNumber = (phone: string) => {
+  const digits = phone.replace(/[^0-9]/g, '').slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+};
 
 type DatingCardData = {
   mbti: string;
   romanticAnswer: string;
   idealTypeAnswer: string;
   photoUrl: string | null;
+  contactMethod: ContactMethodType | '';
+  contactValue: string;
+  notifPhone: string;
 };
 
 // TODO: API 연동 시 교체
@@ -20,6 +41,9 @@ const mockDatingCard: DatingCardData = {
   romanticAnswer: '요거바라 사먹고 돌계에서 수다 떨며 하루를 마무리 하는 연애가 하고 싶습니다.',
   idealTypeAnswer: '물고기가 먹고 싶어서 한강에서 낚시를 할 만한 사람.\n회 떠먹어요',
   photoUrl: null,
+  contactMethod: 'INSTAGRAM',
+  contactValue: '1014.1248',
+  notifPhone: '01012345678',
 };
 
 const MAX_LENGTH = 75;
@@ -127,9 +151,11 @@ function DatingCardEditPage() {
   const [saved, setSaved] = useState<DatingCardData>(mockDatingCard);
   // 수정 모드에서 편집 중인 임시 값
   const [draft, setDraft] = useState<DatingCardData>(mockDatingCard);
+  const [draftNotifPhone, setDraftNotifPhone] = useState(() => mockDatingCard.notifPhone);
 
   const handleStartEdit = () => {
     setDraft(saved);
+    setDraftNotifPhone(saved.notifPhone);
     setIsEditing(true);
   };
 
@@ -146,7 +172,7 @@ function DatingCardEditPage() {
 
   const handleComplete = () => {
     // TODO: API 연동 시 수정 성공 콜백 안으로 이동, isSubmitting 상태로 연타 방어 추가
-    setSaved(draft);
+    setSaved({ ...draft, notifPhone: draftNotifPhone });
     setIsEditing(false);
     setShowToast(true);
   };
@@ -167,8 +193,13 @@ function DatingCardEditPage() {
   };
 
   const card = isEditing ? draft : saved;
+  const isContactMethodSelected = draft.contactMethod.length > 0;
   const isFormValid =
-    draft.romanticAnswer.trim().length > 0 && draft.idealTypeAnswer.trim().length > 0;
+    draft.romanticAnswer.trim().length > 0 &&
+    draft.idealTypeAnswer.trim().length > 0 &&
+    draft.contactMethod.length > 0 &&
+    draft.contactValue.trim().length > 0 &&
+    draftNotifPhone.length === 11;
 
   return (
     <div className="min-h-screen bg-grey-100">
@@ -294,6 +325,101 @@ function DatingCardEditPage() {
                 />
               )}
             </div>
+          </section>
+
+          {/* 공유할 연락처 */}
+          <section className="flex flex-col gap-[0.875rem]">
+            <h2 className="typo-button-text text-grey-900">공유할 연락처</h2>
+            {isEditing ? (
+              <div className="grid grid-cols-[7.75rem_minmax(0,1fr)] gap-2.5">
+                <div className="relative">
+                  <select
+                    value={draft.contactMethod}
+                    onChange={(e) => {
+                      setDraft((prev) => ({
+                        ...prev,
+                        contactMethod: e.target.value as ContactMethodType,
+                        contactValue: '',
+                      }));
+                    }}
+                    className={`${selectClassName} text-grey-600`}
+                  >
+                    <option value="">선택</option>
+                    {contactMethods.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute right-[0.875rem] top-1/2 -translate-y-1/2">
+                    <img src={selectArrow} alt="" className="h-[0.3125rem] w-[0.625rem]" />
+                  </span>
+                </div>
+                <div
+                  className={`flex h-10 w-full items-center gap-0.5 rounded-[0.625rem] border-[1.2px] border-transparent bg-primary-100 px-[0.875rem] ${isContactMethodSelected ? '' : 'opacity-50'}`}
+                >
+                  {draft.contactMethod === 'INSTAGRAM' && (
+                    <span className="typo-input-text-m text-primary-500">@</span>
+                  )}
+                  <input
+                    value={draft.contactValue}
+                    onChange={(e) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        contactValue: e.target.value.replace(/^@+/, ''),
+                      }))
+                    }
+                    disabled={!isContactMethodSelected}
+                    className="min-w-0 flex-1 bg-transparent typo-input-text-m text-primary-500 placeholder:text-grey-600 focus:outline-none"
+                    placeholder={
+                      draft.contactMethod === 'INSTAGRAM'
+                        ? '인스타 ID를 입력해주세요'
+                        : draft.contactMethod === 'KAKAO'
+                          ? '카카오톡 ID를 입력해주세요'
+                          : ''
+                    }
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2.5">
+                <div className="flex h-10 w-[6.75rem] shrink-0 items-center justify-between rounded-[0.625rem] border border-grey-500 bg-grey-100 px-[0.875rem]">
+                  <span className="typo-input-text-m text-grey-600">
+                    {contactMethods.find((m) => m.value === saved.contactMethod)?.label ?? '선택'}
+                  </span>
+                  <img src={selectArrow} alt="" className="h-[0.3125rem] w-[0.625rem]" />
+                </div>
+                <div className="flex h-10 flex-1 items-center rounded-[0.625rem] border border-grey-500 bg-grey-100 px-[0.875rem]">
+                  <span className="typo-input-text-m text-grey-700">
+                    {saved.contactMethod === 'INSTAGRAM' ? `@${saved.contactValue}` : saved.contactValue}
+                  </span>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* 알림문자 받을 전화번호 */}
+          <section className="flex flex-col gap-[0.875rem]">
+            <h2 className="typo-button-text text-grey-900">알림문자 받을 전화번호</h2>
+            {isEditing ? (
+              <input
+                value={formatPhoneNumber(draftNotifPhone)}
+                onChange={(e) =>
+                  setDraftNotifPhone(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))
+                }
+                inputMode="numeric"
+                maxLength={13}
+                placeholder="010-0000-0000"
+                className="h-9 w-full border-b-[1.8px] border-primary-200 bg-transparent typo-input-text text-primary-500 placeholder:text-grey-600 focus:outline-none"
+              />
+            ) : (
+              <div className="flex flex-col gap-[0.625rem]">
+                <p className="typo-input-text text-grey-700">
+                  {formatPhoneNumber(saved.notifPhone)}
+                </p>
+                <div className="h-px w-full bg-grey-500" />
+              </div>
+            )}
           </section>
 
           {/* 하단 버튼 */}

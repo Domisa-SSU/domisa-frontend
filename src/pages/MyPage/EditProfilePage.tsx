@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomActionBar from '../../components/BottomActionBar';
 import NotLoginHeader from '../../components/NotLoginHeader';
@@ -22,14 +22,7 @@ import rabbitImg from '../SignupPage/asset/rabbitImg.png';
 import sudalImg from '../SignupPage/asset/sudalImg.png';
 import wolfImg from '../SignupPage/asset/wolfImg.png';
 
-type ContactMethodType = 'INSTAGRAM' | 'KAKAO';
-
 const birthYears = Array.from({ length: 21 }, (_, index) => `${2008 - index}`);
-const contactMethods: { value: ContactMethodType; label: string }[] = [
-  { value: 'INSTAGRAM', label: '인스타 ID' },
-  { value: 'KAKAO', label: '카카오톡ID' },
-];
-const phonePrefix = '010';
 
 const animalOptions = [
   { name: '강아지', image: dogImg },
@@ -65,12 +58,7 @@ const mockUser = {
   birthYear: 2003,
   gender: false, // true = 남성, false = 여성
   animalProfile: 'OTTER' as AnimalProfile,
-  contact: {
-    type: 'INSTAGRAM' as ContactMethodType,
-    content: '@1014.1248',
-  },
   profileImageUrl: '',
-  notifPhone: '01012345678',
 };
 
 const fieldClassName =
@@ -150,44 +138,17 @@ function EditProfilePage() {
   const [nicknameErrorMessage, setNicknameErrorMessage] = useState('');
   const [gender, setGender] = useState(mockUser.gender ? '남성' : '여성');
   const [birthYear, setBirthYear] = useState(String(mockUser.birthYear));
-  const [contactMethod, setContactMethod] = useState<ContactMethodType | ''>(mockUser.contact.type);
-  // TODO: API 연동 시 notifPhone이 숫자만("01012345678") 형태로 오면 아래처럼 파싱하여 초기값 설정
-  const [notifPhoneMiddle, setNotifPhoneMiddle] = useState(
-    () => mockUser.notifPhone.slice(3, 7)
-  );
-  const [notifPhoneLast, setNotifPhoneLast] = useState(
-    () => mockUser.notifPhone.slice(7, 11)
-  );
-  const notifPhoneMiddleRef = useRef<HTMLInputElement>(null);
-  const notifPhoneLastRef = useRef<HTMLInputElement>(null);
-  const [contactValue, setContactValue] = useState(mockUser.contact.content);
   const { mutateAsync: checkNicknameAvailability, isPending: isCheckingNickname } =
     useCheckNicknameMutation();
 
   const isFormValid = useMemo(() => {
-    const isContactFilled = contactMethod.length > 0 && contactValue.trim().length > 0;
-
     return (
       nickname.trim().length > 0 &&
       isNicknameChecked &&
       gender.length > 0 &&
-      birthYear.length > 0 &&
-      isContactFilled &&
-      notifPhoneMiddle.length === 4 &&
-      notifPhoneLast.length === 4
+      birthYear.length > 0
     );
-  }, [
-    birthYear,
-    contactMethod,
-    contactValue,
-    gender,
-    isNicknameChecked,
-    nickname,
-    notifPhoneMiddle,
-    notifPhoneLast,
-  ]);
-
-  const isContactMethodSelected = contactMethod.length > 0;
+  }, [birthYear, gender, isNicknameChecked, nickname]);
 
   const handleLimitedChange = (
     value: string,
@@ -351,87 +312,6 @@ function EditProfilePage() {
               <span className="pointer-events-none absolute right-[0.875rem] top-1/2 -translate-y-1/2">
                 <img src={selectArrow} alt="" className="h-[0.3125rem] w-[0.625rem]" />
               </span>
-            </div>
-          </section>
-
-          {/* 연락처 */}
-          <section className="flex flex-col gap-[0.875rem]">
-            <h2 className="typo-button-text text-grey-900">공유할 연락처</h2>
-            <div className="grid grid-cols-[7.75rem_minmax(0,1fr)] gap-2.5">
-              <div className="relative">
-                <select
-                  value={contactMethod}
-                  onChange={(event) => {
-                    setContactMethod(event.target.value as ContactMethodType);
-                    setContactValue('');
-                  }}
-                  className={`${selectClassName} text-grey-600`}
-                >
-                  <option value="">선택</option>
-                  {contactMethods.map((item) => (
-                    <option key={item.value} value={item.value}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-                <span className="pointer-events-none absolute right-[0.875rem] top-1/2 -translate-y-1/2">
-                  <img src={selectArrow} alt="" className="h-[0.3125rem] w-[0.625rem]" />
-                </span>
-              </div>
-              <input
-                value={contactValue}
-                onChange={(event) => setContactValue(event.target.value)}
-                disabled={!isContactMethodSelected}
-                className={`${fieldClassName} ${isContactMethodSelected ? '' : 'opacity-50'}`}
-                placeholder={
-                  contactMethod === 'INSTAGRAM'
-                    ? '인스타 ID를 입력해주세요'
-                    : contactMethod === 'KAKAO'
-                      ? '카카오톡 ID를 입력해주세요'
-                      : ''
-                }
-              />
-            </div>
-          </section>
-
-          {/* 알림문자 받을 전화번호 */}
-          <section className="flex flex-col gap-[0.875rem]">
-            <h2 className="typo-button-text text-grey-900">알림문자 받을 전화번호</h2>
-            <div className="grid grid-cols-3 gap-[0.3125rem]">
-              <div
-                aria-disabled="true"
-                className="flex h-10 w-full items-center rounded-[0.625rem] bg-primary-100 px-[0.875rem] typo-input-text-m text-grey-600"
-              >
-                {phonePrefix}
-              </div>
-              <input
-                ref={notifPhoneMiddleRef}
-                value={notifPhoneMiddle}
-                onChange={(event) => {
-                  const next = event.target.value.replace(/[^0-9]/g, '').slice(0, 4);
-                  setNotifPhoneMiddle(next);
-                  if (next.length === 4) notifPhoneLastRef.current?.focus();
-                }}
-                className={fieldClassName}
-                inputMode="numeric"
-                maxLength={4}
-              />
-              <input
-                ref={notifPhoneLastRef}
-                value={notifPhoneLast}
-                onChange={(event) => {
-                  const next = event.target.value.replace(/[^0-9]/g, '').slice(0, 4);
-                  setNotifPhoneLast(next);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Backspace' && notifPhoneLast === '') {
-                    notifPhoneMiddleRef.current?.focus();
-                  }
-                }}
-                className={fieldClassName}
-                inputMode="numeric"
-                maxLength={4}
-              />
             </div>
           </section>
         </div>
