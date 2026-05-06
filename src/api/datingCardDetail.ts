@@ -27,6 +27,7 @@ export type DatingCardDetailResponse = {
   isBlurred: boolean;
   hasSentLike: boolean;
   hasReceivedLike: boolean;
+  hasPaidForReceivedLike?: boolean;
   isMatched: boolean;
   freeLikeRemaining: number;
 };
@@ -55,6 +56,8 @@ const contactTypes: readonly DatingCardDetailContactType[] = [
 const MOCK_DEFAULT_USER_ID = "mock-default";
 const MOCK_SENT_USER_ID = "mock-sent";
 const MOCK_RECEIVED_USER_ID = "mock-received";
+const MOCK_RECEIVED_PAID_USER_ID = "mock-received-paid";
+const MOCK_MATCHED_USER_ID = "mock-matched";
 
 const baseMockDatingCardDetail: DatingCardDetailResponse = {
   publicId: 1,
@@ -102,6 +105,35 @@ const mockDatingCardDetails: Record<string, DatingCardDetailResponse> = {
     contact: null,
     isBlurred: true,
     hasReceivedLike: true,
+  },
+  [MOCK_RECEIVED_PAID_USER_ID]: {
+    ...baseMockDatingCardDetail,
+    publicId: 4,
+    nickName: "쿠키확인",
+    gender: true,
+    animalProfile: "BEAR",
+    contact: {
+      type: "KAKAO",
+      content: "cuty882",
+    },
+    isBlurred: false,
+    hasReceivedLike: true,
+    hasPaidForReceivedLike: true,
+  },
+  [MOCK_MATCHED_USER_ID]: {
+    ...baseMockDatingCardDetail,
+    publicId: 5,
+    nickName: "매칭완료",
+    gender: true,
+    animalProfile: "BEAR",
+    contact: {
+      type: "KAKAO",
+      content: "cuty882",
+    },
+    isBlurred: false,
+    hasSentLike: true,
+    hasReceivedLike: true,
+    isMatched: true,
   },
 };
 
