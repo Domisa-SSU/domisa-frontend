@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   datingCardDetailQueryKey,
   fetchDatingCardDetail,
+  type DatingCardDetailContact,
   type DatingCardDetailResponse,
 } from "../../api/datingCardDetail";
 import type { AnimalProfile } from "../../api/users";
@@ -26,6 +27,7 @@ import rabbitImg from "../SignupPage/asset/rabbitImg.png";
 import sudalImg from "../SignupPage/asset/sudalImg.png";
 import wolfImg from "../SignupPage/asset/wolfImg.png";
 import inviteCreatedIcon from "../IntroduceFriendPage/assets/inviteCreatedIcon.svg";
+import lockIcon from "./assets/lockIcon.png";
 
 type DatingCardDetailSectionItem = {
   title: string;
@@ -55,6 +57,7 @@ const createLockedPlaceholder = (length: number) => {
 
 const getFriendIntroductionItems = (
   cardDetail: DatingCardDetailResponse,
+  isPrivateInfoUnlocked: boolean,
 ): DatingCardDetailSectionItem[] => [
   {
     title: "친구에 대한 간단한 소개",
@@ -67,12 +70,13 @@ const getFriendIntroductionItems = (
   {
     title: "친구와 있었던 가장 웃긴 에피소드",
     content: cardDetail.q3 ?? createLockedPlaceholder(cardDetail.q3Length),
-    isLocked: cardDetail.isBlurred,
+    isLocked: cardDetail.isBlurred && !isPrivateInfoUnlocked,
   },
 ];
 
 const getSelfIntroductionItems = (
   cardDetail: DatingCardDetailResponse,
+  isPrivateInfoUnlocked: boolean,
 ): DatingCardDetailSectionItem[] => [
   {
     title: "원하는 연애 스타일을 적어주세요",
@@ -81,16 +85,20 @@ const getSelfIntroductionItems = (
   {
     title: "이상형을 한 줄로 적어주세요",
     content: cardDetail.idealType,
-    isLocked: cardDetail.isBlurred,
+    isLocked: cardDetail.isBlurred && !isPrivateInfoUnlocked,
   },
 ];
 
+const contactTypeLabels: Record<DatingCardDetailContact["type"], string> = {
+  PHONE: "전화번호",
+  KAKAO: "카카오톡 ID",
+  INSTAGRAM: "인스타 ID",
+};
+
 function CoverImage({
   src,
-  isBlurred,
 }: {
   src: string | null;
-  isBlurred: boolean;
 }) {
   const fadeMask = {
     WebkitMaskImage:
@@ -116,9 +124,7 @@ function CoverImage({
           <img
             src={src}
             alt=""
-            className={`relative z-10 h-full w-auto max-w-full object-contain ${
-              isBlurred ? "blur-[4.65px]" : ""
-            }`}
+            className="relative z-10 h-full w-auto max-w-full object-contain"
           />
         </>
       ) : (
@@ -173,6 +179,29 @@ function ReceivedLikeBadge() {
   );
 }
 
+function MatchedBadge() {
+  return (
+    <div className="flex w-full items-center justify-center gap-1 rounded-[0.625rem] bg-match-hl px-2.5 py-1.5">
+      <p className="typo-comment-2 text-grey-900">서로 호감을 보내 매칭되었어요</p>
+      <img src={heartIcon} alt="" className="h-3 w-3" />
+      <img src={heartIcon} alt="" className="h-3 w-3" />
+    </div>
+  );
+}
+
+function MatchedContactCard({
+  contact,
+}: {
+  contact: DatingCardDetailContact;
+}) {
+  return (
+    <div className="flex w-full flex-col items-center justify-center gap-2.5 rounded-[0.625rem] bg-match-bg py-2.5">
+      <p className="typo-comment-2 text-grey-700">{contactTypeLabels[contact.type]}</p>
+      <p className="typo-input-text text-match-text">{contact.content}</p>
+    </div>
+  );
+}
+
 function InfoCard({
   item,
   variant,
@@ -195,9 +224,7 @@ function InfoCard({
         >
           <span className="min-w-0 break-words">{item.title}</span>
           {item.isLocked ? (
-            <span aria-hidden="true" className="shrink-0 text-[1rem] leading-none">
-              🔒
-            </span>
+            <img src={lockIcon} alt="" aria-hidden="true" className="h-[1.125rem] w-[1.125rem] shrink-0" />
           ) : null}
         </h3>
         <p
@@ -243,14 +270,55 @@ function DetailSection({
 }
 
 function DetailFooter({
+  isMatched,
+  isReceivedLikePaid,
   hasSentLike,
   hasReceivedLike,
   onSendLike,
+  onConfirmMatch,
 }: {
+  isMatched: boolean;
+  isReceivedLikePaid: boolean;
   hasSentLike: boolean;
   hasReceivedLike: boolean;
   onSendLike: () => void;
+  onConfirmMatch: () => void;
 }) {
+  if (isMatched) {
+    return (
+      <div className="fixed inset-x-0 bottom-0 z-30 bg-grey-100 px-5 pb-[2.94rem] pt-2.5">
+        <div className="mx-auto flex w-full max-w-[22.625rem] flex-col items-center">
+          <button
+            type="button"
+            disabled
+            className="flex h-[3.125rem] w-full cursor-default items-center justify-center rounded-[1.25rem] border-[0.8px] border-match-text bg-grey-100 px-2.5 py-2.5 text-match-text shadow-[0_0_10px_rgba(255,208,132,1)]"
+          >
+            <span className="typo-button-text-b">매칭이 된 상대예요</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isReceivedLikePaid) {
+    return (
+      <div className="fixed inset-x-0 bottom-0 z-30 bg-grey-100 px-5 pb-[2.94rem] pt-2.5">
+        <div className="mx-auto flex w-full max-w-[22.625rem] flex-col items-center">
+          <button
+            type="button"
+            onClick={onConfirmMatch}
+            className="flex h-[3.125rem] w-full items-center justify-center rounded-[0.875rem] bg-[linear-gradient(178deg,#ff8b6e_22.19%,#ffc14e_90.53%)] px-2.5 py-2.5 text-grey-100"
+          >
+            <span className="flex items-center gap-1 typo-button-text-b">
+              호감 보내고 매칭되기 (무료)
+              <img src={flowerIcon} alt="" className="h-4 w-4" />
+            </span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (hasSentLike) {
     return (
       <div className="fixed inset-x-0 bottom-0 z-30 bg-grey-100 px-5 pb-[2.94rem] pt-2.5">
@@ -310,8 +378,9 @@ function DetailFooter({
 function DatingCardDetailPage() {
   const navigate = useNavigate();
   const { cardId = "" } = useParams<{ cardId: string }>();
-  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
   const [hasSentLikeOverride, setHasSentLikeOverride] = useState(false);
+  const [isMatchedOverride, setIsMatchedOverride] = useState(false);
 
   const {
     data: cardDetail,
@@ -325,20 +394,34 @@ function DatingCardDetailPage() {
 
   useEffect(() => {
     setHasSentLikeOverride(false);
+    setIsMatchedOverride(false);
+    setToastMessage("");
   }, [cardId]);
 
   useEffect(() => {
-    if (!showToast) {
+    if (!toastMessage) {
       return;
     }
 
-    const timerId = window.setTimeout(() => setShowToast(false), 2500);
+    const timerId = window.setTimeout(() => setToastMessage(""), 2500);
     return () => window.clearTimeout(timerId);
-  }, [showToast]);
+  }, [toastMessage]);
+
+  useEffect(() => {
+    if (import.meta.env.DEV && cardId === "mock-matched" && cardDetail?.isMatched) {
+      setToastMessage("매칭 완료! 서로에게 연락처가 공개되었어요");
+    }
+  }, [cardDetail?.isMatched, cardId]);
 
   const handleSendLike = () => {
     setHasSentLikeOverride(true);
-    setShowToast(true);
+    setToastMessage("호감을 보냈어요");
+  };
+
+  const handleConfirmMatch = () => {
+    setHasSentLikeOverride(true);
+    setIsMatchedOverride(true);
+    setToastMessage("매칭 완료! 서로에게 연락처가 공개되었어요");
   };
 
   if (!cardId || isError) {
@@ -363,9 +446,19 @@ function DatingCardDetailPage() {
     );
   }
 
-  const hasSentLike = cardDetail.hasSentLike || hasSentLikeOverride;
-  const friendIntroductionItems = getFriendIntroductionItems(cardDetail);
-  const selfIntroductionItems = getSelfIntroductionItems(cardDetail);
+  const isMatched = cardDetail.isMatched || isMatchedOverride;
+  const hasSentLike = cardDetail.hasSentLike || hasSentLikeOverride || isMatched;
+  const isReceivedLikePaid =
+    cardDetail.hasReceivedLike && cardDetail.hasPaidForReceivedLike === true;
+  const isPrivateInfoUnlocked = isMatched || isReceivedLikePaid;
+  const friendIntroductionItems = getFriendIntroductionItems(
+    cardDetail,
+    isPrivateInfoUnlocked,
+  );
+  const selfIntroductionItems = getSelfIntroductionItems(
+    cardDetail,
+    isPrivateInfoUnlocked,
+  );
 
   return (
     <div className="min-h-screen bg-grey-100">
@@ -379,7 +472,7 @@ function DatingCardDetailPage() {
 
       <main className="w-full pb-[11rem] pt-[3.271rem]">
         <section className="relative h-[13.625rem] w-full">
-          <CoverImage src={cardDetail.profile} isBlurred={cardDetail.isBlurred} />
+          <CoverImage src={cardDetail.profile} />
           <button
             type="button"
             onClick={() => navigate(-1)}
@@ -399,7 +492,16 @@ function DatingCardDetailPage() {
               gender={cardDetail.gender}
               animalProfile={cardDetail.animalProfile}
             />
-            {cardDetail.hasReceivedLike ? <ReceivedLikeBadge /> : null}
+            {isMatched ? (
+              <>
+                <MatchedBadge />
+                {cardDetail.contact ? (
+                  <MatchedContactCard contact={cardDetail.contact} />
+                ) : null}
+              </>
+            ) : cardDetail.hasReceivedLike ? (
+              <ReceivedLikeBadge />
+            ) : null}
           </div>
           <DetailSection
             title="친구 소개서"
@@ -417,12 +519,15 @@ function DatingCardDetailPage() {
       </main>
 
       <DetailFooter
+        isMatched={isMatched}
+        isReceivedLikePaid={isReceivedLikePaid}
         hasSentLike={hasSentLike}
         hasReceivedLike={cardDetail.hasReceivedLike}
         onSendLike={handleSendLike}
+        onConfirmMatch={handleConfirmMatch}
       />
 
-      {showToast && <Toast message="호감을 보냈어요" />}
+      {toastMessage && <Toast message={toastMessage} />}
     </div>
   );
 }
