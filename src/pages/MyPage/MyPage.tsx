@@ -4,7 +4,7 @@ import NotLoginHeader from '../../components/NotLoginHeader';
 import Toast from '../../components/Toast';
 import { EDIT_PROFILE_TOAST_STORAGE_KEY } from '../../constants/storageKeys';
 import { useLogoutMutation } from '../../queries/auth';
-import { useUserMeQuery, useUserCookiesQuery } from '../../queries/users';
+import { useUserMeQuery, useUserCookiesQuery, useDeleteMeMutation } from '../../queries/users';
 import ReferralSection from '../../components/ReferralSection';
 import RightArrow from '../../assets/right_arrow.svg?react';
 import WithdrawConfirmModal from './WithdrawConfirmModal';
@@ -49,6 +49,7 @@ function MyPage() {
   const { data: me, isLoading: isMeLoading } = useUserMeQuery();
   const { data: cookies, isLoading: isCookiesLoading } = useUserCookiesQuery();
   const { mutateAsync: logout, isPending: isLoggingOut } = useLogoutMutation();
+  const { mutateAsync: deleteMe, isPending: isDeleting } = useDeleteMeMutation();
   const [logoutErrorMessage, setLogoutErrorMessage] = useState('');
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showEditProfileToast, setShowEditProfileToast] = useState(() => {
@@ -269,11 +270,16 @@ function MyPage() {
 
       {showWithdrawModal && (
         <WithdrawConfirmModal
-          onConfirm={() => {
-            // TODO: 탈퇴 API 호출
-            setShowWithdrawModal(false);
+          onConfirm={async () => {
+            try {
+              await deleteMe();
+              navigate('/', { replace: true });
+            } catch (error) {
+              console.error(error);
+            }
           }}
           onCancel={() => setShowWithdrawModal(false)}
+          isLoading={isDeleting}
         />
       )}
     </div>
