@@ -1,13 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
 import {
   fetchDatingHome,
+  getUserCookies,
+  shuffleDatingCards,
   type DatingHomeCard,
 } from "../../api/datingHome";
 import HeaderTop from "../../components/HeaderTop";
+import Toast from "../../components/Toast";
 import headerArrow from "../../assets/headerArrow.svg";
+import XIcon from "../../assets/X.svg";
+import cookieIcon from "../../assets/cookie.svg";
+import arrowIcon from "../../assets/arrowIcon.svg";
 import reloadIcon from "./assets/reloadIcon.svg";
 import datingHeartIcon from "./assets/datingHeartIcon.svg";
 import datingDeletedHeartIcon from "./assets/datingDeletedHeartIcon.png";
@@ -56,9 +62,8 @@ const getRefreshRemainingSeconds = (
 };
 
 const shouldReloadForRefresh = (
-  canRefresh: boolean,
   remainingSeconds: number,
-) => canRefresh || remainingSeconds <= 0;
+) => remainingSeconds <= 0;
 
 const reloadForRefreshOnce = (refreshAvailableAt: string) => {
   if (sessionStorage.getItem(refreshReloadStorageKey) === refreshAvailableAt) {
@@ -87,7 +92,15 @@ function DatingSubHeader() {
   );
 }
 
-function TimerPanel({ remainingSeconds }: { remainingSeconds: number }) {
+function TimerPanel({
+  remainingSeconds,
+  isShuffleLoading,
+  onShuffleClick,
+}: {
+  remainingSeconds: number;
+  isShuffleLoading: boolean;
+  onShuffleClick: () => void;
+}) {
   return (
     <section className="mx-auto flex w-full max-w-[22.625rem] flex-col gap-[0.9375rem]">
       <div className="flex flex-col items-center gap-2.5 rounded-[0.625rem] bg-grey-100 py-2.5 text-center">
@@ -101,8 +114,9 @@ function TimerPanel({ remainingSeconds }: { remainingSeconds: number }) {
 
       <button
         type="button"
-        disabled
-        className="flex h-[3.125rem] flex-col items-center justify-center rounded-[0.3125rem] bg-[linear-gradient(180deg,#ff98b5_0%,#ff5a99_100%)] disabled:cursor-default disabled:opacity-100"
+        onClick={onShuffleClick}
+        disabled={isShuffleLoading}
+        className="flex h-[3.125rem] flex-col items-center justify-center rounded-[0.3125rem] bg-[linear-gradient(180deg,#ff98b5_0%,#ff5a99_100%)] disabled:cursor-wait disabled:opacity-80"
       >
         <span className="flex items-center gap-1.5 typo-comment-1-b text-grey-100">
           카드 섞기
@@ -113,6 +127,68 @@ function TimerPanel({ remainingSeconds }: { remainingSeconds: number }) {
         </span>
       </button>
     </section>
+  );
+}
+
+function ShuffleConfirmModal({
+  cookieCount,
+  isShuffling,
+  onClose,
+  onConfirm,
+}: {
+  cookieCount: number;
+  isShuffling: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  const canShuffle = cookieCount >= 2;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-grey-900/70 px-[1.9375rem]"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="shuffle-confirm-title"
+        className="relative flex w-full max-w-[21.25rem] flex-col items-center justify-center gap-[0.9375rem] rounded-[0.875rem] bg-white pb-5 pt-10"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-5 top-5 flex p-2.5"
+          aria-label="닫기"
+        >
+          <img src={XIcon} alt="" className="h-[1.0625rem] w-4" />
+        </button>
+
+        <div className="flex flex-col items-center gap-[0.9375rem]">
+          <div
+            id="shuffle-confirm-title"
+            className="typo-subtitle-header-2 text-center text-grey-900"
+          >
+            <p>카드를 섞어</p>
+            <p>새로운 사람들을 볼까요?</p>
+          </div>
+          <p className="typo-input-text-m text-center text-grey-700">
+            내 쿠키 : {cookieCount}개
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={onConfirm}
+          disabled={!canShuffle || isShuffling}
+          className="flex h-[3.125rem] w-[18.75rem] items-center justify-center gap-1 rounded-[0.875rem] bg-primary-500 typo-button-text-b text-grey-100 disabled:cursor-default disabled:opacity-100"
+        >
+          <span>쿠키 2개로 카드 섞기</span>
+          <img src={cookieIcon} alt="" className="h-4 w-4" />
+          <img src={arrowIcon} alt="" className="h-3 w-[0.8125rem]" />
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -386,6 +462,7 @@ function DatingPreviewSection({
 
 function DatingPage() {
   const navigate = useNavigate();
+  const reloadTimeoutRef = useRef<number | null>(null);
   const { data, dataUpdatedAt, isError, isPending } = useQuery({
     queryKey: datingHomeQueryKey,
     queryFn: fetchDatingHome,
@@ -393,6 +470,10 @@ function DatingPage() {
     refetchOnWindowFocus: false,
   });
   const [now, setNow] = useState(() => Date.now());
+  const [shuffleCookieCount, setShuffleCookieCount] = useState<number | null>(
+    null,
+  );
+  const [toastMessage, setToastMessage] = useState("");
   const [openedCardState, setOpenedCardState] = useState<{
     dataUpdatedAt: number;
     ids: Set<string>;
@@ -400,6 +481,40 @@ function DatingPage() {
     dataUpdatedAt: 0,
     ids: new Set(),
   }));
+
+  const showToast = (message: string) => {
+    setToastMessage("");
+    window.setTimeout(() => setToastMessage(message), 0);
+  };
+
+  const userCookiesMutation = useMutation({
+    mutationFn: getUserCookies,
+    onSuccess: (result) => {
+      setShuffleCookieCount(result.cookieCount);
+    },
+    onError: () => {
+      showToast("쿠키 정보를 불러오지 못했어요");
+    },
+  });
+
+  const shuffleCardsMutation = useMutation({
+    mutationFn: shuffleDatingCards,
+    onSuccess: () => {
+      setShuffleCookieCount(null);
+      showToast("카드가 섞였어요!");
+
+      if (reloadTimeoutRef.current !== null) {
+        window.clearTimeout(reloadTimeoutRef.current);
+      }
+
+      reloadTimeoutRef.current = window.setTimeout(() => {
+        window.location.reload();
+      }, 1200);
+    },
+    onError: () => {
+      showToast("카드 섞기에 실패했어요");
+    },
+  });
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -409,6 +524,24 @@ function DatingPage() {
     return () => window.clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (reloadTimeoutRef.current !== null) {
+        window.clearTimeout(reloadTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!toastMessage) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => setToastMessage(""), 2500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [toastMessage]);
+
   const remainingSeconds = data
     ? getRefreshRemainingSeconds(data.refreshAvailableAt, now)
     : 0;
@@ -416,7 +549,7 @@ function DatingPage() {
   useEffect(() => {
     if (
       data &&
-      shouldReloadForRefresh(data.canRefresh, remainingSeconds)
+      shouldReloadForRefresh(remainingSeconds)
     ) {
       reloadForRefreshOnce(data.refreshAvailableAt);
     }
@@ -438,6 +571,26 @@ function DatingPage() {
 
   const handleViewCardDetail = (id: string) => {
     navigate(`/dating/cards/${encodeURIComponent(id)}`);
+  };
+
+  const handleShuffleButtonClick = () => {
+    if (userCookiesMutation.isPending) {
+      return;
+    }
+
+    userCookiesMutation.mutate();
+  };
+
+  const handleShuffleConfirm = () => {
+    if (
+      shuffleCookieCount === null ||
+      shuffleCookieCount < 2 ||
+      shuffleCardsMutation.isPending
+    ) {
+      return;
+    }
+
+    shuffleCardsMutation.mutate();
   };
 
   const visibleCards = useMemo(
@@ -486,7 +639,11 @@ function DatingPage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-[25.1875rem] flex-col gap-[1.875rem] px-[0.8125rem] pb-12 pt-[7.5875rem]">
-        <TimerPanel remainingSeconds={remainingSeconds} />
+        <TimerPanel
+          remainingSeconds={remainingSeconds}
+          isShuffleLoading={userCookiesMutation.isPending}
+          onShuffleClick={handleShuffleButtonClick}
+        />
         <MainCardSection
           cards={visibleCards}
           openedCardIds={openedCardIds}
@@ -519,6 +676,15 @@ function DatingPage() {
           />
         </div>
       </main>
+      {shuffleCookieCount !== null && (
+        <ShuffleConfirmModal
+          cookieCount={shuffleCookieCount}
+          isShuffling={shuffleCardsMutation.isPending}
+          onClose={() => setShuffleCookieCount(null)}
+          onConfirm={handleShuffleConfirm}
+        />
+      )}
+      {toastMessage && <Toast message={toastMessage} />}
     </div>
   );
 }

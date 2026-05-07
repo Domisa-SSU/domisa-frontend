@@ -9,32 +9,29 @@ export type DatingCardDetailContact = {
   content: string;
 };
 
+export type DatingCardDetailViewType = "NORMAL" | "FAN";
+
 export type DatingCardDetailResponse = {
   publicId: string;
   nickName: string;
   age: number;
-  gender: boolean | null;
   animalProfile: AnimalProfile;
   profile: string | null;
   q1: string;
   q2: string;
   q3: string | null;
-  q3Length: number;
+  q3Length: number | null;
   datingStyle: string;
   idealType: string | null;
-  idealTypeLength: number;
+  idealTypeLength: number | null;
   mbti: string;
   contact: DatingCardDetailContact | null;
   isBlurred: boolean;
+  isPaidUnblur: boolean;
   hasSentLike: boolean;
   hasReceivedLike: boolean;
-  hasPaidForReceivedLike?: boolean;
   isMatched: boolean;
   freeLikeRemaining: number;
-};
-
-type DatingCardDetailDto = Omit<DatingCardDetailResponse, "gender"> & {
-  gender?: boolean | null;
 };
 
 const animalProfiles: readonly AnimalProfile[] = [
@@ -68,7 +65,6 @@ const baseMockDatingCardDetail: DatingCardDetailResponse = {
   publicId: "mock-default",
   nickName: "숭실대칼이",
   age: 23,
-  gender: false,
   animalProfile: "CAPYBARA",
   profile: testImg,
   q1: "제 친구는 정말로.. 귀여워요!!",
@@ -84,6 +80,7 @@ const baseMockDatingCardDetail: DatingCardDetailResponse = {
     content: "domisa_mock",
   },
   isBlurred: false,
+  isPaidUnblur: false,
   hasSentLike: false,
   hasReceivedLike: false,
   isMatched: false,
@@ -104,10 +101,11 @@ const mockDatingCardDetails: Record<string, DatingCardDetailResponse> = {
     ...baseMockDatingCardDetail,
     publicId: "mock-received",
     nickName: "받은호감",
-    gender: true,
     animalProfile: "BEAR",
     q3: null,
     q3Length: 42,
+    idealType: null,
+    idealTypeLength: 14,
     contact: null,
     isBlurred: true,
     hasReceivedLike: true,
@@ -116,7 +114,6 @@ const mockDatingCardDetails: Record<string, DatingCardDetailResponse> = {
     ...baseMockDatingCardDetail,
     publicId: "mock-received-paid",
     nickName: "쿠키확인",
-    gender: true,
     animalProfile: "BEAR",
     contact: {
       type: "KAKAO",
@@ -124,13 +121,12 @@ const mockDatingCardDetails: Record<string, DatingCardDetailResponse> = {
     },
     isBlurred: false,
     hasReceivedLike: true,
-    hasPaidForReceivedLike: true,
+    isPaidUnblur: true,
   },
   [MOCK_MATCHED_USER_ID]: {
     ...baseMockDatingCardDetail,
     publicId: "mock-matched",
     nickName: "매칭완료",
-    gender: true,
     animalProfile: "BEAR",
     contact: {
       type: "KAKAO",
@@ -167,7 +163,7 @@ const isDatingCardDetailContact = (
 
 const isDatingCardDetailResponse = (
   value: unknown,
-): value is DatingCardDetailDto => {
+): value is DatingCardDetailResponse => {
   if (!value || typeof value !== "object") {
     return false;
   }
@@ -178,23 +174,27 @@ const isDatingCardDetailResponse = (
     typeof response.publicId === "string" &&
     typeof response.nickName === "string" &&
     typeof response.age === "number" &&
-    (
-      typeof response.gender === "boolean" ||
-      response.gender === null ||
-      response.gender === undefined
-    ) &&
     isAnimalProfile(response.animalProfile) &&
     (typeof response.profile === "string" || response.profile === null) &&
     typeof response.q1 === "string" &&
     typeof response.q2 === "string" &&
     (typeof response.q3 === "string" || response.q3 === null) &&
-    typeof response.q3Length === "number" &&
+    (
+      typeof response.q3 === "string"
+        ? response.q3Length === null || typeof response.q3Length === "number"
+        : typeof response.q3Length === "number"
+    ) &&
     typeof response.datingStyle === "string" &&
     (typeof response.idealType === "string" || response.idealType === null) &&
-    typeof response.idealTypeLength === "number" &&
+    (
+      typeof response.idealType === "string"
+        ? response.idealTypeLength === null || typeof response.idealTypeLength === "number"
+        : typeof response.idealTypeLength === "number"
+    ) &&
     typeof response.mbti === "string" &&
     (isDatingCardDetailContact(response.contact) || response.contact === null) &&
     typeof response.isBlurred === "boolean" &&
+    typeof response.isPaidUnblur === "boolean" &&
     typeof response.hasSentLike === "boolean" &&
     typeof response.hasReceivedLike === "boolean" &&
     typeof response.isMatched === "boolean" &&
@@ -202,30 +202,27 @@ const isDatingCardDetailResponse = (
   );
 };
 
-const normalizeDatingCardDetail = (
-  detail: DatingCardDetailDto,
-): DatingCardDetailResponse => ({
-  ...detail,
-  gender: detail.gender ?? null,
-});
-
-export const datingCardDetailQueryKey = (publicId: string) =>
-  ["dating", "cards", publicId] as const;
+export const datingCardDetailQueryKey = (
+  publicId: string,
+  viewType: DatingCardDetailViewType,
+) => ["dating", "cards", publicId, viewType] as const;
 
 export const fetchDatingCardDetail = async (
   publicId: string,
+  viewType: DatingCardDetailViewType = "NORMAL",
 ): Promise<DatingCardDetailResponse> => {
   if (import.meta.env.DEV && publicId in mockDatingCardDetails) {
     return mockDatingCardDetails[publicId];
   }
 
-  const { data } = await apiClient.get<unknown>(
+  const { data } = await apiClient.post<unknown>(
     `/api/datings/profiles/${encodeURIComponent(publicId)}`,
+    { viewType },
   );
 
   if (!isDatingCardDetailResponse(data)) {
     throw new Error("Invalid dating card detail response");
   }
 
-  return normalizeDatingCardDetail(data);
+  return data;
 };

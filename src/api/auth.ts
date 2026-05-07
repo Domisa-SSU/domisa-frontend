@@ -15,6 +15,19 @@ type LogoutResponse = {
     message: string;
 };
 
+const isLoginRequiredResponse = (value: unknown) => {
+    if (!value || typeof value !== "object") {
+        return false;
+    }
+
+    const response = value as Record<string, unknown>;
+
+    return (
+        response.status === 401 &&
+        response.code === "LOGIN_REQUIRED"
+    );
+};
+
 const parseAuthMeResponse = (value: unknown): AuthMeResponse | null => {
     if (!value || typeof value !== "object") {
         return null;
@@ -24,7 +37,6 @@ const parseAuthMeResponse = (value: unknown): AuthMeResponse | null => {
 
     if (
         typeof response.publicId !== "string" ||
-        typeof response.cookies !== "number" ||
         !isBackendStatusDto(response.status)
     ) {
         return null;
@@ -32,7 +44,6 @@ const parseAuthMeResponse = (value: unknown): AuthMeResponse | null => {
 
     return {
         publicId: response.publicId,
-        cookies: response.cookies,
         status: normalizeUserStatus(response.status),
     };
 };
@@ -70,6 +81,10 @@ const isLogoutResponse = (value: unknown): value is LogoutResponse => {
  */
 export const getAuthMe = async () => {
     const { data } = await apiClient.get<unknown>("/api/auth/me");
+    if (isLoginRequiredResponse(data)) {
+        return null;
+    }
+
     const authMe = parseAuthMeResponse(data);
 
     if (!authMe) {
