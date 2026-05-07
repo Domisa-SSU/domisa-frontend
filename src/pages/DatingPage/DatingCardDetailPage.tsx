@@ -7,6 +7,7 @@ import {
   fetchDatingCardDetail,
   type DatingCardDetailContact,
   type DatingCardDetailResponse,
+  type DatingCardDetailViewType,
 } from "../../api/datingCardDetail";
 import type { AnimalProfile } from "../../api/users";
 import HeaderTop from "../../components/HeaderTop";
@@ -57,7 +58,6 @@ const createLockedPlaceholder = (length: number) => {
 
 const getFriendIntroductionItems = (
   cardDetail: DatingCardDetailResponse,
-  isPrivateInfoUnlocked: boolean,
 ): DatingCardDetailSectionItem[] => [
   {
     title: "친구에 대한 간단한 소개",
@@ -69,14 +69,13 @@ const getFriendIntroductionItems = (
   },
   {
     title: "친구와 있었던 가장 웃긴 에피소드",
-    content: cardDetail.q3 ?? createLockedPlaceholder(cardDetail.q3Length),
-    isLocked: cardDetail.isBlurred && !isPrivateInfoUnlocked,
+    content: cardDetail.q3 ?? createLockedPlaceholder(cardDetail.q3Length ?? 0),
+    isLocked: cardDetail.q3 === null,
   },
 ];
 
 const getSelfIntroductionItems = (
   cardDetail: DatingCardDetailResponse,
-  isPrivateInfoUnlocked: boolean,
 ): DatingCardDetailSectionItem[] => [
   {
     title: "원하는 연애 스타일을 적어주세요",
@@ -86,8 +85,8 @@ const getSelfIntroductionItems = (
     title: "이상형을 한 줄로 적어주세요",
     content:
       cardDetail.idealType ??
-      createLockedPlaceholder(cardDetail.idealTypeLength),
-    isLocked: cardDetail.isBlurred && !isPrivateInfoUnlocked,
+      createLockedPlaceholder(cardDetail.idealTypeLength ?? 0),
+    isLocked: cardDetail.idealType === null,
   },
 ];
 
@@ -142,19 +141,16 @@ function ProfileSummary({
   nickName,
   age,
   mbti,
-  gender,
   animalProfile,
 }: {
   nickName: string;
   age: number;
   mbti: string;
-  gender: boolean | null;
   animalProfile: AnimalProfile;
 }) {
   const summaryItems = [
     `${age}세`,
     mbti,
-    typeof gender === "boolean" ? (gender ? "남" : "여") : null,
   ].filter((item): item is string => Boolean(item));
 
   return (
@@ -386,6 +382,7 @@ function DetailFooter({
 function DatingCardDetailPage() {
   const navigate = useNavigate();
   const { cardId = "" } = useParams<{ cardId: string }>();
+  const detailViewType: DatingCardDetailViewType = "NORMAL";
   const [toastMessage, setToastMessage] = useState("");
   const [hasSentLikeOverride, setHasSentLikeOverride] = useState(false);
   const [isMatchedOverride, setIsMatchedOverride] = useState(false);
@@ -395,8 +392,8 @@ function DatingCardDetailPage() {
     isPending,
     isError,
   } = useQuery({
-    queryKey: datingCardDetailQueryKey(cardId),
-    queryFn: () => fetchDatingCardDetail(cardId),
+    queryKey: datingCardDetailQueryKey(cardId, detailViewType),
+    queryFn: () => fetchDatingCardDetail(cardId, detailViewType),
     enabled: cardId.trim().length > 0,
   });
 
@@ -456,17 +453,8 @@ function DatingCardDetailPage() {
 
   const isMatched = cardDetail.isMatched || isMatchedOverride;
   const hasSentLike = cardDetail.hasSentLike || hasSentLikeOverride || isMatched;
-  const isReceivedLikePaid =
-    cardDetail.hasReceivedLike && cardDetail.hasPaidForReceivedLike === true;
-  const isPrivateInfoUnlocked = isMatched || isReceivedLikePaid;
-  const friendIntroductionItems = getFriendIntroductionItems(
-    cardDetail,
-    isPrivateInfoUnlocked,
-  );
-  const selfIntroductionItems = getSelfIntroductionItems(
-    cardDetail,
-    isPrivateInfoUnlocked,
-  );
+  const friendIntroductionItems = getFriendIntroductionItems(cardDetail);
+  const selfIntroductionItems = getSelfIntroductionItems(cardDetail);
 
   return (
     <div className="min-h-screen bg-grey-100">
@@ -497,7 +485,6 @@ function DatingCardDetailPage() {
               nickName={cardDetail.nickName}
               age={cardDetail.age}
               mbti={cardDetail.mbti}
-              gender={cardDetail.gender}
               animalProfile={cardDetail.animalProfile}
             />
             {isMatched ? (
@@ -528,7 +515,7 @@ function DatingCardDetailPage() {
 
       <DetailFooter
         isMatched={isMatched}
-        isReceivedLikePaid={isReceivedLikePaid}
+        isReceivedLikePaid={false}
         hasSentLike={hasSentLike}
         hasReceivedLike={cardDetail.hasReceivedLike}
         onSendLike={handleSendLike}

@@ -19,7 +19,6 @@ export type DatingMatch = {
 
 export type DatingHomeResponse = {
   refreshAvailableAt: string;
-  canRefresh: boolean;
   profileNum: number;
   freeLikeRemaining: number;
   cards: DatingHomeCard[];
@@ -30,7 +29,10 @@ export type DatingHomeResponse = {
 
 type RefreshTimeResponse = {
   refreshAvailableAt: string;
-  canRefresh: boolean;
+};
+
+export type UserCookiesResponse = {
+  cookieCount: number;
 };
 
 type ProfilesResponse = {
@@ -125,10 +127,19 @@ const isRefreshTimeResponse = (
 
   const response = value as Record<string, unknown>;
 
-  return (
-    typeof response.refreshAvailableAt === "string" &&
-    typeof response.canRefresh === "boolean"
-  );
+  return typeof response.refreshAvailableAt === "string";
+};
+
+const isUserCookiesResponse = (
+  value: unknown,
+): value is UserCookiesResponse => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return typeof response.cookieCount === "number";
 };
 
 const isProfilesResponse = (value: unknown): value is ProfilesResponse => {
@@ -200,6 +211,20 @@ export const getDatingRefreshTime = async () => {
   }
 
   return data;
+};
+
+export const getUserCookies = async () => {
+  const { data } = await apiClient.get<unknown>("/api/users/cookies");
+
+  if (!isUserCookiesResponse(data)) {
+    throw new Error("Invalid user cookies response");
+  }
+
+  return data;
+};
+
+export const shuffleDatingCards = async () => {
+  await apiClient.post("/api/datings/shuffle");
 };
 
 export const getDatingMatchCount = async () => {
@@ -277,7 +302,6 @@ export const fetchDatingHome = async (): Promise<DatingHomeResponse> => {
 
   return {
     refreshAvailableAt: refreshTime.refreshAvailableAt,
-    canRefresh: refreshTime.canRefresh,
     profileNum: profiles.profileNum,
     freeLikeRemaining: profiles.freeLikeRemaining,
     cards: profiles.profiles,
