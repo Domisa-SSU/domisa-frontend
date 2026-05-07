@@ -6,57 +6,19 @@ import Toast from '../../components/Toast';
 import { EDIT_PROFILE_TOAST_STORAGE_KEY } from '../../constants/storageKeys';
 import { useCheckNicknameMutation, useUserMeQuery, useUpdateMeMutation } from '../../queries/users';
 import type { UserMeResponse } from '../../api/users';
-import type { AnimalProfile } from '../../api/users';
 import ProfileChangeIcon from '../../assets/profile_change.svg?react';
 import xIcon from '../../assets/X.svg';
 import forbiddenIcon from '../SignupPage/asset/forbiddenIcon.svg';
 import pinkCheckIcon from '../SignupPage/asset/pinkCheckIcon.svg';
 import selectArrow from '../SignupPage/asset/selectArrow.svg';
-import alphacaImg from '../SignupPage/asset/alphacaImg.png';
-import bearImg from '../SignupPage/asset/bearImg.png';
-import capibaraImg from '../SignupPage/asset/capibaraImg.png';
-import catImg from '../SignupPage/asset/catImg.png';
-import deerImg from '../SignupPage/asset/deerImg.png';
-import dogImg from '../SignupPage/asset/dogImg.png';
-import foxImg from '../SignupPage/asset/foxImg.png';
-import hamsterImg from '../SignupPage/asset/hamsterImg.png';
-import namuneulboImg from '../SignupPage/asset/namuneulboImg.png';
-import rabbitImg from '../SignupPage/asset/rabbitImg.png';
-import sudalImg from '../SignupPage/asset/sudalImg.png';
-import wolfImg from '../SignupPage/asset/wolfImg.png';
+import {
+  ANIMAL_OPTIONS,
+  animalImageMap,
+  animalNameByProfile,
+  animalProfileByName,
+} from '../../constants/animalProfile';
 
 const birthYears = Array.from({ length: 21 }, (_, index) => `${2008 - index}`);
-
-const animalOptions = [
-  { name: '강아지', image: dogImg },
-  { name: '고양이', image: catImg },
-  { name: '곰', image: bearImg },
-  { name: '나무늘보', image: namuneulboImg },
-  { name: '햄스터', image: hamsterImg },
-  { name: '늑대', image: wolfImg },
-  { name: '토끼', image: rabbitImg },
-  { name: '사슴', image: deerImg },
-  { name: '수달', image: sudalImg },
-  { name: '알파카', image: alphacaImg },
-  { name: '여우', image: foxImg },
-  { name: '카피바라', image: capibaraImg },
-];
-
-const animalImageMap: Record<string, string> = Object.fromEntries(
-  animalOptions.map((a) => [a.name, a.image])
-);
-
-const animalNameByProfile: Record<string, string> = {
-  DOG: '강아지', CAT: '고양이', BEAR: '곰', SLOTH: '나무늘보',
-  HAMSTER: '햄스터', WOLF: '늑대', RABBIT: '토끼', DEER: '사슴',
-  OTTER: '수달', ALPACA: '알파카', FOX: '여우', CAPYBARA: '카피바라',
-};
-
-const animalProfileByName: Record<string, AnimalProfile> = {
-  '강아지': 'DOG', '고양이': 'CAT', '곰': 'BEAR', '나무늘보': 'SLOTH',
-  '햄스터': 'HAMSTER', '늑대': 'WOLF', '토끼': 'RABBIT', '사슴': 'DEER',
-  '수달': 'OTTER', '알파카': 'ALPACA', '여우': 'FOX', '카피바라': 'CAPYBARA',
-};
 
 const fieldClassName =
   'h-10 w-full rounded-[0.625rem] border-[1.2px] border-transparent bg-primary-100 px-[0.875rem] typo-input-text-m text-primary-500 placeholder:text-grey-600 focus:outline-none';
@@ -88,7 +50,7 @@ function AnimalSelectModal({ current, onConfirm, onClose }: AnimalSelectModalPro
         <p className="typo-subtitle-header-2 text-grey-900">프로필 수정</p>
 
         <div className="grid grid-cols-[repeat(3,5rem)] gap-x-6 gap-y-4">
-          {animalOptions.map((animal) => {
+          {ANIMAL_OPTIONS.map((animal) => {
             const isSelected = draft === animal.name;
             return (
               <button

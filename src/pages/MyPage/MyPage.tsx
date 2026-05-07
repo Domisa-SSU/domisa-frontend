@@ -16,33 +16,7 @@ import catImg from '../../assets/catIcon.svg';
 import flowerImg from '../../assets/flowerIcon.svg';
 import arrowIcon from '../../assets/arrowIcon.svg';
 import heartIconOrange from '../../assets/heartIconOrange.svg';
-import alphacaImg from '../SignupPage/asset/alphacaImg.png';
-import bearImg from '../SignupPage/asset/bearImg.png';
-import capibaraImg from '../SignupPage/asset/capibaraImg.png';
-import catProfileImg from '../SignupPage/asset/catImg.png';
-import deerImg from '../SignupPage/asset/deerImg.png';
-import dogProfileImg from '../SignupPage/asset/dogImg.png';
-import foxImg from '../SignupPage/asset/foxImg.png';
-import hamsterImg from '../SignupPage/asset/hamsterImg.png';
-import namuneulboImg from '../SignupPage/asset/namuneulboImg.png';
-import rabbitImg from '../SignupPage/asset/rabbitImg.png';
-import sudalImg from '../SignupPage/asset/sudalImg.png';
-import wolfImg from '../SignupPage/asset/wolfImg.png';
-
-const animalProfileImageMap: Record<string, string> = {
-  DOG: dogProfileImg,
-  CAT: catProfileImg,
-  BEAR: bearImg,
-  SLOTH: namuneulboImg,
-  HAMSTER: hamsterImg,
-  WOLF: wolfImg,
-  RABBIT: rabbitImg,
-  DEER: deerImg,
-  OTTER: sudalImg,
-  ALPACA: alphacaImg,
-  FOX: foxImg,
-  CAPYBARA: capibaraImg,
-};
+import { animalProfileImageMap } from '../../constants/animalProfile';
 
 function MyPage() {
   const navigate = useNavigate();
