@@ -24,10 +24,6 @@ const mockResponse = {
     birthYear: 2003,
     gender: '여',
     profileImageUrl: null as string | null,
-    contact: {
-      type: 'INSTAGRAM' as 'INSTAGRAM' | 'KAKAO' | 'PHONE',
-      value: '@1014.1248',
-    },
     cookieCount: 10,
     referralCode: 'd9fs3k29',
   },
@@ -36,12 +32,6 @@ const mockResponse = {
     hasIntroduction: true,
     isProfileCompleted: true, // true면 소개팅 카드 있음
   },
-};
-
-const contactLabel: Record<'INSTAGRAM' | 'KAKAO' | 'PHONE', string> = {
-  INSTAGRAM: '인스타 ID',
-  KAKAO: '카카오 ID',
-  PHONE: '전화번호',
 };
 
 function MyPage() {
@@ -98,20 +88,7 @@ function MyPage() {
             </button>
           </div>
 
-          {/* 연락처 */}
-          <div className="flex flex-col gap-2.5">
-            <span className="typo-button-text text-grey-900">연락처</span>
-            <div className="flex items-center gap-5">
-              <span className="typo-comment-1 text-grey-600 shrink-0">
-                {contactLabel[user.contact.type]}
-              </span>
-              <div className="flex-1 flex items-center h-10 px-2.5 rounded-[0.625rem] bg-grey-100">
-                <span className="typo-comment-1-b text-primary-500">{user.contact.value}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-[1.875rem]">
+<div className="flex flex-col gap-[1.875rem]">
             {/* 보유 쿠키 */}
             <div className="flex flex-col gap-3.5">
               <span className="typo-button-text text-grey-900">보유 쿠키</span>
