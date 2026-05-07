@@ -10,7 +10,7 @@ export type DatingCardDetailContact = {
 };
 
 export type DatingCardDetailResponse = {
-  publicId: number;
+  publicId: string;
   nickName: string;
   age: number;
   gender: boolean;
@@ -60,7 +60,7 @@ const MOCK_RECEIVED_PAID_USER_ID = "mock-received-paid";
 const MOCK_MATCHED_USER_ID = "mock-matched";
 
 const baseMockDatingCardDetail: DatingCardDetailResponse = {
-  publicId: 1,
+  publicId: "mock-default",
   nickName: "숭실대칼이",
   age: 23,
   gender: false,
@@ -88,7 +88,7 @@ const mockDatingCardDetails: Record<string, DatingCardDetailResponse> = {
   [MOCK_DEFAULT_USER_ID]: baseMockDatingCardDetail,
   [MOCK_SENT_USER_ID]: {
     ...baseMockDatingCardDetail,
-    publicId: 2,
+    publicId: "mock-sent",
     nickName: "보낸호감",
     animalProfile: "CAT",
     hasSentLike: true,
@@ -96,7 +96,7 @@ const mockDatingCardDetails: Record<string, DatingCardDetailResponse> = {
   },
   [MOCK_RECEIVED_USER_ID]: {
     ...baseMockDatingCardDetail,
-    publicId: 3,
+    publicId: "mock-received",
     nickName: "받은호감",
     gender: true,
     animalProfile: "BEAR",
@@ -108,7 +108,7 @@ const mockDatingCardDetails: Record<string, DatingCardDetailResponse> = {
   },
   [MOCK_RECEIVED_PAID_USER_ID]: {
     ...baseMockDatingCardDetail,
-    publicId: 4,
+    publicId: "mock-received-paid",
     nickName: "쿠키확인",
     gender: true,
     animalProfile: "BEAR",
@@ -122,7 +122,7 @@ const mockDatingCardDetails: Record<string, DatingCardDetailResponse> = {
   },
   [MOCK_MATCHED_USER_ID]: {
     ...baseMockDatingCardDetail,
-    publicId: 5,
+    publicId: "mock-matched",
     nickName: "매칭완료",
     gender: true,
     animalProfile: "BEAR",
@@ -169,7 +169,7 @@ const isDatingCardDetailResponse = (
   const response = value as Record<string, unknown>;
 
   return (
-    typeof response.publicId === "number" &&
+    typeof response.publicId === "string" &&
     typeof response.nickName === "string" &&
     typeof response.age === "number" &&
     typeof response.gender === "boolean" &&
@@ -191,18 +191,18 @@ const isDatingCardDetailResponse = (
   );
 };
 
-export const datingCardDetailQueryKey = (userId: string) =>
-  ["dating", "cards", userId] as const;
+export const datingCardDetailQueryKey = (publicId: string) =>
+  ["dating", "cards", publicId] as const;
 
 export const fetchDatingCardDetail = async (
-  userId: string,
+  publicId: string,
 ): Promise<DatingCardDetailResponse> => {
-  if (import.meta.env.DEV && userId in mockDatingCardDetails) {
-    return mockDatingCardDetails[userId];
+  if (import.meta.env.DEV && publicId in mockDatingCardDetails) {
+    return mockDatingCardDetails[publicId];
   }
 
   const { data } = await apiClient.get<unknown>(
-    `/api/datings/profiles/${encodeURIComponent(userId)}`,
+    `/api/datings/profiles/${encodeURIComponent(publicId)}`,
   );
 
   if (!isDatingCardDetailResponse(data)) {

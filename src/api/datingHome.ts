@@ -2,9 +2,11 @@ import { apiClient } from "./client";
 
 export type DatingHomeCard = {
   id: string;
-  userId: string;
+  publicId: string;
   profile: string | null;
 };
+
+type DatingHomeCardDto = Omit<DatingHomeCard, "id">;
 
 export type DatingMatch = {
   id: string;
@@ -34,17 +36,17 @@ type RefreshTimeResponse = {
 type ProfilesResponse = {
   profileNum: number;
   freeLikeRemaining: number;
-  profiles: DatingHomeCard[];
+  profiles: DatingHomeCardDto[];
 };
 
 type ReceivedLikesResponse = {
   myFanNumber: number;
-  myFans: DatingHomeCard[];
+  myFans: DatingHomeCardDto[];
 };
 
 type SentLikesResponse = {
   myTypeNumber: number;
-  myTypes: DatingHomeCard[];
+  myTypes: DatingHomeCardDto[];
 };
 
 type DatingMatchDto = Omit<DatingMatch, "id">;
@@ -70,7 +72,7 @@ const isDatingMatchCountResponse = (
   return typeof response.matchCount === "number";
 };
 
-const isProfileCard = (value: unknown): value is DatingHomeCard => {
+const isProfileCard = (value: unknown): value is DatingHomeCardDto => {
   if (!value || typeof value !== "object") {
     return false;
   }
@@ -78,14 +80,14 @@ const isProfileCard = (value: unknown): value is DatingHomeCard => {
   const profile = value as Record<string, unknown>;
 
   return (
-    typeof profile.userId === "string" &&
+    typeof profile.publicId === "string" &&
     (typeof profile.profile === "string" || profile.profile === null)
   );
 };
 
-const normalizeProfileCard = (profile: DatingHomeCard): DatingHomeCard => ({
-  id: profile.userId,
-  userId: profile.userId,
+const normalizeProfileCard = (profile: DatingHomeCardDto): DatingHomeCard => ({
+  id: profile.publicId,
+  publicId: profile.publicId,
   profile: profile.profile,
 });
 

@@ -23,7 +23,7 @@ const parseAuthMeResponse = (value: unknown): AuthMeResponse | null => {
     const response = value as Record<string, unknown>;
 
     if (
-        typeof response.userId !== "string" ||
+        typeof response.publicId !== "string" ||
         typeof response.cookies !== "number" ||
         !isBackendStatusDto(response.status)
     ) {
@@ -31,7 +31,7 @@ const parseAuthMeResponse = (value: unknown): AuthMeResponse | null => {
     }
 
     return {
-        userId: response.userId,
+        publicId: response.publicId,
         cookies: response.cookies,
         status: normalizeUserStatus(response.status),
     };
