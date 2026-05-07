@@ -8,6 +8,7 @@ import {
   shuffleDatingCards,
   type DatingHomeCard,
 } from "../../api/datingHome";
+import type { DatingCardDetailViewType } from "../../api/datingCardDetail";
 import HeaderTop from "../../components/HeaderTop";
 import Toast from "../../components/Toast";
 import { DATING_OPENED_CARDS_STORAGE_KEY } from "../../constants/storageKeys";
@@ -27,6 +28,26 @@ import sumnailIcon from "./assets/sumnailIcon.png";
 const datingHomeQueryKey = ["dating", "home"] as const;
 const refreshReloadStorageKey = "dating:last-refresh-reload-at";
 const maxFreeLikeCount = 3;
+
+type DatingPreviewSectionVariant = "received" | "sent" | "matched";
+
+const datingPreviewDetailViewTypeByVariant: Record<
+  DatingPreviewSectionVariant,
+  DatingCardDetailViewType
+> = {
+  received: "FAN",
+  sent: "NORMAL",
+  matched: "NORMAL",
+};
+
+const getDatingCardDetailPath = (
+  id: string,
+  viewType: DatingCardDetailViewType = "NORMAL",
+) => {
+  const searchParams = new URLSearchParams({ viewType });
+
+  return `/dating/cards/${encodeURIComponent(id)}?${searchParams.toString()}`;
+};
 
 const formatRemainingTime = (totalSeconds: number) => {
   const safeSeconds = Math.max(totalSeconds, 0);
@@ -481,11 +502,12 @@ function DatingPreviewSection({
 }: {
   title: string;
   cards: DatingPreviewItem[];
-  variant: "received" | "sent" | "matched";
+  variant: DatingPreviewSectionVariant;
   emptyMessage: string;
   isCardBlurred: boolean;
-  onViewDetail: (id: string) => void;
+  onViewDetail: (id: string, viewType: DatingCardDetailViewType) => void;
 }) {
+  const detailViewType = datingPreviewDetailViewTypeByVariant[variant];
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [scrollFadeStatus, setScrollFadeStatus] = useState(() => ({
     left: false,
@@ -548,7 +570,7 @@ function DatingPreviewSection({
                   key={card.id}
                   card={card}
                   isBlurred={isCardBlurred}
-                  onViewDetail={onViewDetail}
+                  onViewDetail={(id) => onViewDetail(id, detailViewType)}
                 />
               ))}
             </div>
@@ -678,8 +700,11 @@ function DatingPage() {
     });
   };
 
-  const handleViewCardDetail = (id: string) => {
-    navigate(`/dating/cards/${encodeURIComponent(id)}`);
+  const handleViewCardDetail = (
+    id: string,
+    viewType: DatingCardDetailViewType = "NORMAL",
+  ) => {
+    navigate(getDatingCardDetailPath(id, viewType));
   };
 
   const handleShuffleButtonClick = () => {

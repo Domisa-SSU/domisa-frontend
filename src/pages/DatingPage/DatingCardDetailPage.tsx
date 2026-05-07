@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import {
   datingCardDetailQueryKey,
@@ -102,6 +102,11 @@ const contactTypeLabels: Record<DatingCardDetailContact["type"], string> = {
 };
 
 const datingQueryRootKey = ["dating"] as const;
+
+const getDatingCardDetailViewType = (
+  value: string | null,
+): DatingCardDetailViewType =>
+  value === "FAN" || value === "NORMAL" ? value : "NORMAL";
 
 const getApiErrorMessage = (error: unknown, fallbackMessage: string) => {
   if (!axios.isAxiosError(error)) {
@@ -422,7 +427,8 @@ function DatingCardDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { cardId = "" } = useParams<{ cardId: string }>();
-  const detailViewType: DatingCardDetailViewType = "NORMAL";
+  const [searchParams] = useSearchParams();
+  const detailViewType = getDatingCardDetailViewType(searchParams.get("viewType"));
   const [toastMessage, setToastMessage] = useState("");
 
   const {
