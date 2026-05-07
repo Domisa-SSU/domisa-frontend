@@ -33,8 +33,7 @@ export type DatingCardDetailResponse = {
   freeLikeRemaining: number;
 };
 
-type DatingCardDetailDto = Omit<DatingCardDetailResponse, "publicId" | "gender"> & {
-  userId: string;
+type DatingCardDetailDto = Omit<DatingCardDetailResponse, "gender"> & {
   gender?: boolean | null;
 };
 
@@ -176,7 +175,7 @@ const isDatingCardDetailResponse = (
   const response = value as Record<string, unknown>;
 
   return (
-    typeof response.userId === "string" &&
+    typeof response.publicId === "string" &&
     typeof response.nickName === "string" &&
     typeof response.age === "number" &&
     (
@@ -207,7 +206,6 @@ const normalizeDatingCardDetail = (
   detail: DatingCardDetailDto,
 ): DatingCardDetailResponse => ({
   ...detail,
-  publicId: detail.userId,
   gender: detail.gender ?? null,
 });
 
