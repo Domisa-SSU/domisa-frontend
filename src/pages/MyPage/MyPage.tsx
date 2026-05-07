@@ -171,7 +171,7 @@ function MyPage() {
               <div className="flex flex-col items-center justify-center gap-2.5 h-[7.25rem] px-2.5 bg-grey-200 rounded-[0.625rem]">
                 <span className="typo-comment-1-m text-grey-700">등록된 프로필이 없어요</span>
                 <button
-                  onClick={() => navigate('/my/dating-card/register')}
+                  onClick={() => navigate('/dating/register')}
                   className="flex items-center justify-center gap-2.5 h-[3.125rem] px-5 rounded-[0.875rem] w-full"
                   style={{ background: 'linear-gradient(to bottom, #ff98b5, #ff5a99)' }}
                 >
