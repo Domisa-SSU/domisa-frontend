@@ -1,15 +1,20 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 
 import {
   datingCardDetailQueryKey,
   fetchDatingCardDetail,
+  matchReceivedDatingLike,
+  sendDatingLike,
+  unblurReceivedDatingLike,
   type DatingCardDetailContact,
   type DatingCardDetailResponse,
   type DatingCardDetailViewType,
 } from "../../api/datingCardDetail";
 import type { AnimalProfile } from "../../api/users";
+import { userCookiesQueryKey } from "../../queries/users";
 import HeaderTop from "../../components/HeaderTop";
 import Toast from "../../components/Toast";
 import flowerIcon from "../../assets/flowerIcon.svg";
@@ -94,6 +99,26 @@ const contactTypeLabels: Record<DatingCardDetailContact["type"], string> = {
   PHONE: "전화번호",
   KAKAO: "카카오톡 ID",
   INSTAGRAM: "인스타 ID",
+};
+
+const datingQueryRootKey = ["dating"] as const;
+
+const getApiErrorMessage = (error: unknown, fallbackMessage: string) => {
+  if (!axios.isAxiosError(error)) {
+    return fallbackMessage;
+  }
+
+  const responseData = error.response?.data;
+
+  if (!responseData || typeof responseData !== "object") {
+    return fallbackMessage;
+  }
+
+  const message = (responseData as Record<string, unknown>).message;
+
+  return typeof message === "string" && message.trim().length > 0
+    ? message
+    : fallbackMessage;
 };
 
 function CoverImage({
@@ -278,14 +303,22 @@ function DetailFooter({
   isReceivedLikePaid,
   hasSentLike,
   hasReceivedLike,
+  isSendLikePending,
+  isUnblurPending,
+  isMatchPending,
   onSendLike,
+  onUnblurReceivedLike,
   onConfirmMatch,
 }: {
   isMatched: boolean;
   isReceivedLikePaid: boolean;
   hasSentLike: boolean;
   hasReceivedLike: boolean;
+  isSendLikePending: boolean;
+  isUnblurPending: boolean;
+  isMatchPending: boolean;
   onSendLike: () => void;
+  onUnblurReceivedLike: () => void;
   onConfirmMatch: () => void;
 }) {
   if (isMatched) {
@@ -311,10 +344,11 @@ function DetailFooter({
           <button
             type="button"
             onClick={onConfirmMatch}
-            className="flex h-[3.125rem] w-full items-center justify-center rounded-[0.875rem] bg-[linear-gradient(178deg,#ff8b6e_22.19%,#ffc14e_90.53%)] px-2.5 py-2.5 text-grey-100"
+            disabled={isMatchPending}
+            className="flex h-[3.125rem] w-full items-center justify-center rounded-[0.875rem] bg-[linear-gradient(178deg,#ff8b6e_22.19%,#ffc14e_90.53%)] px-2.5 py-2.5 text-grey-100 disabled:cursor-wait disabled:opacity-80"
           >
             <span className="flex items-center gap-1 typo-button-text-b">
-              호감 보내고 매칭되기 (무료)
+              {isMatchPending ? "매칭 중..." : "호감 보내고 매칭되기 (무료)"}
               <img src={flowerIcon} alt="" className="h-4 w-4" />
             </span>
           </button>
@@ -350,10 +384,12 @@ function DetailFooter({
           </p>
           <button
             type="button"
-            className="flex h-[3.125rem] w-full items-center justify-center rounded-[0.875rem] bg-gradient-to-b from-[#ff98b5] to-[#ff5a99] px-2.5 py-2.5 text-grey-100"
+            onClick={onUnblurReceivedLike}
+            disabled={isUnblurPending}
+            className="flex h-[3.125rem] w-full items-center justify-center rounded-[0.875rem] bg-gradient-to-b from-[#ff98b5] to-[#ff5a99] px-2.5 py-2.5 text-grey-100 disabled:cursor-wait disabled:opacity-80"
           >
             <span className="typo-button-text-b">
-              소개팅 카드 확인하기 (쿠키 2개)
+              {isUnblurPending ? "카드 확인 중..." : "소개팅 카드 확인하기 (쿠키 2개)"}
             </span>
           </button>
         </div>
@@ -370,9 +406,12 @@ function DetailFooter({
         <button
           type="button"
           onClick={onSendLike}
-          className="flex h-[3.125rem] w-full items-center justify-center rounded-[0.875rem] bg-primary-500 px-2.5 py-2.5 text-grey-100"
+          disabled={isSendLikePending}
+          className="flex h-[3.125rem] w-full items-center justify-center rounded-[0.875rem] bg-primary-500 px-2.5 py-2.5 text-grey-100 disabled:cursor-wait disabled:opacity-80"
         >
-          <span className="typo-button-text-b">호감 보내기</span>
+          <span className="typo-button-text-b">
+            {isSendLikePending ? "호감 보내는 중..." : "호감 보내기"}
+          </span>
         </button>
       </div>
     </div>
@@ -381,11 +420,10 @@ function DetailFooter({
 
 function DatingCardDetailPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { cardId = "" } = useParams<{ cardId: string }>();
   const detailViewType: DatingCardDetailViewType = "NORMAL";
   const [toastMessage, setToastMessage] = useState("");
-  const [hasSentLikeOverride, setHasSentLikeOverride] = useState(false);
-  const [isMatchedOverride, setIsMatchedOverride] = useState(false);
 
   const {
     data: cardDetail,
@@ -398,12 +436,6 @@ function DatingCardDetailPage() {
   });
 
   useEffect(() => {
-    setHasSentLikeOverride(false);
-    setIsMatchedOverride(false);
-    setToastMessage("");
-  }, [cardId]);
-
-  useEffect(() => {
     if (!toastMessage) {
       return;
     }
@@ -412,21 +444,74 @@ function DatingCardDetailPage() {
     return () => window.clearTimeout(timerId);
   }, [toastMessage]);
 
-  useEffect(() => {
-    if (import.meta.env.DEV && cardId === "mock-matched" && cardDetail?.isMatched) {
+  const invalidateDatingQueries = async () => {
+    await queryClient.invalidateQueries({ queryKey: datingQueryRootKey });
+  };
+
+  const sendLikeMutation = useMutation({
+    mutationFn: sendDatingLike,
+    onSuccess: async () => {
+      setToastMessage("호감을 보냈어요");
+      await invalidateDatingQueries();
+    },
+    onError: (error) => {
+      setToastMessage(
+        getApiErrorMessage(error, "호감 보내기에 실패했어요"),
+      );
+    },
+  });
+
+  const unblurMutation = useMutation({
+    mutationFn: unblurReceivedDatingLike,
+    onSuccess: async (result) => {
+      setToastMessage(result.message);
+      await Promise.all([
+        invalidateDatingQueries(),
+        queryClient.invalidateQueries({ queryKey: userCookiesQueryKey }),
+      ]);
+    },
+    onError: (error) => {
+      setToastMessage(
+        getApiErrorMessage(error, "소개팅 카드 확인에 실패했어요"),
+      );
+    },
+  });
+
+  const matchMutation = useMutation({
+    mutationFn: matchReceivedDatingLike,
+    onSuccess: async () => {
       setToastMessage("매칭 완료! 서로에게 연락처가 공개되었어요");
-    }
-  }, [cardDetail?.isMatched, cardId]);
+      await invalidateDatingQueries();
+    },
+    onError: (error) => {
+      setToastMessage(
+        getApiErrorMessage(error, "매칭 요청에 실패했어요"),
+      );
+    },
+  });
 
   const handleSendLike = () => {
-    setHasSentLikeOverride(true);
-    setToastMessage("호감을 보냈어요");
+    if (!cardId || sendLikeMutation.isPending) {
+      return;
+    }
+
+    sendLikeMutation.mutate(cardId);
+  };
+
+  const handleUnblurReceivedLike = () => {
+    if (!cardId || unblurMutation.isPending) {
+      return;
+    }
+
+    unblurMutation.mutate(cardId);
   };
 
   const handleConfirmMatch = () => {
-    setHasSentLikeOverride(true);
-    setIsMatchedOverride(true);
-    setToastMessage("매칭 완료! 서로에게 연락처가 공개되었어요");
+    if (!cardId || matchMutation.isPending) {
+      return;
+    }
+
+    matchMutation.mutate(cardId);
   };
 
   if (!cardId || isError) {
@@ -451,8 +536,8 @@ function DatingCardDetailPage() {
     );
   }
 
-  const isMatched = cardDetail.isMatched || isMatchedOverride;
-  const hasSentLike = cardDetail.hasSentLike || hasSentLikeOverride || isMatched;
+  const isMatched = cardDetail.isMatched;
+  const hasSentLike = cardDetail.hasSentLike || isMatched;
   const friendIntroductionItems = getFriendIntroductionItems(cardDetail);
   const selfIntroductionItems = getSelfIntroductionItems(cardDetail);
 
@@ -515,10 +600,14 @@ function DatingCardDetailPage() {
 
       <DetailFooter
         isMatched={isMatched}
-        isReceivedLikePaid={false}
+        isReceivedLikePaid={cardDetail.hasReceivedLike && cardDetail.isPaidUnblur}
         hasSentLike={hasSentLike}
         hasReceivedLike={cardDetail.hasReceivedLike}
+        isSendLikePending={sendLikeMutation.isPending}
+        isUnblurPending={unblurMutation.isPending}
+        isMatchPending={matchMutation.isPending}
         onSendLike={handleSendLike}
+        onUnblurReceivedLike={handleUnblurReceivedLike}
         onConfirmMatch={handleConfirmMatch}
       />
 

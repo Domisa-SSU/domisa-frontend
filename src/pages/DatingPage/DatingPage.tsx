@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -10,6 +10,7 @@ import {
 } from "../../api/datingHome";
 import HeaderTop from "../../components/HeaderTop";
 import Toast from "../../components/Toast";
+import { DATING_OPENED_CARDS_STORAGE_KEY } from "../../constants/storageKeys";
 import headerArrow from "../../assets/headerArrow.svg";
 import XIcon from "../../assets/X.svg";
 import cookieIcon from "../../assets/cookie.svg";
@@ -72,6 +73,100 @@ const reloadForRefreshOnce = (refreshAvailableAt: string) => {
 
   sessionStorage.setItem(refreshReloadStorageKey, refreshAvailableAt);
   window.location.reload();
+};
+
+type StoredOpenedDatingCards = {
+  refreshAvailableAt: string;
+  openedCardIds: string[];
+  savedAt: number;
+};
+
+const isStoredOpenedDatingCards = (
+  value: unknown,
+): value is StoredOpenedDatingCards => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+
+  return (
+    typeof record.refreshAvailableAt === "string" &&
+    Array.isArray(record.openedCardIds) &&
+    record.openedCardIds.every((id) => typeof id === "string") &&
+    typeof record.savedAt === "number"
+  );
+};
+
+const readStoredOpenedDatingCards = (): StoredOpenedDatingCards | null => {
+  try {
+    const rawValue = localStorage.getItem(DATING_OPENED_CARDS_STORAGE_KEY);
+
+    if (!rawValue) {
+      return null;
+    }
+
+    const parsedValue: unknown = JSON.parse(rawValue);
+
+    return isStoredOpenedDatingCards(parsedValue) ? parsedValue : null;
+  } catch {
+    return null;
+  }
+};
+
+const getStoredOpenedCardIds = (refreshAvailableAt: string) => {
+  const storedOpenedCards = readStoredOpenedDatingCards();
+
+  return storedOpenedCards?.refreshAvailableAt === refreshAvailableAt
+    ? new Set(storedOpenedCards.openedCardIds)
+    : new Set<string>();
+};
+
+const writeStoredOpenedDatingCards = (
+  refreshAvailableAt: string,
+  openedCardIds: Set<string>,
+) => {
+  try {
+    localStorage.setItem(
+      DATING_OPENED_CARDS_STORAGE_KEY,
+      JSON.stringify({
+        refreshAvailableAt,
+        openedCardIds: Array.from(openedCardIds),
+        savedAt: Date.now(),
+      }),
+    );
+  } catch {
+    // localStorage can fail in restricted browser modes. The UI still works in memory.
+  }
+};
+
+const resetStoredOpenedDatingCards = () => {
+  try {
+    localStorage.removeItem(DATING_OPENED_CARDS_STORAGE_KEY);
+  } catch {
+    // Ignore storage failures and fall back to the in-memory state.
+  }
+};
+
+const resetStaleStoredOpenedDatingCards = (refreshAvailableAt: string) => {
+  try {
+    const rawValue = localStorage.getItem(DATING_OPENED_CARDS_STORAGE_KEY);
+
+    if (!rawValue) {
+      return;
+    }
+
+    const parsedValue: unknown = JSON.parse(rawValue);
+
+    if (
+      !isStoredOpenedDatingCards(parsedValue) ||
+      parsedValue.refreshAvailableAt !== refreshAvailableAt
+    ) {
+      localStorage.removeItem(DATING_OPENED_CARDS_STORAGE_KEY);
+    }
+  } catch {
+    resetStoredOpenedDatingCards();
+  }
 };
 
 function DatingSubHeader() {
@@ -462,8 +557,8 @@ function DatingPreviewSection({
 
 function DatingPage() {
   const navigate = useNavigate();
-  const reloadTimeoutRef = useRef<number | null>(null);
-  const { data, dataUpdatedAt, isError, isPending } = useQuery({
+  const queryClient = useQueryClient();
+  const { data, isError, isPending } = useQuery({
     queryKey: datingHomeQueryKey,
     queryFn: fetchDatingHome,
     retry: false,
@@ -475,10 +570,10 @@ function DatingPage() {
   );
   const [toastMessage, setToastMessage] = useState("");
   const [openedCardState, setOpenedCardState] = useState<{
-    dataUpdatedAt: number;
+    refreshAvailableAt: string;
     ids: Set<string>;
   }>(() => ({
-    dataUpdatedAt: 0,
+    refreshAvailableAt: "",
     ids: new Set(),
   }));
 
@@ -499,17 +594,15 @@ function DatingPage() {
 
   const shuffleCardsMutation = useMutation({
     mutationFn: shuffleDatingCards,
-    onSuccess: () => {
+    onSuccess: async () => {
       setShuffleCookieCount(null);
+      resetStoredOpenedDatingCards();
+      setOpenedCardState({
+        refreshAvailableAt: data?.refreshAvailableAt ?? "",
+        ids: new Set(),
+      });
       showToast("카드가 섞였어요!");
-
-      if (reloadTimeoutRef.current !== null) {
-        window.clearTimeout(reloadTimeoutRef.current);
-      }
-
-      reloadTimeoutRef.current = window.setTimeout(() => {
-        window.location.reload();
-      }, 1200);
+      await queryClient.invalidateQueries({ queryKey: datingHomeQueryKey });
     },
     onError: () => {
       showToast("카드 섞기에 실패했어요");
@@ -522,14 +615,6 @@ function DatingPage() {
     }, 1000);
 
     return () => window.clearInterval(intervalId);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (reloadTimeoutRef.current !== null) {
-        window.clearTimeout(reloadTimeoutRef.current);
-      }
-    };
   }, []);
 
   useEffect(() => {
@@ -555,15 +640,29 @@ function DatingPage() {
     }
   }, [data, remainingSeconds]);
 
+  useEffect(() => {
+    if (!data) {
+      return;
+    }
+
+    resetStaleStoredOpenedDatingCards(data.refreshAvailableAt);
+  }, [data]);
+
   const handleOpenCard = (id: string) => {
+    if (!data) {
+      return;
+    }
+
     setOpenedCardState((prevOpenedCardState) => {
       const nextOpenedCardIds =
-        prevOpenedCardState.dataUpdatedAt === dataUpdatedAt
+        prevOpenedCardState.refreshAvailableAt === data.refreshAvailableAt
           ? new Set(prevOpenedCardState.ids)
-          : new Set<string>();
+          : getStoredOpenedCardIds(data.refreshAvailableAt);
       nextOpenedCardIds.add(id);
+      writeStoredOpenedDatingCards(data.refreshAvailableAt, nextOpenedCardIds);
+
       return {
-        dataUpdatedAt,
+        refreshAvailableAt: data.refreshAvailableAt,
         ids: nextOpenedCardIds,
       };
     });
@@ -598,11 +697,16 @@ function DatingPage() {
     [data?.cards],
   );
   const openedCardIds = useMemo(
-    () =>
-      openedCardState.dataUpdatedAt === dataUpdatedAt
+    () => {
+      if (!data) {
+        return new Set<string>();
+      }
+
+      return openedCardState.refreshAvailableAt === data.refreshAvailableAt
         ? openedCardState.ids
-        : new Set<string>(),
-    [dataUpdatedAt, openedCardState],
+        : getStoredOpenedCardIds(data.refreshAvailableAt);
+    },
+    [data, openedCardState],
   );
 
   if (isPending) {

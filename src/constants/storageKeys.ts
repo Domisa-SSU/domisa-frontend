@@ -5,3 +5,4 @@ export const KAKAO_OAUTH_FLOW_STORAGE_KEY = "kakaoOAuthFlow";
 export const KAKAO_RETURN_TO_STORAGE_KEY = "kakaoReturnTo";
 export const KAKAO_LOGIN_TOAST_STORAGE_KEY = "kakaoLoginToast";
 export const EDIT_PROFILE_TOAST_STORAGE_KEY = "editProfileToast";
+export const DATING_OPENED_CARDS_STORAGE_KEY = "datingOpenedCards";
