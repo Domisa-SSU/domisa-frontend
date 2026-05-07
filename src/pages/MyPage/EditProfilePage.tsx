@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import BottomActionBar from '../../components/BottomActionBar';
 import NotLoginHeader from '../../components/NotLoginHeader';
 import { EDIT_PROFILE_TOAST_STORAGE_KEY } from '../../constants/storageKeys';
-import { useCheckNicknameMutation } from '../../queries/users';
+import { useCheckNicknameMutation, useUserMeQuery, useUpdateMeMutation } from '../../queries/users';
+import type { UserMeResponse } from '../../api/users';
+import type { AnimalProfile } from '../../api/users';
 import ProfileChangeIcon from '../../assets/profile_change.svg?react';
 import xIcon from '../../assets/X.svg';
 import forbiddenIcon from '../SignupPage/asset/forbiddenIcon.svg';
@@ -49,16 +51,10 @@ const animalNameByProfile: Record<string, string> = {
   OTTER: '수달', ALPACA: '알파카', FOX: '여우', CAPYBARA: '카피바라',
 };
 
-type AnimalProfile = string;
-
-// TODO: API 연동 시 교체
-const mockUser = {
-  userId: 'user-001',
-  nickname: '삑그리고',
-  birthYear: 2003,
-  gender: false, // true = 남성, false = 여성
-  animalProfile: 'OTTER' as AnimalProfile,
-  profileImageUrl: '',
+const animalProfileByName: Record<string, AnimalProfile> = {
+  '강아지': 'DOG', '고양이': 'CAT', '곰': 'BEAR', '나무늘보': 'SLOTH',
+  '햄스터': 'HAMSTER', '늑대': 'WOLF', '토끼': 'RABBIT', '사슴': 'DEER',
+  '수달': 'OTTER', '알파카': 'ALPACA', '여우': 'FOX', '카피바라': 'CAPYBARA',
 };
 
 const fieldClassName =
@@ -129,17 +125,22 @@ function AnimalSelectModal({ current, onConfirm, onClose }: AnimalSelectModalPro
   );
 }
 
-function EditProfilePage() {
+type EditProfileFormProps = {
+  me: UserMeResponse;
+};
+
+function EditProfileForm({ me }: EditProfileFormProps) {
   const navigate = useNavigate();
-  const [selectedAnimal, setSelectedAnimal] = useState(animalNameByProfile[mockUser.animalProfile]);
+  const [selectedAnimal, setSelectedAnimal] = useState(animalNameByProfile[me.animalProfile]);
   const [showAnimalModal, setShowAnimalModal] = useState(false);
-  const [nickname, setNickname] = useState(mockUser.nickname);
+  const [nickname, setNickname] = useState(me.nickname);
   const [isNicknameChecked, setIsNicknameChecked] = useState(true);
   const [nicknameErrorMessage, setNicknameErrorMessage] = useState('');
-  const [gender, setGender] = useState(mockUser.gender ? '남성' : '여성');
-  const [birthYear, setBirthYear] = useState(String(mockUser.birthYear));
+  const [gender, setGender] = useState(me.gender ? '남성' : '여성');
+  const [birthYear, setBirthYear] = useState(String(me.birthYear));
   const { mutateAsync: checkNicknameAvailability, isPending: isCheckingNickname } =
     useCheckNicknameMutation();
+  const { mutateAsync: updateMe, isPending: isUpdating } = useUpdateMeMutation();
 
   const isFormValid = useMemo(() => {
     return (
@@ -169,7 +170,7 @@ function EditProfilePage() {
       return;
     }
 
-    if (trimmedNickname === mockUser.nickname) {
+    if (trimmedNickname === me.nickname) {
       setIsNicknameChecked(true);
       setNicknameErrorMessage('');
       return;
@@ -184,6 +185,21 @@ function EditProfilePage() {
       console.error(error);
       setIsNicknameChecked(false);
       setNicknameErrorMessage('닉네임 확인에 실패했어요. 다시 시도해주세요');
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      await updateMe({
+        nickname: nickname.trim(),
+        gender: gender === '남성',
+        birthYear: Number(birthYear),
+        animalProfile: animalProfileByName[selectedAnimal],
+      });
+      sessionStorage.setItem(EDIT_PROFILE_TOAST_STORAGE_KEY, 'true');
+      navigate(-1);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -230,7 +246,7 @@ function EditProfilePage() {
                     const nextNickname = event.target.value;
 
                     handleLimitedChange(nextNickname, 4, setNickname);
-                    setIsNicknameChecked(nextNickname.trim() === mockUser.nickname);
+                    setIsNicknameChecked(nextNickname.trim() === me.nickname);
                     setNicknameErrorMessage('');
                   }}
                   className={`${fieldClassName} pr-[5.5rem] ${
@@ -319,12 +335,8 @@ function EditProfilePage() {
 
       <BottomActionBar
         label="수정 완료"
-        disabled={!isFormValid}
-        onClick={() => {
-          // TODO: API 연동 시 수정 성공 콜백 안으로 이동
-          sessionStorage.setItem(EDIT_PROFILE_TOAST_STORAGE_KEY, 'true');
-          navigate(-1);
-        }}
+        disabled={!isFormValid || isUpdating}
+        onClick={handleSubmit}
       />
 
       {showAnimalModal && (
@@ -339,6 +351,20 @@ function EditProfilePage() {
       )}
     </div>
   );
+}
+
+function EditProfilePage() {
+  const { data: me, isLoading } = useUserMeQuery();
+
+  if (isLoading || !me) {
+    return (
+      <div className="min-h-screen bg-grey-100">
+        <NotLoginHeader title="정보 수정" />
+      </div>
+    );
+  }
+
+  return <EditProfileForm me={me} />;
 }
 
 export default EditProfilePage;

@@ -4,6 +4,7 @@ import NotLoginHeader from '../../components/NotLoginHeader';
 import Toast from '../../components/Toast';
 import { EDIT_PROFILE_TOAST_STORAGE_KEY } from '../../constants/storageKeys';
 import { useLogoutMutation } from '../../queries/auth';
+import { useUserMeQuery, useUserCookiesQuery } from '../../queries/users';
 import ReferralSection from '../../components/ReferralSection';
 import RightArrow from '../../assets/right_arrow.svg?react';
 import WithdrawConfirmModal from './WithdrawConfirmModal';
@@ -15,28 +16,38 @@ import catImg from '../../assets/catIcon.svg';
 import flowerImg from '../../assets/flowerIcon.svg';
 import arrowIcon from '../../assets/arrowIcon.svg';
 import heartIconOrange from '../../assets/heartIconOrange.svg';
+import alphacaImg from '../SignupPage/asset/alphacaImg.png';
+import bearImg from '../SignupPage/asset/bearImg.png';
+import capibaraImg from '../SignupPage/asset/capibaraImg.png';
+import catProfileImg from '../SignupPage/asset/catImg.png';
+import deerImg from '../SignupPage/asset/deerImg.png';
+import dogProfileImg from '../SignupPage/asset/dogImg.png';
+import foxImg from '../SignupPage/asset/foxImg.png';
+import hamsterImg from '../SignupPage/asset/hamsterImg.png';
+import namuneulboImg from '../SignupPage/asset/namuneulboImg.png';
+import rabbitImg from '../SignupPage/asset/rabbitImg.png';
+import sudalImg from '../SignupPage/asset/sudalImg.png';
+import wolfImg from '../SignupPage/asset/wolfImg.png';
 
-// TODO: API 연동 시 GET /api/users/me 응답으로 교체
-const mockResponse = {
-  user: {
-    userId: '123',
-    nickname: '콩순이짱',
-    birthYear: 2003,
-    gender: '여',
-    profileImageUrl: null as string | null,
-    cookieCount: 10,
-    referralCode: 'd9fs3k29',
-  },
-  status: {
-    isRegistered: true,
-    hasIntroduction: true,
-    isProfileCompleted: true, // true면 소개팅 카드 있음
-  },
+const animalProfileImageMap: Record<string, string> = {
+  DOG: dogProfileImg,
+  CAT: catProfileImg,
+  BEAR: bearImg,
+  SLOTH: namuneulboImg,
+  HAMSTER: hamsterImg,
+  WOLF: wolfImg,
+  RABBIT: rabbitImg,
+  DEER: deerImg,
+  OTTER: sudalImg,
+  ALPACA: alphacaImg,
+  FOX: foxImg,
+  CAPYBARA: capibaraImg,
 };
 
 function MyPage() {
-  const { user, status } = mockResponse;
   const navigate = useNavigate();
+  const { data: me, isLoading: isMeLoading } = useUserMeQuery();
+  const { data: cookies, isLoading: isCookiesLoading } = useUserCookiesQuery();
   const { mutateAsync: logout, isPending: isLoggingOut } = useLogoutMutation();
   const [logoutErrorMessage, setLogoutErrorMessage] = useState('');
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -54,6 +65,16 @@ function MyPage() {
     return () => clearTimeout(timer);
   }, [showEditProfileToast]);
 
+  if (isMeLoading || isCookiesLoading || !me || !cookies) {
+    return (
+      <div className="min-h-screen bg-grey-100">
+        <NotLoginHeader title="내정보" />
+      </div>
+    );
+  }
+
+  const animalProfileImage = animalProfileImageMap[me.animalProfile];
+
   return (
     <div className="min-h-screen bg-grey-100">
       <NotLoginHeader title="내정보" />
@@ -63,19 +84,19 @@ function MyPage() {
           {/* 프로필 */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-[1.875rem] bg-grey-300 overflow-hidden shrink-0">
-                {user.profileImageUrl && (
+              <div className="w-20 h-20 rounded-[1.875rem] bg-primary-100 overflow-hidden shrink-0">
+                {animalProfileImage && (
                   <img
-                    src={user.profileImageUrl}
-                    alt="프로필"
+                    src={animalProfileImage}
+                    alt={me.animalProfile}
                     className="w-full h-full object-cover"
                   />
                 )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <span className="typo-title-header-1 text-grey-900">{user.nickname}</span>
+                <span className="typo-title-header-1 text-grey-900">{me.nickname}</span>
                 <span className="typo-input-text-m text-grey-700">
-                  {String(user.birthYear)}년생 {user.gender}
+                  {String(me.birthYear)}년생 {me.gender ? '남성' : '여성'}
                 </span>
               </div>
             </div>
@@ -88,7 +109,7 @@ function MyPage() {
             </button>
           </div>
 
-<div className="flex flex-col gap-[1.875rem]">
+          <div className="flex flex-col gap-[1.875rem]">
             {/* 보유 쿠키 */}
             <div className="flex flex-col gap-3.5">
               <span className="typo-button-text text-grey-900">보유 쿠키</span>
@@ -98,7 +119,7 @@ function MyPage() {
               >
                 <div className="flex items-center gap-1">
                   <img src={cookieImg} alt="" className="w-4 h-4" />
-                  <span className="typo-button-text text-primary-500">{user.cookieCount}개</span>
+                  <span className="typo-button-text text-primary-500">{cookies.cookieCount}개</span>
                 </div>
                 <div className="absolute right-2.5 flex items-center justify-center h-[2.15rem] w-[1.7rem]">
                   <RightArrow className="text-primary-500" />
@@ -107,7 +128,7 @@ function MyPage() {
             </div>
 
             {/* 소개팅 카드 */}
-            {status.isProfileCompleted ? (
+            {me.status.isProfileCompleted ? (
               <button
                 onClick={() => navigate('/my/dating-card')}
                 className="relative flex flex-col gap-1 h-[10.25rem] p-2.5 rounded-[0.625rem] overflow-hidden w-full text-left"
