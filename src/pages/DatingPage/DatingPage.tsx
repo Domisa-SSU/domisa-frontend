@@ -8,6 +8,7 @@ import {
   shuffleDatingCards,
   type DatingHomeCard,
 } from "../../api/datingHome";
+import type { DatingCardDetailViewType } from "../../api/datingCardDetail";
 import HeaderTop from "../../components/HeaderTop";
 import Toast from "../../components/Toast";
 import { DATING_OPENED_CARDS_STORAGE_KEY } from "../../constants/storageKeys";
@@ -27,6 +28,26 @@ import sumnailIcon from "./assets/sumnailIcon.png";
 const datingHomeQueryKey = ["dating", "home"] as const;
 const refreshReloadStorageKey = "dating:last-refresh-reload-at";
 const maxFreeLikeCount = 3;
+
+type DatingPreviewSectionVariant = "received" | "sent" | "matched";
+
+const datingPreviewDetailViewTypeByVariant: Record<
+  DatingPreviewSectionVariant,
+  DatingCardDetailViewType
+> = {
+  received: "FAN",
+  sent: "NORMAL",
+  matched: "NORMAL",
+};
+
+const getDatingCardDetailPath = (
+  id: string,
+  viewType: DatingCardDetailViewType = "NORMAL",
+) => {
+  const searchParams = new URLSearchParams({ viewType });
+
+  return `/dating/cards/${encodeURIComponent(id)}?${searchParams.toString()}`;
+};
 
 const formatRemainingTime = (totalSeconds: number) => {
   const safeSeconds = Math.max(totalSeconds, 0);
@@ -414,12 +435,19 @@ type DatingPreviewItem = Pick<DatingHomeCard, "id" | "profile">;
 function DatingPreviewCard({
   card,
   isBlurred,
+  onViewDetail,
 }: {
   card: DatingPreviewItem;
   isBlurred: boolean;
+  onViewDetail: (id: string) => void;
 }) {
   return (
-    <div className="h-[7.6875rem] w-[5.3125rem] shrink-0 rounded-[0.3125rem] border-[0.25rem] border-grey-100 bg-grey-100 p-[0.1875rem] shadow-[0_1px_5px_rgba(0,0,0,0.18)]">
+    <button
+      type="button"
+      onClick={() => onViewDetail(card.id)}
+      className="h-[7.6875rem] w-[5.3125rem] shrink-0 rounded-[0.3125rem] border-[0.25rem] border-grey-100 bg-grey-100 p-[0.1875rem] shadow-[0_1px_5px_rgba(0,0,0,0.18)]"
+      aria-label="소개팅 카드 상세 보기"
+    >
       <img
         src={card.profile ?? sumnailIcon}
         alt=""
@@ -427,7 +455,7 @@ function DatingPreviewCard({
           isBlurred ? "blur-[0.125rem]" : ""
         }`}
       />
-    </div>
+    </button>
   );
 }
 
@@ -470,13 +498,16 @@ function DatingPreviewSection({
   variant,
   emptyMessage,
   isCardBlurred,
+  onViewDetail,
 }: {
   title: string;
   cards: DatingPreviewItem[];
-  variant: "received" | "sent" | "matched";
+  variant: DatingPreviewSectionVariant;
   emptyMessage: string;
   isCardBlurred: boolean;
+  onViewDetail: (id: string, viewType: DatingCardDetailViewType) => void;
 }) {
+  const detailViewType = datingPreviewDetailViewTypeByVariant[variant];
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [scrollFadeStatus, setScrollFadeStatus] = useState(() => ({
     left: false,
@@ -539,6 +570,7 @@ function DatingPreviewSection({
                   key={card.id}
                   card={card}
                   isBlurred={isCardBlurred}
+                  onViewDetail={(id) => onViewDetail(id, detailViewType)}
                 />
               ))}
             </div>
@@ -668,8 +700,11 @@ function DatingPage() {
     });
   };
 
-  const handleViewCardDetail = (id: string) => {
-    navigate(`/dating/cards/${encodeURIComponent(id)}`);
+  const handleViewCardDetail = (
+    id: string,
+    viewType: DatingCardDetailViewType = "NORMAL",
+  ) => {
+    navigate(getDatingCardDetailPath(id, viewType));
   };
 
   const handleShuffleButtonClick = () => {
@@ -763,6 +798,7 @@ function DatingPage() {
             variant="received"
             emptyMessage="아직 받은 호감이 없어요"
             isCardBlurred
+            onViewDetail={handleViewCardDetail}
           />
           <DatingPreviewSection
             title="보낸 호감"
@@ -770,6 +806,7 @@ function DatingPage() {
             variant="sent"
             emptyMessage="아직 보낸 호감이 없어요"
             isCardBlurred
+            onViewDetail={handleViewCardDetail}
           />
           <DatingPreviewSection
             title="쌍방 매칭"
@@ -777,6 +814,7 @@ function DatingPage() {
             variant="matched"
             emptyMessage="아직 매칭된 프로필이 없어요"
             isCardBlurred={false}
+            onViewDetail={handleViewCardDetail}
           />
         </div>
       </main>
