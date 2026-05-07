@@ -24,7 +24,7 @@ type RegisterUserRequest = {
 };
 
 export type RegisterUserResponse = {
-  userId: string;
+  publicId: string;
   status: UserStatus;
   totalUserCount: number;
 };
@@ -45,7 +45,7 @@ const parseRegisterUserResponse = (value: unknown): RegisterUserResponse | null 
   const response = value as Record<string, unknown>;
 
   if (
-    typeof response.userId !== 'string' ||
+    typeof response.publicId !== 'string' ||
     !isBackendStatusDto(response.status) ||
     typeof response.totalUserCount !== 'number'
   ) {
@@ -53,7 +53,7 @@ const parseRegisterUserResponse = (value: unknown): RegisterUserResponse | null 
   }
 
   return {
-    userId: response.userId,
+    publicId: response.publicId,
     status: normalizeUserStatus(response.status),
     totalUserCount: response.totalUserCount,
   };

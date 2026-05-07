@@ -66,6 +66,14 @@ function HomePage() {
         };
 
   const handleDatingClick = () => {
+    if (status?.isRegistered === false) {
+      const searchParams = new URLSearchParams({
+        returnTo: "/dating/register",
+      });
+      navigate(`/auth/signup?${searchParams.toString()}`);
+      return;
+    }
+
     if (status?.isProfileCompleted !== true) {
       navigate("/dating/register");
       return;
