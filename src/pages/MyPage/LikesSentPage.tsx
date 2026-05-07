@@ -4,13 +4,13 @@ import headerArrow from '../../assets/headerArrow.svg';
 import loginImg from '../LoginPage/asset/loginImg.png';
 import testImg from '../../assets/testImg.png';
 
-interface Type {
+interface SentLike {
   userId: string;
   profile: string;
 }
 
 // TODO: API 연동 시 GET /api/likes/sent 응답으로 교체
-const mockData: { myTypeNumber: number; myTypes: Type[] } = {
+const mockData: { myTypeNumber: number; myTypes: SentLike[] } = {
   myTypeNumber: 6,
   myTypes: [
     { userId: 'type1', profile: testImg },
@@ -22,7 +22,7 @@ const mockData: { myTypeNumber: number; myTypes: Type[] } = {
   ],
 };
 
-function ProfileCard({ item }: { item: Type }) {
+function ProfileCard({ item }: { item: SentLike }) {
   return (
     <div className="w-full aspect-[85/123] bg-white rounded-[0.3125rem] flex items-center justify-center">
       <div className="w-[88.235%] aspect-[75/113] overflow-hidden">
