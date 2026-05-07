@@ -84,7 +84,9 @@ const getSelfIntroductionItems = (
   },
   {
     title: "이상형을 한 줄로 적어주세요",
-    content: cardDetail.idealType,
+    content:
+      cardDetail.idealType ??
+      createLockedPlaceholder(cardDetail.idealTypeLength),
     isLocked: cardDetail.isBlurred && !isPrivateInfoUnlocked,
   },
 ];
@@ -146,9 +148,15 @@ function ProfileSummary({
   nickName: string;
   age: number;
   mbti: string;
-  gender: boolean;
+  gender: boolean | null;
   animalProfile: AnimalProfile;
 }) {
+  const summaryItems = [
+    `${age}세`,
+    mbti,
+    typeof gender === "boolean" ? (gender ? "남" : "여") : null,
+  ].filter((item): item is string => Boolean(item));
+
   return (
     <section className="flex flex-col gap-2.5">
       <div className="flex items-center gap-[0.945rem]">
@@ -162,7 +170,7 @@ function ProfileSummary({
         <div className="flex min-w-0 flex-col gap-[0.4725rem]">
           <h1 className="typo-title-header-1 text-grey-900">{nickName}</h1>
           <p className="typo-comment-1-m text-grey-700">
-            {age}세 · {mbti} · {gender ? "남" : "여"}
+            {summaryItems.join(" · ")}
           </p>
         </div>
       </div>

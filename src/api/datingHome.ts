@@ -6,7 +6,10 @@ export type DatingHomeCard = {
   profile: string | null;
 };
 
-type DatingHomeCardDto = Omit<DatingHomeCard, "id">;
+type DatingHomeCardDto = {
+  userId: string;
+  profile: string | null;
+};
 
 export type DatingMatch = {
   id: string;
@@ -49,7 +52,9 @@ type SentLikesResponse = {
   myTypes: DatingHomeCardDto[];
 };
 
-type DatingMatchDto = Omit<DatingMatch, "id">;
+type DatingMatchDto = Omit<DatingMatch, "id" | "publicId"> & {
+  userId: string;
+};
 
 export type DatingMatchesResponse = {
   matchCount: number;
@@ -80,14 +85,14 @@ const isProfileCard = (value: unknown): value is DatingHomeCardDto => {
   const profile = value as Record<string, unknown>;
 
   return (
-    typeof profile.publicId === "string" &&
+    typeof profile.userId === "string" &&
     (typeof profile.profile === "string" || profile.profile === null)
   );
 };
 
 const normalizeProfileCard = (profile: DatingHomeCardDto): DatingHomeCard => ({
-  id: profile.publicId,
-  publicId: profile.publicId,
+  id: profile.userId,
+  publicId: profile.userId,
   profile: profile.profile,
 });
 
@@ -99,7 +104,7 @@ const isDatingMatchDto = (value: unknown): value is DatingMatchDto => {
   const match = value as Record<string, unknown>;
 
   return (
-    typeof match.publicId === "string" &&
+    typeof match.userId === "string" &&
     typeof match.nickname === "string" &&
     (typeof match.profile === "string" || match.profile === null) &&
     typeof match.contactType === "string" &&
@@ -108,8 +113,8 @@ const isDatingMatchDto = (value: unknown): value is DatingMatchDto => {
 };
 
 const normalizeDatingMatch = (match: DatingMatchDto): DatingMatch => ({
-  id: match.publicId,
-  publicId: match.publicId,
+  id: match.userId,
+  publicId: match.userId,
   nickname: match.nickname,
   profile: match.profile,
   contactType: match.contactType,
