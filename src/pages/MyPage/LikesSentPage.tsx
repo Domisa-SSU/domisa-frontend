@@ -1,32 +1,18 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HeaderTop from '../../components/HeaderTop';
 import headerArrow from '../../assets/headerArrow.svg';
 import loginImg from '../LoginPage/asset/loginImg.png';
-import testImg from '../../assets/testImg.png';
+import { getSentLikes } from '../../api/datingHome';
+import type { DatingHomeCard } from '../../api/datingHome';
 
-interface SentLike {
-  userId: string;
-  profile: string;
-}
-
-// TODO: API 연동 시 GET /api/likes/sent 응답으로 교체
-const mockData: { myTypeNumber: number; myTypes: SentLike[] } = {
-  myTypeNumber: 6,
-  myTypes: [
-    { userId: 'type1', profile: testImg },
-    { userId: 'type2', profile: testImg },
-    { userId: 'type3', profile: testImg },
-    { userId: 'type4', profile: testImg },
-    { userId: 'type5', profile: testImg },
-    { userId: 'type6', profile: testImg },
-  ],
-};
-
-function ProfileCard({ item }: { item: SentLike }) {
+function ProfileCard({ item }: { item: DatingHomeCard }) {
   return (
     <div className="w-full aspect-[85/123] bg-white rounded-[0.3125rem] flex items-center justify-center">
       <div className="w-[88.235%] aspect-[75/113] overflow-hidden">
-        <img src={item.profile} alt="" className="w-full h-full object-cover" />
+        {item.profile && (
+          <img src={item.profile} alt="" className="w-full h-full object-cover" />
+        )}
       </div>
     </div>
   );
@@ -34,7 +20,13 @@ function ProfileCard({ item }: { item: SentLike }) {
 
 function LikesSentPage() {
   const navigate = useNavigate();
-  const { myTypes } = mockData;
+  const [myTypes, setMyTypes] = useState<DatingHomeCard[]>([]);
+
+  useEffect(() => {
+    getSentLikes()
+      .then((res) => setMyTypes(res.myTypes))
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col bg-grey-100">
@@ -61,7 +53,7 @@ function LikesSentPage() {
           ) : (
             <div className="grid grid-cols-4 gap-[0.625rem]">
               {myTypes.map((item) => (
-                <ProfileCard key={item.userId} item={item} />
+                <ProfileCard key={item.publicId} item={item} />
               ))}
             </div>
           )}
