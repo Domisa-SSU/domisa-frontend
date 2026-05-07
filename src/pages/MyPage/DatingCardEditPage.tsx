@@ -500,7 +500,16 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
 }
 
 function DatingCardEditPage() {
-  const { data: profile, isLoading } = useDatingProfileQuery();
+  const { data: profile, isLoading, isError } = useDatingProfileQuery();
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-grey-100">
+        <NotLoginHeader title="소개팅 카드" />
+        <p className="mt-10 text-center typo-input-text-m text-grey-600">소개팅 카드를 불러오지 못했어요.</p>
+      </div>
+    );
+  }
 
   if (isLoading || !profile) {
     return (
