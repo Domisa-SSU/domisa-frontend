@@ -124,7 +124,7 @@ const isMyIntroduction = (value: unknown): value is MyIntroduction => {
 export const getMyIntroduction = async (): Promise<MyIntroduction | null> => {
   const { data } = await apiClient.get<unknown>("/api/users/introduction");
 
-  if (!data) return null;
+  if (!data || (typeof data === 'object' && Object.keys(data as object).length === 0)) return null;
 
   if (!isMyIntroduction(data)) {
     throw new Error("Invalid my introduction response");
