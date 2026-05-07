@@ -13,7 +13,7 @@ export type DatingCardDetailResponse = {
   publicId: string;
   nickName: string;
   age: number;
-  gender: boolean;
+  gender: boolean | null;
   animalProfile: AnimalProfile;
   profile: string | null;
   q1: string;
@@ -21,7 +21,8 @@ export type DatingCardDetailResponse = {
   q3: string | null;
   q3Length: number;
   datingStyle: string;
-  idealType: string;
+  idealType: string | null;
+  idealTypeLength: number;
   mbti: string;
   contact: DatingCardDetailContact | null;
   isBlurred: boolean;
@@ -30,6 +31,10 @@ export type DatingCardDetailResponse = {
   hasPaidForReceivedLike?: boolean;
   isMatched: boolean;
   freeLikeRemaining: number;
+};
+
+type DatingCardDetailDto = Omit<DatingCardDetailResponse, "gender"> & {
+  gender?: boolean | null;
 };
 
 const animalProfiles: readonly AnimalProfile[] = [
@@ -72,6 +77,7 @@ const baseMockDatingCardDetail: DatingCardDetailResponse = {
   q3Length: 37,
   datingStyle: "다정하고 친구 같은 연애!",
   idealType: "곰같은 남자",
+  idealTypeLength: 5,
   mbti: "INFJ",
   contact: {
     type: "INSTAGRAM",
@@ -161,7 +167,7 @@ const isDatingCardDetailContact = (
 
 const isDatingCardDetailResponse = (
   value: unknown,
-): value is DatingCardDetailResponse => {
+): value is DatingCardDetailDto => {
   if (!value || typeof value !== "object") {
     return false;
   }
@@ -172,7 +178,11 @@ const isDatingCardDetailResponse = (
     typeof response.publicId === "string" &&
     typeof response.nickName === "string" &&
     typeof response.age === "number" &&
-    typeof response.gender === "boolean" &&
+    (
+      typeof response.gender === "boolean" ||
+      response.gender === null ||
+      response.gender === undefined
+    ) &&
     isAnimalProfile(response.animalProfile) &&
     (typeof response.profile === "string" || response.profile === null) &&
     typeof response.q1 === "string" &&
@@ -180,7 +190,8 @@ const isDatingCardDetailResponse = (
     (typeof response.q3 === "string" || response.q3 === null) &&
     typeof response.q3Length === "number" &&
     typeof response.datingStyle === "string" &&
-    typeof response.idealType === "string" &&
+    (typeof response.idealType === "string" || response.idealType === null) &&
+    typeof response.idealTypeLength === "number" &&
     typeof response.mbti === "string" &&
     (isDatingCardDetailContact(response.contact) || response.contact === null) &&
     typeof response.isBlurred === "boolean" &&
@@ -190,6 +201,13 @@ const isDatingCardDetailResponse = (
     typeof response.freeLikeRemaining === "number"
   );
 };
+
+const normalizeDatingCardDetail = (
+  detail: DatingCardDetailDto,
+): DatingCardDetailResponse => ({
+  ...detail,
+  gender: detail.gender ?? null,
+});
 
 export const datingCardDetailQueryKey = (publicId: string) =>
   ["dating", "cards", publicId] as const;
@@ -209,5 +227,5 @@ export const fetchDatingCardDetail = async (
     throw new Error("Invalid dating card detail response");
   }
 
-  return data;
+  return normalizeDatingCardDetail(data);
 };

@@ -743,6 +743,13 @@ function DatingRegisterNotificationPhoneStep() {
       await queryClient.invalidateQueries({
         queryKey: authMeQueryKey,
       });
+
+      if (!createdProfile.status.hasIntroduction) {
+        resetRegisterFlow();
+        navigate('/dating/require-introduce', { replace: true });
+        return;
+      }
+
       setTotalUserCount(createdProfile.totalUserCount);
       setIsCompleteModalOpen(true);
     } catch (error) {

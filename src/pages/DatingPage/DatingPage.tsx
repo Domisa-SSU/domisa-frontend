@@ -20,7 +20,6 @@ import sumnailIcon from "./assets/sumnailIcon.png";
 const datingHomeQueryKey = ["dating", "home"] as const;
 const refreshReloadStorageKey = "dating:last-refresh-reload-at";
 const maxFreeLikeCount = 3;
-const temporaryFreeLikeRemaining = 2;
 
 const formatRemainingTime = (totalSeconds: number) => {
   const safeSeconds = Math.max(totalSeconds, 0);
@@ -492,7 +491,7 @@ function DatingPage() {
           cards={visibleCards}
           openedCardIds={openedCardIds}
           profileNum={data.profileNum}
-          freeLikeRemaining={temporaryFreeLikeRemaining}
+          freeLikeRemaining={data.freeLikeRemaining}
           onOpenCard={handleOpenCard}
           onViewCardDetail={handleViewCardDetail}
         />

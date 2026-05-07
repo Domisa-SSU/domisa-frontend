@@ -66,10 +66,16 @@ function HomePage() {
         };
 
   const handleDatingClick = () => {
+    const searchParams = new URLSearchParams({
+      returnTo: "/dating/register",
+    });
+
+    if (!authMe) {
+      navigate(`/auth?${searchParams.toString()}`);
+      return;
+    }
+
     if (status?.isRegistered === false) {
-      const searchParams = new URLSearchParams({
-        returnTo: "/dating/register",
-      });
       navigate(`/auth/signup?${searchParams.toString()}`);
       return;
     }
@@ -79,9 +85,13 @@ function HomePage() {
       return;
     }
 
+    if (status?.hasIntroduction !== true) {
+      navigate("/dating/require-introduce");
+      return;
+    }
+
     navigate("/dating");
   };
-
   const handleDeleteMe = async () => {
     try {
       setDeleteMessage("");
