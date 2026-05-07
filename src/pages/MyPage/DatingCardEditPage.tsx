@@ -6,6 +6,7 @@ import ProfileChangeIcon from '../../assets/profile_change.svg?react';
 import PhotoUploadIcon from '../../assets/photo_upload.svg?react';
 import CheckIcon from '../../assets/check.svg?react';
 import xIcon from '../../assets/X.svg';
+import forbiddenIcon from '../SignupPage/asset/forbiddenIcon.svg';
 import selectArrow from '../SignupPage/asset/selectArrow.svg';
 import { useDatingProfileQuery, useUpdateDatingProfileMutation } from '../../queries/datingProfile';
 import type { DatingProfileResponse, DatingProfileContactType } from '../../api/datingProfile';
@@ -141,7 +142,7 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const objectUrlRef = useRef<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [showToast, setShowToast] = useState(false);
+  const [toast, setToast] = useState<{ message: string; icon?: string } | null>(null);
   const [showMbtiModal, setShowMbtiModal] = useState(false);
 
   useEffect(() => {
@@ -160,10 +161,10 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
     useUpdateDatingProfileMutation();
 
   useEffect(() => {
-    if (!showToast) return;
-    const timer = setTimeout(() => setShowToast(false), 2500);
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 2500);
     return () => clearTimeout(timer);
-  }, [showToast]);
+  }, [toast]);
 
   const handleStartEdit = () => {
     setDraft(saved);
@@ -188,9 +189,10 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
       });
       setSaved({ ...draft });
       setIsEditing(false);
-      setShowToast(true);
+      setToast({ message: '수정 완료되었습니다' });
     } catch (error) {
       console.error(error);
+      setToast({ message: '수정에 실패했어요. 다시 시도해주세요.', icon: forbiddenIcon });
     }
   };
 
@@ -492,7 +494,7 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
         />
       )}
 
-      {showToast && <Toast message="수정 완료되었습니다" />}
+      {toast && <Toast message={toast.message} icon={toast.icon} />}
     </div>
   );
 }

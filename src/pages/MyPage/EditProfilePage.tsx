@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomActionBar from '../../components/BottomActionBar';
 import NotLoginHeader from '../../components/NotLoginHeader';
+import Toast from '../../components/Toast';
 import { EDIT_PROFILE_TOAST_STORAGE_KEY } from '../../constants/storageKeys';
 import { useCheckNicknameMutation, useUserMeQuery, useUpdateMeMutation } from '../../queries/users';
 import type { UserMeResponse } from '../../api/users';
@@ -141,6 +142,13 @@ function EditProfileForm({ me }: EditProfileFormProps) {
   const { mutateAsync: checkNicknameAvailability, isPending: isCheckingNickname } =
     useCheckNicknameMutation();
   const { mutateAsync: updateMe, isPending: isUpdating } = useUpdateMeMutation();
+  const [toastMessage, setToastMessage] = useState('');
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = setTimeout(() => setToastMessage(''), 2500);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
 
   const isFormValid = useMemo(() => {
     return (
@@ -200,6 +208,7 @@ function EditProfileForm({ me }: EditProfileFormProps) {
       navigate(-1);
     } catch (error) {
       console.error(error);
+      setToastMessage('정보 수정에 실패했어요. 다시 시도해주세요.');
     }
   };
 
@@ -338,6 +347,8 @@ function EditProfileForm({ me }: EditProfileFormProps) {
         disabled={!isFormValid || isUpdating}
         onClick={handleSubmit}
       />
+
+      {toastMessage && <Toast message={toastMessage} icon={forbiddenIcon} />}
 
       {showAnimalModal && (
         <AnimalSelectModal
