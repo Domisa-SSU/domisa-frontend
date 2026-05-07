@@ -5,7 +5,7 @@ export interface UserStatus {
 }
 
 export interface AuthMeResponse {
-    userId: string;
+    publicId: string;
     cookies: number;
     status: UserStatus;
 }

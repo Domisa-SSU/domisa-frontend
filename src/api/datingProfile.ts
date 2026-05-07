@@ -13,7 +13,7 @@ type CreateDatingProfileRequest = {
 };
 
 export type CreateDatingProfileResponse = {
-  userId: string;
+  publicId: string;
   status: {
     isRegistered: boolean;
     hasIntroduction: boolean;
@@ -33,7 +33,7 @@ const isCreateDatingProfileResponse = (
   const status = response.status as Record<string, unknown> | undefined;
 
   return (
-    typeof response.userId === "string" &&
+    typeof response.publicId === "string" &&
     !!status &&
     typeof status.isRegistered === "boolean" &&
     typeof status.hasIntroduction === "boolean" &&
