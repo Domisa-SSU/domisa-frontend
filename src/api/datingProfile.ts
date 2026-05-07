@@ -50,7 +50,7 @@ export type DatingProfileResponse = {
   imageKey: string;
   contactType: DatingProfileContactType;
   contact: string;
-  notificationPhone: string;
+  notificationPhone: string | null;
 };
 
 type UpdateDatingProfileRequest = {
@@ -60,7 +60,7 @@ type UpdateDatingProfileRequest = {
   imageKey: string;
   contactType: DatingProfileContactType;
   contact: string;
-  notificationPhone: string;
+  notificationPhone: string | null;
 };
 
 const parseDatingProfileResponse = (value: unknown): DatingProfileResponse | null => {
@@ -74,7 +74,7 @@ const parseDatingProfileResponse = (value: unknown): DatingProfileResponse | nul
     typeof r.imageKey !== 'string' ||
     typeof r.contactType !== 'string' ||
     typeof r.contact !== 'string' ||
-    typeof r.notificationPhone !== 'string'
+    (r.notificationPhone !== null && typeof r.notificationPhone !== 'string')
   ) return null;
   return {
     cardId: r.cardId,
@@ -84,7 +84,7 @@ const parseDatingProfileResponse = (value: unknown): DatingProfileResponse | nul
     imageKey: r.imageKey,
     contactType: r.contactType as DatingProfileContactType,
     contact: r.contact,
-    notificationPhone: r.notificationPhone,
+    notificationPhone: r.notificationPhone as string | null,
   };
 };
 

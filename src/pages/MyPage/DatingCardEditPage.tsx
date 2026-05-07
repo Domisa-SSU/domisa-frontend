@@ -35,6 +35,7 @@ type DatingCardData = {
   contactMethod: ContactMethodType | '';
   contactValue: string;
   notifPhone: string;
+  isSmsOptedOut: boolean;
 };
 
 const profileToDraftData = (profile: DatingProfileResponse): DatingCardData => ({
@@ -44,7 +45,8 @@ const profileToDraftData = (profile: DatingProfileResponse): DatingCardData => (
   photoUrl: null, // TODO: imageKey로 S3 URL 구성
   contactMethod: profile.contactType,
   contactValue: profile.contact,
-  notifPhone: profile.notificationPhone,
+  notifPhone: profile.notificationPhone ?? '',
+  isSmsOptedOut: profile.notificationPhone === null,
 });
 
 const MAX_LENGTH = 75;
@@ -151,7 +153,6 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
   const initialData = profileToDraftData(profile);
   const [saved, setSaved] = useState<DatingCardData>(initialData);
   const [draft, setDraft] = useState<DatingCardData>(initialData);
-  const [draftNotifPhone, setDraftNotifPhone] = useState(initialData.notifPhone);
   // TODO: 새 사진 선택 시 S3 업로드 후 교체
   const imageKeyRef = useRef(profile.imageKey);
 
@@ -166,7 +167,6 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
 
   const handleStartEdit = () => {
     setDraft(saved);
-    setDraftNotifPhone(saved.notifPhone);
     setIsEditing(true);
   };
 
@@ -184,9 +184,9 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
         imageKey: imageKeyRef.current,
         contactType: draft.contactMethod as DatingProfileContactType,
         contact: draft.contactValue,
-        notificationPhone: draftNotifPhone,
+        notificationPhone: draft.isSmsOptedOut ? null : draft.notifPhone,
       });
-      setSaved({ ...draft, notifPhone: draftNotifPhone });
+      setSaved({ ...draft });
       setIsEditing(false);
       setShowToast(true);
     } catch (error) {
@@ -217,7 +217,7 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
     draft.idealTypeAnswer.trim().length > 0 &&
     draft.contactMethod.length > 0 &&
     draft.contactValue.trim().length > 0 &&
-    draftNotifPhone.length === 11;
+    (draft.isSmsOptedOut || draft.notifPhone.length === 11);
 
   return (
     <div className="min-h-screen bg-grey-100">
@@ -406,19 +406,51 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
           <section className="flex flex-col gap-[0.875rem]">
             <h2 className="typo-button-text text-grey-900">알림문자 받을 전화번호</h2>
             {isEditing ? (
-              <input
-                value={formatPhoneNumber(draftNotifPhone)}
-                onChange={(e) =>
-                  setDraftNotifPhone(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))
-                }
-                inputMode="numeric"
-                maxLength={13}
-                placeholder="010-0000-0000"
-                className="h-9 w-full border-b-[1.8px] border-primary-200 bg-transparent typo-input-text text-primary-500 placeholder:text-grey-600 focus:outline-none"
-              />
+              <>
+                <input
+                  value={formatPhoneNumber(draft.notifPhone)}
+                  onChange={(e) =>
+                    setDraft((prev) => ({ ...prev, notifPhone: e.target.value.replace(/[^0-9]/g, '').slice(0, 11) }))
+                  }
+                  disabled={draft.isSmsOptedOut}
+                  inputMode="numeric"
+                  maxLength={13}
+                  placeholder="010-0000-0000"
+                  className={`h-9 w-full border-b-[1.8px] bg-transparent typo-input-text focus:outline-none ${
+                    draft.isSmsOptedOut
+                      ? 'border-grey-400 text-grey-400 placeholder:text-grey-400'
+                      : 'border-primary-200 text-primary-500 placeholder:text-grey-600'
+                  }`}
+                />
+                <button
+                  type="button"
+                  aria-pressed={draft.isSmsOptedOut}
+                  onClick={() =>
+                    setDraft((prev) => ({ ...prev, isSmsOptedOut: !prev.isSmsOptedOut, notifPhone: '' }))
+                  }
+                  className="flex items-center gap-2.5 self-start"
+                >
+                  <span
+                    className={`flex h-[1.5625rem] w-[1.5625rem] items-center justify-center rounded-[0.3125rem] ${
+                      draft.isSmsOptedOut ? 'bg-primary-500' : 'bg-grey-400'
+                    }`}
+                  >
+                    <CheckIcon className="w-[1.125rem] h-[0.9375rem]" />
+                  </span>
+                  <span
+                    className={`typo-comment-1-m ${
+                      draft.isSmsOptedOut ? 'text-primary-600' : 'text-grey-600'
+                    }`}
+                  >
+                    문자 알림 안 받을래요
+                  </span>
+                </button>
+              </>
             ) : (
               <div className="flex flex-col gap-[0.625rem]">
-                <p className="typo-input-text text-grey-700">{formatPhoneNumber(saved.notifPhone)}</p>
+                <p className="typo-input-text text-grey-700">
+                  {saved.isSmsOptedOut ? '문자 알림 없음' : formatPhoneNumber(saved.notifPhone)}
+                </p>
                 <div className="h-px w-full bg-grey-500" />
               </div>
             )}
