@@ -97,6 +97,42 @@ export const getReceivedIntroduction = async (linkCode: string) => {
   return data;
 };
 
+export type MyIntroduction = {
+  q1: string;
+  q2: string;
+  q3: string;
+};
+
+const isMyIntroduction = (value: unknown): value is MyIntroduction => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const intro = value as Record<string, unknown>;
+  return (
+    typeof intro.q1 === "string" &&
+    typeof intro.q2 === "string" &&
+    typeof intro.q3 === "string"
+  );
+};
+
+/**
+ * API 제목: 내 친구 소개서 조회
+ * GET /api/users/introduction
+ * 현재 로그인한 사용자에게 등록된 친구 소개서를 조회한다.
+ * 소개서가 없으면 빈 body 200으로 응답한다.
+ */
+export const getMyIntroduction = async (): Promise<MyIntroduction | null> => {
+  const { data } = await apiClient.get<unknown>("/api/users/introduction");
+
+  if (!data) return null;
+
+  if (!isMyIntroduction(data)) {
+    throw new Error("Invalid my introduction response");
+  }
+
+  return data;
+};
+
 /**
  * API 제목: 친구 소개서 수락
  * POST /api/users/introduction/{introductionId}
