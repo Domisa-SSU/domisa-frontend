@@ -414,12 +414,19 @@ type DatingPreviewItem = Pick<DatingHomeCard, "id" | "profile">;
 function DatingPreviewCard({
   card,
   isBlurred,
+  onViewDetail,
 }: {
   card: DatingPreviewItem;
   isBlurred: boolean;
+  onViewDetail: (id: string) => void;
 }) {
   return (
-    <div className="h-[7.6875rem] w-[5.3125rem] shrink-0 rounded-[0.3125rem] border-[0.25rem] border-grey-100 bg-grey-100 p-[0.1875rem] shadow-[0_1px_5px_rgba(0,0,0,0.18)]">
+    <button
+      type="button"
+      onClick={() => onViewDetail(card.id)}
+      className="h-[7.6875rem] w-[5.3125rem] shrink-0 rounded-[0.3125rem] border-[0.25rem] border-grey-100 bg-grey-100 p-[0.1875rem] shadow-[0_1px_5px_rgba(0,0,0,0.18)]"
+      aria-label="소개팅 카드 상세 보기"
+    >
       <img
         src={card.profile ?? sumnailIcon}
         alt=""
@@ -427,7 +434,7 @@ function DatingPreviewCard({
           isBlurred ? "blur-[0.125rem]" : ""
         }`}
       />
-    </div>
+    </button>
   );
 }
 
@@ -470,12 +477,14 @@ function DatingPreviewSection({
   variant,
   emptyMessage,
   isCardBlurred,
+  onViewDetail,
 }: {
   title: string;
   cards: DatingPreviewItem[];
   variant: "received" | "sent" | "matched";
   emptyMessage: string;
   isCardBlurred: boolean;
+  onViewDetail: (id: string) => void;
 }) {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [scrollFadeStatus, setScrollFadeStatus] = useState(() => ({
@@ -539,6 +548,7 @@ function DatingPreviewSection({
                   key={card.id}
                   card={card}
                   isBlurred={isCardBlurred}
+                  onViewDetail={onViewDetail}
                 />
               ))}
             </div>
@@ -763,6 +773,7 @@ function DatingPage() {
             variant="received"
             emptyMessage="아직 받은 호감이 없어요"
             isCardBlurred
+            onViewDetail={handleViewCardDetail}
           />
           <DatingPreviewSection
             title="보낸 호감"
@@ -770,6 +781,7 @@ function DatingPage() {
             variant="sent"
             emptyMessage="아직 보낸 호감이 없어요"
             isCardBlurred
+            onViewDetail={handleViewCardDetail}
           />
           <DatingPreviewSection
             title="쌍방 매칭"
@@ -777,6 +789,7 @@ function DatingPage() {
             variant="matched"
             emptyMessage="아직 매칭된 프로필이 없어요"
             isCardBlurred={false}
+            onViewDetail={handleViewCardDetail}
           />
         </div>
       </main>
