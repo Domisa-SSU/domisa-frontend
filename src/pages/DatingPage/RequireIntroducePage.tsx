@@ -45,7 +45,7 @@ function RequireIntroducePage() {
 
     return (
         <div className="relative min-h-screen overflow-hidden bg-grey-100">
-            <NotLoginHeader title="회원가입" />
+            <NotLoginHeader title="친구 소개하기" />
 
             <main className="flex min-h-[calc(100vh-5.9rem)] flex-col items-center px-5 pt-[5.75rem] pb-[12.5rem]">
                 <h1 className="typo-header-3 text-center text-grey-900">

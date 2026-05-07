@@ -1,10 +1,8 @@
+import { useNavigate } from "react-router-dom";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import ReferralSection from "../../components/ReferralSection";
+import { useUserCookiesQuery } from "../../queries/users";
 import cookieImg from "../../assets/cookie.svg";
-
-// TODO: API 연동 시 교체
-const COOKIE_COUNT = 10;
-const REFERRAL_CODE = "d9fs3k29";
 
 const COOKIE_PACKAGES = [
   { count: 5, price: "2,000" },
@@ -14,6 +12,9 @@ const COOKIE_PACKAGES = [
 ];
 
 function MyCookiePage() {
+  const navigate = useNavigate();
+  const { data: cookies } = useUserCookiesQuery();
+
   return (
     <div className="min-h-screen bg-grey-100">
       <NotLoginHeader title="보유 쿠키" />
@@ -25,7 +26,7 @@ function MyCookiePage() {
           <div className="flex items-center justify-center h-[3.75rem] bg-primary-100 rounded-[0.625rem]">
             <div className="flex items-center gap-1">
               <img src={cookieImg} alt="" className="w-4 h-4" />
-              <span className="typo-header-3-b text-primary-500">{COOKIE_COUNT}개</span>
+              <span className="typo-header-3-b text-primary-500">{cookies?.cookieCount ?? '-'}개</span>
             </div>
           </div>
 
@@ -43,6 +44,7 @@ function MyCookiePage() {
                     <span className="typo-comment-1 text-grey-900">쿠키 {count}개</span>
                   </div>
                   <button
+                    onClick={() => navigate("/my/cookie/purchase", { state: { count, price } })}
                     className="flex items-center justify-center h-8 w-20 rounded-[0.3125rem] typo-comment-2 text-grey-100"
                     style={{
                       background:
@@ -57,7 +59,7 @@ function MyCookiePage() {
           </div>
 
           {/* 친구 소개 */}
-          <ReferralSection referralCode={REFERRAL_CODE} />
+          <ReferralSection />
 
         </div>
       </div>

@@ -6,22 +6,45 @@ import logo from "../assets/domisaLogo.svg";
 import dogImg from "../assets/dogIcon.svg";
 import heartImg from "../assets/domisaHeartIcon.svg";
 import catImg from "../assets/catIcon.svg";
-import mapImg from "../assets/mapIcon.svg";
+import dayMapImg from "../assets/dayMapIcon.png";
+import nightMapImg from "../assets/nightMapIcon.png";
 import arrowImg from "../assets/arrowIcon.svg";
+import flowerIcon from "../assets/flowerIcon.svg";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getDatingMatchCount } from "../api/datingHome";
 import { useAuthMeQuery } from "../queries/auth";
+import { useDeleteMeMutation } from "../queries/users";
 
-const getThemeByTime = () => {
+const datingMatchCountQueryKey = ["dating", "count"] as const;
+const fallbackMatchCount = 21;
+const shouldShowDeleteMeButton = import.meta.env.DEV;
+
+type HomeTheme = "day" | "night";
+
+const getThemeByTime = (): HomeTheme => {
   const hour = new Date().getHours();
   return hour >= 6 && hour < 18 ? `day` : `night`;
 };
 
 function HomePage() {
   const [theme] = useState(getThemeByTime());
+  const [deleteMessage, setDeleteMessage] = useState("");
   const navigate = useNavigate();
   const { data: authMe } = useAuthMeQuery();
+  const {
+    mutateAsync: deleteMe,
+    isPending: isDeletingMe,
+  } = useDeleteMeMutation();
+  const { data: matchCountData } = useQuery({
+    queryKey: datingMatchCountQueryKey,
+    queryFn: getDatingMatchCount,
+    retry: false,
+  });
   const status = authMe?.status;
+  const matchCount = matchCountData?.matchCount ?? fallbackMatchCount;
+  const mapImg = theme === "day" ? dayMapImg : nightMapImg;
 
   const themeClasses =
     theme == "day"
@@ -43,8 +66,40 @@ function HomePage() {
         };
 
   const handleDatingClick = () => {
+    const searchParams = new URLSearchParams({
+      returnTo: "/dating/register",
+    });
+
+    if (!authMe) {
+      navigate(`/auth?${searchParams.toString()}`);
+      return;
+    }
+
+    if (status?.isRegistered === false) {
+      navigate(`/auth/signup?${searchParams.toString()}`);
+      return;
+    }
+
     if (status?.isProfileCompleted !== true) {
       navigate("/dating/register");
+      return;
+    }
+
+    if (status?.hasIntroduction !== true) {
+      navigate("/dating/require-introduce");
+      return;
+    }
+
+    navigate("/dating");
+  };
+  const handleDeleteMe = async () => {
+    try {
+      setDeleteMessage("");
+      const response = await deleteMe();
+      setDeleteMessage(response.message);
+    } catch (error) {
+      console.error(error);
+      setDeleteMessage("회원탈퇴에 실패했어요.");
     }
   };
 
@@ -59,8 +114,12 @@ function HomePage() {
     >
       <MessageSlider></MessageSlider>
 
-      <section className="flex-1">
-        <Header dayText={themeClasses.text} isLoggedIn={Boolean(authMe)}></Header>
+      <section className="relative flex flex-1 flex-col">
+        <Header
+          dayText={themeClasses.text}
+          isLoggedIn={Boolean(authMe)}
+          theme={theme}
+        ></Header>
         <div className="mb-5"></div>
         <div className="flex flex-col items-center gap-4 mb-8">
           <img src={logo} alt="" className="w-[13.4rem]" />
@@ -69,7 +128,7 @@ function HomePage() {
               오늘 매칭된 커플
             </span>
             <div className={`${themeClasses.coupleTextBackGround} px-[0.12rem] typo-comment-1-b py-[0.09rem] text-primary-500 rounded-[0.93rem]`}>
-              21
+              {matchCount}
             </div>
             <span className={`${themeClasses.text} typo-comment-1`}>쌍!</span>
           </div>
@@ -100,7 +159,7 @@ function HomePage() {
               <img src={catImg} alt="" className="w-auto h-11.4" />
             </div>
           </button>
-          <button className={`w-44 h-37.5 flex flex-col items-center ${themeClasses.mapCard} rounded-xl py-5 shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.25)]`}>
+          <button className={`w-44 h-37.5 flex flex-col justify-between items-center ${themeClasses.mapCard} rounded-xl py-5 shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.25)]`}>
             <div className="gap-1 flex flex-col">
               <span className="typo-title-header-1-b text-grey-100 mb-1">
                 주점지도
@@ -108,14 +167,17 @@ function HomePage() {
               <span className={`${themeClasses.text} typo-comment-2`}>
                 부스 방문하고 쿠키 받기
               </span>
-              <img src={mapImg} alt="" className="h-17 w-auto" />
             </div>
+            <img src={mapImg} alt="" className="h-[3.25rem] w-auto" />
           </button>
         </div>
         <div className="flex flex-col gap-2 items-center">
-          <span className={`${theme == 'day' ? `text-grey-700` : `text-grey-600`} text-comment-1"`}>
-            제 친구가 연애했으면 좋겠어요
-          </span>
+          <div className="flex items-center justify-center gap-1">
+            <span className={`${theme == 'day' ? `text-grey-700` : `text-grey-600`} typo-comment-1`}>
+              친구가 가입하면 쿠키 2개 지급
+            </span>
+            <img src={flowerIcon} alt="" className="h-3.5 w-3.5" />
+          </div>
           <button
             onClick={() => navigate("/introduce-friend")}
             className="w-90 h-12.5 flex justify-center items-center gap-[0.62rem] bg-home-friend-day border-[0.8px] border-white rounded-[1.25rem]
@@ -126,6 +188,35 @@ function HomePage() {
             </span>
             <img src={arrowImg} alt="" className="w-3" />
           </button>
+        </div>
+        <div className="absolute bottom-[6%] left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 whitespace-nowrap">
+          <div
+            aria-disabled="true"
+            className={`pointer-events-none flex items-center justify-center gap-1 typo-comment-2 ${
+              theme == "day" ? "text-grey-700" : "text-grey-400"
+            }`}
+          >
+            <span className="underline">이용약관</span>
+            <span>・</span>
+            <span className="underline">개인정보처리방침</span>
+          </div>
+          {shouldShowDeleteMeButton ? (
+            <>
+              <button
+                type="button"
+                onClick={handleDeleteMe}
+                disabled={isDeletingMe}
+                className={`typo-comment-2 underline underline-offset-4 disabled:opacity-60 ${
+                  theme == "day" ? "text-grey-700" : "text-grey-400"
+                }`}
+              >
+                {isDeletingMe ? "회원탈퇴 중" : "회원탈퇴"}
+              </button>
+              {deleteMessage ? (
+                <p className="typo-comment-2 text-primary-600">{deleteMessage}</p>
+              ) : null}
+            </>
+          ) : null}
         </div>
       </section>
       <MessageSlider></MessageSlider>
