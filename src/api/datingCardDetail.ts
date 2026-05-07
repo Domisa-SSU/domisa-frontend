@@ -34,6 +34,12 @@ export type DatingCardDetailResponse = {
   freeLikeRemaining: number;
 };
 
+export type UnblurReceivedDatingLikeResponse = {
+  publicId: string;
+  isBlurred: false;
+  message: string;
+};
+
 const animalProfiles: readonly AnimalProfile[] = [
   "DOG",
   "CAT",
@@ -139,6 +145,20 @@ const mockDatingCardDetails: Record<string, DatingCardDetailResponse> = {
   },
 };
 
+const isMockDatingCardId = (publicId: string) =>
+  import.meta.env.DEV && publicId in mockDatingCardDetails;
+
+const getMockDatingCardDetail = (publicId: string) => ({
+  ...mockDatingCardDetails[publicId],
+});
+
+const updateMockDatingCardDetail = (
+  publicId: string,
+  updater: (cardDetail: DatingCardDetailResponse) => DatingCardDetailResponse,
+) => {
+  mockDatingCardDetails[publicId] = updater(mockDatingCardDetails[publicId]);
+};
+
 const isAnimalProfile = (value: unknown): value is AnimalProfile =>
   typeof value === "string" && animalProfiles.includes(value as AnimalProfile);
 
@@ -202,6 +222,22 @@ const isDatingCardDetailResponse = (
   );
 };
 
+const isUnblurReceivedDatingLikeResponse = (
+  value: unknown,
+): value is UnblurReceivedDatingLikeResponse => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return (
+    typeof response.publicId === "string" &&
+    response.isBlurred === false &&
+    typeof response.message === "string"
+  );
+};
+
 export const datingCardDetailQueryKey = (
   publicId: string,
   viewType: DatingCardDetailViewType,
@@ -211,8 +247,8 @@ export const fetchDatingCardDetail = async (
   publicId: string,
   viewType: DatingCardDetailViewType = "NORMAL",
 ): Promise<DatingCardDetailResponse> => {
-  if (import.meta.env.DEV && publicId in mockDatingCardDetails) {
-    return mockDatingCardDetails[publicId];
+  if (isMockDatingCardId(publicId)) {
+    return getMockDatingCardDetail(publicId);
   }
 
   const { data } = await apiClient.post<unknown>(
@@ -225,4 +261,76 @@ export const fetchDatingCardDetail = async (
   }
 
   return data;
+};
+
+export const sendDatingLike = async (publicId: string) => {
+  if (isMockDatingCardId(publicId)) {
+    updateMockDatingCardDetail(publicId, (cardDetail) => ({
+      ...cardDetail,
+      hasSentLike: true,
+      freeLikeRemaining: Math.max(cardDetail.freeLikeRemaining - 1, 0),
+    }));
+    return;
+  }
+
+  await apiClient.post(`/api/datings/likes/${encodeURIComponent(publicId)}`);
+};
+
+export const unblurReceivedDatingLike = async (
+  publicId: string,
+): Promise<UnblurReceivedDatingLikeResponse> => {
+  if (isMockDatingCardId(publicId)) {
+    updateMockDatingCardDetail(publicId, (cardDetail) => ({
+      ...cardDetail,
+      q3: cardDetail.q3 ?? baseMockDatingCardDetail.q3,
+      q3Length: baseMockDatingCardDetail.q3Length,
+      idealType: cardDetail.idealType ?? baseMockDatingCardDetail.idealType,
+      idealTypeLength: baseMockDatingCardDetail.idealTypeLength,
+      contact: cardDetail.contact ?? {
+        type: "KAKAO",
+        content: "cuty882",
+      },
+      isBlurred: false,
+      isPaidUnblur: true,
+      hasReceivedLike: true,
+    }));
+
+    return {
+      publicId,
+      isBlurred: false,
+      message: "소개팅 카드 블러가 해제되었습니다.",
+    };
+  }
+
+  const { data } = await apiClient.post<unknown>(
+    `/api/datings/likes/received/${encodeURIComponent(publicId)}/unblur`,
+  );
+
+  if (!isUnblurReceivedDatingLikeResponse(data)) {
+    throw new Error("Invalid unblur received dating like response");
+  }
+
+  return data;
+};
+
+export const matchReceivedDatingLike = async (publicId: string) => {
+  if (isMockDatingCardId(publicId)) {
+    updateMockDatingCardDetail(publicId, (cardDetail) => ({
+      ...cardDetail,
+      contact: cardDetail.contact ?? {
+        type: "KAKAO",
+        content: "cuty882",
+      },
+      isBlurred: false,
+      isPaidUnblur: true,
+      hasSentLike: true,
+      hasReceivedLike: true,
+      isMatched: true,
+    }));
+    return;
+  }
+
+  await apiClient.post(
+    `/api/datings/likes/received/${encodeURIComponent(publicId)}/match`,
+  );
 };
