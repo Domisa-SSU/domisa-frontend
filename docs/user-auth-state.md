@@ -47,17 +47,17 @@ export interface UserStatus {
 }
 
 export interface AuthMeResponse {
-    userId: number;
+    publicId: string;
     cookieCount: number;
     status: UserStatus;
 }
 ```
 
-### `userId`
+### `publicId`
 
 현재 로그인한 서비스 유저의 고유 ID입니다.
 
-- `number`: 로그인된 사용자
+- `string`: 로그인된 사용자
 - `null`: 비로그인 상태이거나 아직 사용자 정보를 확정하지 못한 상태
 
 이 값은 화면에 직접 보여주기 위한 값이라기보다, 현재 store에 로그인 사용자가 존재하는지 판단할 때 사용됩니다.
@@ -136,7 +136,7 @@ status: {
 
 ```ts
 interface UserState {
-    userId: number | null;
+    publicId: string | null;
     status: UserStatus | null;
     cookieCount: number | null;
     isLoggedIn: boolean;
@@ -216,7 +216,7 @@ if (!isLoggedIn) {
 
 ```ts
 set({
-    userId: data.userId,
+    publicId: data.publicId,
     status: data.status,
     cookieCount: data.cookieCount,
     isLoggedIn: true,
@@ -228,7 +228,7 @@ set({
 
 ```ts
 set({
-    userId: null,
+    publicId: null,
     status: null,
     cookieCount: null,
     isLoggedIn: false,
@@ -242,7 +242,7 @@ set({
 
 사용 예:
 
-- 로그인 API 응답이 `userId`, `cookieCount`, `status`를 직접 반환하는 경우
+- 로그인 API 응답이 `publicId`, `cookieCount`, `status`를 직접 반환하는 경우
 - 특정 API 성공 후 전체 인증 데이터를 다시 받은 경우
 
 현재 권장 흐름은 로그인 성공 후 `fetchMe()`를 호출하는 방식입니다.

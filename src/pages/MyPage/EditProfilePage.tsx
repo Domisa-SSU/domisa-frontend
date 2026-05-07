@@ -1,59 +1,24 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomActionBar from '../../components/BottomActionBar';
 import NotLoginHeader from '../../components/NotLoginHeader';
+import Toast from '../../components/Toast';
 import { EDIT_PROFILE_TOAST_STORAGE_KEY } from '../../constants/storageKeys';
-import { useCheckNicknameMutation } from '../../queries/users';
+import { useCheckNicknameMutation, useUserMeQuery, useUpdateMeMutation } from '../../queries/users';
+import type { UserMeResponse } from '../../api/users';
 import ProfileChangeIcon from '../../assets/profile_change.svg?react';
 import xIcon from '../../assets/X.svg';
 import forbiddenIcon from '../SignupPage/asset/forbiddenIcon.svg';
 import pinkCheckIcon from '../SignupPage/asset/pinkCheckIcon.svg';
 import selectArrow from '../SignupPage/asset/selectArrow.svg';
-import alphacaImg from '../SignupPage/asset/alphacaImg.png';
-import bearImg from '../SignupPage/asset/bearImg.png';
-import capibaraImg from '../SignupPage/asset/capibaraImg.png';
-import catImg from '../SignupPage/asset/catImg.png';
-import deerImg from '../SignupPage/asset/deerImg.png';
-import dogImg from '../SignupPage/asset/dogImg.png';
-import foxImg from '../SignupPage/asset/foxImg.png';
-import hamsterImg from '../SignupPage/asset/hamsterImg.png';
-import namuneulboImg from '../SignupPage/asset/namuneulboImg.png';
-import rabbitImg from '../SignupPage/asset/rabbitImg.png';
-import sudalImg from '../SignupPage/asset/sudalImg.png';
-import wolfImg from '../SignupPage/asset/wolfImg.png';
+import {
+  ANIMAL_OPTIONS,
+  animalImageMap,
+  animalNameByProfile,
+  animalProfileByName,
+} from '../../constants/animalProfile';
 
 const birthYears = Array.from({ length: 21 }, (_, index) => `${2008 - index}`);
-const contactMethods = ['인스타 ID', '전화번호', '카카오톡ID'];
-const phonePrefix = '010';
-
-const animalOptions = [
-  { name: '강아지', image: dogImg },
-  { name: '고양이', image: catImg },
-  { name: '곰', image: bearImg },
-  { name: '나무늘보', image: namuneulboImg },
-  { name: '햄스터', image: hamsterImg },
-  { name: '늑대', image: wolfImg },
-  { name: '토끼', image: rabbitImg },
-  { name: '사슴', image: deerImg },
-  { name: '수달', image: sudalImg },
-  { name: '알파카', image: alphacaImg },
-  { name: '여우', image: foxImg },
-  { name: '카피바라', image: capibaraImg },
-];
-
-const animalImageMap: Record<string, string> = Object.fromEntries(
-  animalOptions.map((a) => [a.name, a.image])
-);
-
-// TODO: API 연동 시 교체
-const mockUser = {
-  nickname: '삑그리고',
-  gender: '여성',
-  birthYear: '2003',
-  contactMethod: '인스타 ID',
-  contactValue: '@1014.1248',
-  animalType: '수달',
-};
 
 const fieldClassName =
   'h-10 w-full rounded-[0.625rem] border-[1.2px] border-transparent bg-primary-100 px-[0.875rem] typo-input-text-m text-primary-500 placeholder:text-grey-600 focus:outline-none';
@@ -85,7 +50,7 @@ function AnimalSelectModal({ current, onConfirm, onClose }: AnimalSelectModalPro
         <p className="typo-subtitle-header-2 text-grey-900">프로필 수정</p>
 
         <div className="grid grid-cols-[repeat(3,5rem)] gap-x-6 gap-y-4">
-          {animalOptions.map((animal) => {
+          {ANIMAL_OPTIONS.map((animal) => {
             const isSelected = draft === animal.name;
             return (
               <button
@@ -123,50 +88,38 @@ function AnimalSelectModal({ current, onConfirm, onClose }: AnimalSelectModalPro
   );
 }
 
-function EditProfilePage() {
+type EditProfileFormProps = {
+  me: UserMeResponse;
+};
+
+function EditProfileForm({ me }: EditProfileFormProps) {
   const navigate = useNavigate();
-  const [selectedAnimal, setSelectedAnimal] = useState(mockUser.animalType);
+  const [selectedAnimal, setSelectedAnimal] = useState(animalNameByProfile[me.animalProfile]);
   const [showAnimalModal, setShowAnimalModal] = useState(false);
-  const [nickname, setNickname] = useState(mockUser.nickname);
+  const [nickname, setNickname] = useState(me.nickname);
   const [isNicknameChecked, setIsNicknameChecked] = useState(true);
   const [nicknameErrorMessage, setNicknameErrorMessage] = useState('');
-  const [gender, setGender] = useState(mockUser.gender);
-  const [birthYear, setBirthYear] = useState(mockUser.birthYear);
-  const [contactMethod, setContactMethod] = useState(mockUser.contactMethod);
-  // TODO: API 연동 시 contactValue가 전화번호인 경우 "010-XXXX-XXXX" 형태로 파싱하여 초기값 설정
-  const [phoneMiddle, setPhoneMiddle] = useState('');
-  const [phoneLast, setPhoneLast] = useState('');
-  const [contactValue, setContactValue] = useState(mockUser.contactValue);
-  const {
-    mutateAsync: checkNicknameAvailability,
-    isPending: isCheckingNickname,
-  } = useCheckNicknameMutation();
+  const [gender, setGender] = useState(me.gender ? '남성' : '여성');
+  const [birthYear, setBirthYear] = useState(String(me.birthYear));
+  const { mutateAsync: checkNicknameAvailability, isPending: isCheckingNickname } =
+    useCheckNicknameMutation();
+  const { mutateAsync: updateMe, isPending: isUpdating } = useUpdateMeMutation();
+  const [toastMessage, setToastMessage] = useState('');
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = setTimeout(() => setToastMessage(''), 2500);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
 
   const isFormValid = useMemo(() => {
-    const isContactFilled =
-      contactMethod === '전화번호'
-        ? phoneMiddle.trim().length > 0 && phoneLast.trim().length > 0
-        : contactMethod.length > 0 && contactValue.trim().length > 0;
-
     return (
       nickname.trim().length > 0 &&
       isNicknameChecked &&
       gender.length > 0 &&
-      birthYear.length > 0 &&
-      isContactFilled
+      birthYear.length > 0
     );
-  }, [
-    birthYear,
-    contactMethod,
-    contactValue,
-    gender,
-    isNicknameChecked,
-    nickname,
-    phoneLast,
-    phoneMiddle,
-  ]);
-
-  const isContactMethodSelected = contactMethod.length > 0;
+  }, [birthYear, gender, isNicknameChecked, nickname]);
 
   const handleLimitedChange = (
     value: string,
@@ -187,7 +140,7 @@ function EditProfilePage() {
       return;
     }
 
-    if (trimmedNickname === mockUser.nickname) {
+    if (trimmedNickname === me.nickname) {
       setIsNicknameChecked(true);
       setNicknameErrorMessage('');
       return;
@@ -202,6 +155,22 @@ function EditProfilePage() {
       console.error(error);
       setIsNicknameChecked(false);
       setNicknameErrorMessage('닉네임 확인에 실패했어요. 다시 시도해주세요');
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      await updateMe({
+        nickname: nickname.trim(),
+        gender: gender === '남성',
+        birthYear: Number(birthYear),
+        animalProfile: animalProfileByName[selectedAnimal],
+      });
+      sessionStorage.setItem(EDIT_PROFILE_TOAST_STORAGE_KEY, 'true');
+      navigate(-1);
+    } catch (error) {
+      console.error(error);
+      setToastMessage('정보 수정에 실패했어요. 다시 시도해주세요.');
     }
   };
 
@@ -248,7 +217,7 @@ function EditProfilePage() {
                     const nextNickname = event.target.value;
 
                     handleLimitedChange(nextNickname, 4, setNickname);
-                    setIsNicknameChecked(nextNickname.trim() === mockUser.nickname);
+                    setIsNicknameChecked(nextNickname.trim() === me.nickname);
                     setNicknameErrorMessage('');
                   }}
                   className={`${fieldClassName} pr-[5.5rem] ${
@@ -332,94 +301,16 @@ function EditProfilePage() {
               </span>
             </div>
           </section>
-
-          {/* 연락처 */}
-          <section className="flex flex-col gap-[0.875rem]">
-            <h2 className="typo-button-text text-grey-900">연락처를 입력해주세요</h2>
-            <div className="grid grid-cols-[7.75rem_minmax(0,1fr)] gap-2.5">
-              <div className="relative">
-                <select
-                  value={contactMethod}
-                  onChange={(event) => {
-                    const nextMethod = event.target.value;
-                    setContactMethod(nextMethod);
-                    setContactValue('');
-                    setPhoneMiddle('');
-                    setPhoneLast('');
-                  }}
-                  className={`${selectClassName} ${
-                    contactMethod ? 'text-primary-500' : 'text-grey-600'
-                  }`}
-                >
-                  <option value="">선택</option>
-                  {contactMethods.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-                <span className="pointer-events-none absolute right-[0.875rem] top-1/2 -translate-y-1/2">
-                  <img src={selectArrow} alt="" className="h-[0.3125rem] w-[0.625rem]" />
-                </span>
-              </div>
-              {contactMethod === '전화번호' ? (
-                <div className="grid grid-cols-3 gap-[0.3125rem]">
-                  <div
-                    aria-disabled="true"
-                    className="flex h-10 w-full items-center rounded-[0.625rem] bg-primary-100 px-[0.875rem] typo-input-text-m text-primary-500"
-                  >
-                    {phonePrefix}
-                  </div>
-                  <input
-                    value={phoneMiddle}
-                    onChange={(event) =>
-                      setPhoneMiddle(event.target.value.replace(/[^0-9]/g, '').slice(0, 4))
-                    }
-                    disabled={!isContactMethodSelected}
-                    className={`${fieldClassName} ${isContactMethodSelected ? '' : 'opacity-50'}`}
-                    inputMode="numeric"
-                    maxLength={4}
-                  />
-                  <input
-                    value={phoneLast}
-                    onChange={(event) =>
-                      setPhoneLast(event.target.value.replace(/[^0-9]/g, '').slice(0, 4))
-                    }
-                    disabled={!isContactMethodSelected}
-                    className={`${fieldClassName} ${isContactMethodSelected ? '' : 'opacity-50'}`}
-                    inputMode="numeric"
-                    maxLength={4}
-                  />
-                </div>
-              ) : (
-                <input
-                  value={contactValue}
-                  onChange={(event) => setContactValue(event.target.value)}
-                  disabled={!isContactMethodSelected}
-                  className={`${fieldClassName} ${isContactMethodSelected ? '' : 'opacity-50'}`}
-                  placeholder={
-                    contactMethod === '인스타 ID'
-                      ? '인스타 ID를 입력해주세요'
-                      : contactMethod === '카카오톡ID'
-                        ? '카카오톡 ID를 입력해주세요'
-                        : ''
-                  }
-                />
-              )}
-            </div>
-          </section>
         </div>
       </div>
 
       <BottomActionBar
         label="수정 완료"
-        disabled={!isFormValid}
-        onClick={() => {
-          // TODO: API 연동 시 수정 성공 콜백 안으로 이동
-          sessionStorage.setItem(EDIT_PROFILE_TOAST_STORAGE_KEY, 'true');
-          navigate(-1);
-        }}
+        disabled={!isFormValid || isUpdating}
+        onClick={handleSubmit}
       />
+
+      {toastMessage && <Toast message={toastMessage} icon={forbiddenIcon} />}
 
       {showAnimalModal && (
         <AnimalSelectModal
@@ -433,6 +324,20 @@ function EditProfilePage() {
       )}
     </div>
   );
+}
+
+function EditProfilePage() {
+  const { data: me, isLoading } = useUserMeQuery();
+
+  if (isLoading || !me) {
+    return (
+      <div className="min-h-screen bg-grey-100">
+        <NotLoginHeader title="정보 수정" />
+      </div>
+    );
+  }
+
+  return <EditProfileForm me={me} />;
 }
 
 export default EditProfilePage;

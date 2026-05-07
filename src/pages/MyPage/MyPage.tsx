@@ -4,8 +4,10 @@ import NotLoginHeader from '../../components/NotLoginHeader';
 import Toast from '../../components/Toast';
 import { EDIT_PROFILE_TOAST_STORAGE_KEY } from '../../constants/storageKeys';
 import { useLogoutMutation } from '../../queries/auth';
+import { useUserMeQuery, useUserCookiesQuery, useDeleteMeMutation } from '../../queries/users';
 import ReferralSection from '../../components/ReferralSection';
 import RightArrow from '../../assets/right_arrow.svg?react';
+import WithdrawConfirmModal from './WithdrawConfirmModal';
 import editPencilImg from '../../assets/edit_pencil.svg';
 import cookieImg from '../../assets/cookie.svg';
 import dogImg from '../../assets/dogIcon.svg';
@@ -13,43 +15,17 @@ import domisaHeartImg from '../../assets/domisaHeartIcon.svg';
 import catImg from '../../assets/catIcon.svg';
 import flowerImg from '../../assets/flowerIcon.svg';
 import arrowIcon from '../../assets/arrowIcon.svg';
-
-// TODO: API 연동 시 GET /api/users/me 응답으로 교체
-const mockResponse = {
-  user: {
-    userId: 123,
-    nickname: '콩순이짱',
-    birthYear: 2003,
-    gender: '여',
-    profileImageUrl: null as string | null,
-    contact: {
-      type: 'INSTAGRAM' as 'INSTAGRAM' | 'KAKAO' | 'PHONE',
-      value: '@1014.1248',
-    },
-    cookieCount: 10,
-    referralCode: 'd9fs3k29',
-  },
-  status: {
-    isRegistered: true,
-    hasIntroduction: true,
-    isProfileCompleted: false, // true면 소개팅 카드 있음
-  },
-};
-
-const contactLabel: Record<'INSTAGRAM' | 'KAKAO' | 'PHONE', string> = {
-  INSTAGRAM: '인스타 ID',
-  KAKAO: '카카오 ID',
-  PHONE: '전화번호',
-};
+import heartIconOrange from '../../assets/heartIconOrange.svg';
+import { animalProfileImageMap } from '../../constants/animalProfile';
 
 function MyPage() {
-  const { user, status } = mockResponse;
   const navigate = useNavigate();
-  const {
-    mutateAsync: logout,
-    isPending: isLoggingOut,
-  } = useLogoutMutation();
+  const { data: me, isLoading: isMeLoading } = useUserMeQuery();
+  const { data: cookies, isLoading: isCookiesLoading } = useUserCookiesQuery();
+  const { mutateAsync: logout, isPending: isLoggingOut } = useLogoutMutation();
+  const { mutateAsync: deleteMe, isPending: isDeleting } = useDeleteMeMutation();
   const [logoutErrorMessage, setLogoutErrorMessage] = useState('');
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showEditProfileToast, setShowEditProfileToast] = useState(() => {
     const shouldShow = sessionStorage.getItem(EDIT_PROFILE_TOAST_STORAGE_KEY) === 'true';
     if (shouldShow) {
@@ -64,6 +40,16 @@ function MyPage() {
     return () => clearTimeout(timer);
   }, [showEditProfileToast]);
 
+  if (isMeLoading || isCookiesLoading || !me || !cookies) {
+    return (
+      <div className="min-h-screen bg-grey-100">
+        <NotLoginHeader title="내정보" />
+      </div>
+    );
+  }
+
+  const animalProfileImage = animalProfileImageMap[me.animalProfile];
+
   return (
     <div className="min-h-screen bg-grey-100">
       <NotLoginHeader title="내정보" />
@@ -73,19 +59,19 @@ function MyPage() {
           {/* 프로필 */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-[1.875rem] bg-grey-300 overflow-hidden shrink-0">
-                {user.profileImageUrl && (
+              <div className="w-20 h-20 rounded-[1.875rem] bg-primary-100 overflow-hidden shrink-0">
+                {animalProfileImage && (
                   <img
-                    src={user.profileImageUrl}
-                    alt="프로필"
+                    src={animalProfileImage}
+                    alt={me.animalProfile}
                     className="w-full h-full object-cover"
                   />
                 )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <span className="typo-title-header-1 text-grey-900">{user.nickname}</span>
+                <span className="typo-title-header-1 text-grey-900">{me.nickname}</span>
                 <span className="typo-input-text-m text-grey-700">
-                  {String(user.birthYear).slice(2)}년생 {user.gender}
+                  {String(me.birthYear)}년생 {me.gender ? '남성' : '여성'}
                 </span>
               </div>
             </div>
@@ -98,19 +84,6 @@ function MyPage() {
             </button>
           </div>
 
-          {/* 연락처 */}
-          <div className="flex flex-col gap-2.5">
-            <span className="typo-button-text text-grey-900">연락처</span>
-            <div className="flex items-center gap-5">
-              <span className="typo-comment-1 text-grey-600 shrink-0">
-                {contactLabel[user.contact.type]}
-              </span>
-              <div className="flex-1 flex items-center h-10 px-2.5 rounded-[0.625rem] bg-grey-100">
-                <span className="typo-comment-1-b text-primary-500">{user.contact.value}</span>
-              </div>
-            </div>
-          </div>
-
           <div className="flex flex-col gap-[1.875rem]">
             {/* 보유 쿠키 */}
             <div className="flex flex-col gap-3.5">
@@ -121,7 +94,7 @@ function MyPage() {
               >
                 <div className="flex items-center gap-1">
                   <img src={cookieImg} alt="" className="w-4 h-4" />
-                  <span className="typo-button-text text-primary-500">{user.cookieCount}개</span>
+                  <span className="typo-button-text text-primary-500">{cookies.cookieCount}개</span>
                 </div>
                 <div className="absolute right-2.5 flex items-center justify-center h-[2.15rem] w-[1.7rem]">
                   <RightArrow className="text-primary-500" />
@@ -130,7 +103,7 @@ function MyPage() {
             </div>
 
             {/* 소개팅 카드 */}
-            {status.isProfileCompleted ? (
+            {me.status.isProfileCompleted ? (
               <button
                 onClick={() => navigate('/my/dating-card')}
                 className="relative flex flex-col gap-1 h-[10.25rem] p-2.5 rounded-[0.625rem] overflow-hidden w-full text-left"
@@ -172,7 +145,7 @@ function MyPage() {
               <div className="flex flex-col items-center justify-center gap-2.5 h-[7.25rem] px-2.5 bg-grey-200 rounded-[0.625rem]">
                 <span className="typo-comment-1-m text-grey-700">등록된 프로필이 없어요</span>
                 <button
-                  onClick={() => navigate('/my/dating-card/register')}
+                  onClick={() => navigate('/dating/register')}
                   className="flex items-center justify-center gap-2.5 h-[3.125rem] px-5 rounded-[0.875rem] w-full"
                   style={{ background: 'linear-gradient(to bottom, #ff98b5, #ff5a99)' }}
                 >
@@ -214,13 +187,25 @@ function MyPage() {
                     <RightArrow />
                   </div>
                 </button>
+                <button
+                  onClick={() => navigate('/my/mutual-match')}
+                  className="flex items-center justify-between h-[3.125rem] px-2.5 border border-match-sd rounded-[0.625rem] w-full bg-match-bg"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="typo-button-text text-match-text">쌍방 매칭</span>
+                    <img src={heartIconOrange} alt="" className="w-4 h-4" />
+                  </div>
+                  <div className="flex items-center justify-center h-[2.15rem] w-[1.7rem]">
+                    <RightArrow className="text-match-text" />
+                  </div>
+                </button>
               </div>
             </div>
 
             {/* 친구 소개 */}
             <div className="flex flex-col gap-3.5">
               <span className="typo-button-text text-grey-900">친구 소개</span>
-              <ReferralSection referralCode={user.referralCode} />
+              <ReferralSection />
             </div>
           </div>
 
@@ -246,20 +231,31 @@ function MyPage() {
             </button>
             <button
               className="absolute right-0 top-5 underline underline-offset-4 whitespace-nowrap"
-              onClick={() => {
-                // TODO: 회원 탈퇴 확인 모달 표시 후 탈퇴 API 호출
-              }}
+              onClick={() => setShowWithdrawModal(true)}
             >
               탈퇴하기
             </button>
           </div>
           {logoutErrorMessage && (
-            <p className="typo-comment-2 text-center text-warning">
-              {logoutErrorMessage}
-            </p>
+            <p className="typo-comment-2 text-center text-warning">{logoutErrorMessage}</p>
           )}
         </div>
       </div>
+
+      {showWithdrawModal && (
+        <WithdrawConfirmModal
+          onConfirm={async () => {
+            try {
+              await deleteMe();
+              navigate('/', { replace: true });
+            } catch (error) {
+              console.error(error);
+            }
+          }}
+          onCancel={() => setShowWithdrawModal(false)}
+          isLoading={isDeleting}
+        />
+      )}
     </div>
   );
 }

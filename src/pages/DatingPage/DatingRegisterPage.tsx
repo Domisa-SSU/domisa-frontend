@@ -60,9 +60,9 @@ const ROMANTIC_STYLE_PLACEHOLDER = '공강 때 요거바라 가서 요거트 먹
 const IDEAL_TYPE_MAX_LENGTH = 75;
 const IDEAL_TYPE_PLACEHOLDER = '대화가 잘 통하고 같이 있으면 편한 사람';
 const NOTIFICATION_PHONE_MAX_LENGTH = 11;
-const PHOTO_CROP_ASPECT = 362 / 197;
-const PHOTO_CROP_OUTPUT_WIDTH = 1086;
-const PHOTO_CROP_OUTPUT_HEIGHT = 591;
+const PHOTO_CROP_ASPECT = 71 / 109;
+const PHOTO_CROP_OUTPUT_WIDTH = 710;
+const PHOTO_CROP_OUTPUT_HEIGHT = 1090;
 
 const getCroppedImageFile = async ({
   imageElement,
@@ -618,7 +618,7 @@ function DatingRegisterPhotoStep() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="relative flex aspect-[362/197] w-full items-center justify-center overflow-hidden rounded-[0.625rem] border-[1.8px] border-dashed border-grey-700 bg-grey-300"
+              className="relative mx-auto flex aspect-[71/109] w-full max-w-[13.3125rem] items-center justify-center overflow-hidden rounded-[0.625rem] border-[1.8px] border-dashed border-grey-700 bg-grey-300"
             >
               {formData.photoPreviewUrl ? (
                 <img
@@ -743,6 +743,13 @@ function DatingRegisterNotificationPhoneStep() {
       await queryClient.invalidateQueries({
         queryKey: authMeQueryKey,
       });
+
+      if (!createdProfile.status.hasIntroduction) {
+        resetRegisterFlow();
+        navigate('/dating/require-introduce', { replace: true });
+        return;
+      }
+
       setTotalUserCount(createdProfile.totalUserCount);
       setIsCompleteModalOpen(true);
     } catch (error) {

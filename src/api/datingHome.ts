@@ -2,42 +2,79 @@ import { apiClient } from "./client";
 
 export type DatingHomeCard = {
   id: string;
-  userId: number;
-  profile: string;
+  publicId: string;
+  profile: string | null;
+};
+
+type DatingHomeCardDto = Omit<DatingHomeCard, "id">;
+
+export type DatingMatch = {
+  id: string;
+  publicId: string;
+  nickname: string;
+  profile: string | null;
+  contactType: string;
+  contact: string;
 };
 
 export type DatingHomeResponse = {
   refreshAvailableAt: string;
-  canRefresh: boolean;
   profileNum: number;
   freeLikeRemaining: number;
   cards: DatingHomeCard[];
   receivedLikes: DatingHomeCard[];
   sentLikes: DatingHomeCard[];
+  matches: DatingMatch[];
 };
 
 type RefreshTimeResponse = {
   refreshAvailableAt: string;
-  canRefresh: boolean;
+};
+
+export type UserCookiesResponse = {
+  cookieCount: number;
 };
 
 type ProfilesResponse = {
   profileNum: number;
   freeLikeRemaining: number;
-  profiles: DatingHomeCard[];
+  profiles: DatingHomeCardDto[];
 };
 
 type ReceivedLikesResponse = {
   myFanNumber: number;
-  myFans: DatingHomeCard[];
+  myFans: DatingHomeCardDto[];
 };
 
 type SentLikesResponse = {
   myTypeNumber: number;
-  myTypes: DatingHomeCard[];
+  myTypes: DatingHomeCardDto[];
 };
 
-const isProfileCard = (value: unknown): value is DatingHomeCard => {
+type DatingMatchDto = Omit<DatingMatch, "id">;
+
+export type DatingMatchesResponse = {
+  matchCount: number;
+  matches: DatingMatchDto[];
+};
+
+export type DatingMatchCountResponse = {
+  matchCount: number;
+};
+
+const isDatingMatchCountResponse = (
+  value: unknown,
+): value is DatingMatchCountResponse => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return typeof response.matchCount === "number";
+};
+
+const isProfileCard = (value: unknown): value is DatingHomeCardDto => {
   if (!value || typeof value !== "object") {
     return false;
   }
@@ -45,15 +82,40 @@ const isProfileCard = (value: unknown): value is DatingHomeCard => {
   const profile = value as Record<string, unknown>;
 
   return (
-    typeof profile.userId === "number" &&
-    typeof profile.profile === "string"
+    typeof profile.publicId === "string" &&
+    (typeof profile.profile === "string" || profile.profile === null)
   );
 };
 
-const normalizeProfileCard = (profile: DatingHomeCard): DatingHomeCard => ({
-  id: String(profile.userId),
-  userId: profile.userId,
+const normalizeProfileCard = (profile: DatingHomeCardDto): DatingHomeCard => ({
+  id: profile.publicId,
+  publicId: profile.publicId,
   profile: profile.profile,
+});
+
+const isDatingMatchDto = (value: unknown): value is DatingMatchDto => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const match = value as Record<string, unknown>;
+
+  return (
+    typeof match.publicId === "string" &&
+    typeof match.nickname === "string" &&
+    (typeof match.profile === "string" || match.profile === null) &&
+    typeof match.contactType === "string" &&
+    typeof match.contact === "string"
+  );
+};
+
+const normalizeDatingMatch = (match: DatingMatchDto): DatingMatch => ({
+  id: match.publicId,
+  publicId: match.publicId,
+  nickname: match.nickname,
+  profile: match.profile,
+  contactType: match.contactType,
+  contact: match.contact,
 });
 
 const isRefreshTimeResponse = (
@@ -65,10 +127,19 @@ const isRefreshTimeResponse = (
 
   const response = value as Record<string, unknown>;
 
-  return (
-    typeof response.refreshAvailableAt === "string" &&
-    typeof response.canRefresh === "boolean"
-  );
+  return typeof response.refreshAvailableAt === "string";
+};
+
+const isUserCookiesResponse = (
+  value: unknown,
+): value is UserCookiesResponse => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return typeof response.cookieCount === "number";
 };
 
 const isProfilesResponse = (value: unknown): value is ProfilesResponse => {
@@ -116,11 +187,51 @@ const isSentLikesResponse = (value: unknown): value is SentLikesResponse => {
   );
 };
 
+const isDatingMatchesResponse = (
+  value: unknown,
+): value is DatingMatchesResponse => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return (
+    typeof response.matchCount === "number" &&
+    Array.isArray(response.matches) &&
+    response.matches.every(isDatingMatchDto)
+  );
+};
+
 export const getDatingRefreshTime = async () => {
   const { data } = await apiClient.get<unknown>("/api/datings/refresh-time");
 
   if (!isRefreshTimeResponse(data)) {
     throw new Error("Invalid dating refresh time response");
+  }
+
+  return data;
+};
+
+export const getUserCookies = async () => {
+  const { data } = await apiClient.get<unknown>("/api/users/cookies");
+
+  if (!isUserCookiesResponse(data)) {
+    throw new Error("Invalid user cookies response");
+  }
+
+  return data;
+};
+
+export const shuffleDatingCards = async () => {
+  await apiClient.post("/api/datings/shuffle");
+};
+
+export const getDatingMatchCount = async () => {
+  const { data } = await apiClient.get<unknown>("/api/datings/count");
+
+  if (!isDatingMatchCountResponse(data)) {
+    throw new Error("Invalid dating count response");
   }
 
   return data;
@@ -166,21 +277,36 @@ export const getSentLikes = async () => {
   };
 };
 
+export const getDatingMatches = async () => {
+  const { data } = await apiClient.get<unknown>("/api/datings/matches");
+
+  if (!isDatingMatchesResponse(data)) {
+    throw new Error("Invalid dating matches response");
+  }
+
+  return {
+    matchCount: data.matchCount,
+    matches: data.matches.map(normalizeDatingMatch),
+  };
+};
+
 export const fetchDatingHome = async (): Promise<DatingHomeResponse> => {
-  const [refreshTime, profiles, receivedLikes, sentLikes] = await Promise.all([
-    getDatingRefreshTime(),
-    getDatingProfiles(),
-    getReceivedLikes(),
-    getSentLikes(),
-  ]);
+  const [refreshTime, profiles, receivedLikes, sentLikes, matches] =
+    await Promise.all([
+      getDatingRefreshTime(),
+      getDatingProfiles(),
+      getReceivedLikes(),
+      getSentLikes(),
+      getDatingMatches(),
+    ]);
 
   return {
     refreshAvailableAt: refreshTime.refreshAvailableAt,
-    canRefresh: refreshTime.canRefresh,
     profileNum: profiles.profileNum,
     freeLikeRemaining: profiles.freeLikeRemaining,
     cards: profiles.profiles,
     receivedLikes: receivedLikes.myFans,
     sentLikes: sentLikes.myTypes,
+    matches: matches.matches,
   };
 };
