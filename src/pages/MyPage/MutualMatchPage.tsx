@@ -26,12 +26,62 @@ function ProfileCard({ match, onClick }: { match: DatingMatch; onClick: () => vo
 function MutualMatchPage() {
   const navigate = useNavigate();
   const [matches, setMatches] = useState<DatingMatch[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     getDatingMatches()
       .then((res) => setMatches(res.matches))
-      .catch(() => {});
+      .catch(() => setIsError(true))
+      .finally(() => setIsLoading(false));
   }, []);
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center pt-24">
+          <div
+            role="status"
+            aria-label="쌍방 매칭 확인 중"
+            className="h-10 w-10 animate-spin rounded-full border-[0.1875rem] border-primary-200 border-t-primary-500"
+          />
+        </div>
+      );
+    }
+
+    if (isError) {
+      return (
+        <div className="flex justify-center pt-24">
+          <span className="typo-header-3 text-grey-700 leading-7 text-center">
+            쌍방 매칭을 불러올 수 없어요
+          </span>
+        </div>
+      );
+    }
+
+    if (matches.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center pt-24">
+          <span className="typo-header-3 text-grey-700 leading-7 text-center">
+            아직 쌍방 매칭이 없어요
+          </span>
+          <img src={loginImg} alt="" className="w-[15.36rem] h-[15.36rem] object-cover" />
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-4 gap-[0.625rem]">
+        {matches.map((match) => (
+          <ProfileCard
+            key={match.publicId}
+            match={match}
+            onClick={() => navigate(`/dating/cards/${encodeURIComponent(match.publicId)}`)}
+          />
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-grey-100">
@@ -49,24 +99,7 @@ function MutualMatchPage() {
       </div>
       <div className="flex flex-1 justify-center bg-grey-400">
         <div className="w-full max-w-[22.6875rem] px-5 pt-6 pb-10">
-          {matches.length === 0 ? (
-            <div className="flex flex-col items-center justify-center pt-24">
-              <span className="typo-header-3 text-grey-700 leading-7 text-center">
-                아직 쌍방 매칭이 없어요
-              </span>
-              <img src={loginImg} alt="" className="w-[15.36rem] h-[15.36rem] object-cover" />
-            </div>
-          ) : (
-            <div className="grid grid-cols-4 gap-[0.625rem]">
-              {matches.map((match) => (
-                <ProfileCard
-                  key={match.publicId}
-                  match={match}
-                  onClick={() => navigate(`/dating/cards/${encodeURIComponent(match.publicId)}`)}
-                />
-              ))}
-            </div>
-          )}
+          {renderContent()}
         </div>
       </div>
     </div>
