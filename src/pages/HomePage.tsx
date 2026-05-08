@@ -2,7 +2,7 @@ import dayBgImg from "../assets/homePageDayBackGround.jpg";
 import nightBgImg from "../assets/homePageNightBackGround.jpg";
 import Header from "../components/homePageHeader";
 import MessageSlider from "../components/MessageSlider";
-import logo from "../assets/domisaLogo.svg";
+import logo from "../assets/domisaLogo.png";
 import dogImg from "../assets/dogIcon.png";
 import heartImg from "../assets/domisaHeartIcon.png";
 import catImg from "../assets/catIcon.png";
