@@ -11,11 +11,17 @@ import nightMapImg from "../assets/nightMapIcon.png";
 import arrowImg from "../assets/arrowIcon.svg";
 import flowerIcon from "../assets/flowerIcon.svg";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDatingMatchCount } from "../api/datingHome";
+import AlarmModal from "../components/AlarmModal";
 import { useAuthMeQuery } from "../queries/auth";
+import { useActiveNotificationsQuery } from "../queries/notifications";
 import { useDeleteMeMutation } from "../queries/users";
+import type {
+  ActiveNotificationsResponse,
+  NotificationType,
+} from "../types/notification";
 
 const datingMatchCountQueryKey = ["dating", "count"] as const;
 const fallbackMatchCount = 21;
@@ -28,11 +34,46 @@ const getThemeByTime = (): HomeTheme => {
   return hour >= 6 && hour < 18 ? `day` : `night`;
 };
 
+const buildActiveNotificationQueue = (
+  activeNotifications: ActiveNotificationsResponse,
+): NotificationType[] => {
+  const queue: NotificationType[] = [];
+
+  if (activeNotifications.match) {
+    queue.push("MATCH");
+  }
+
+  if (activeNotifications.like) {
+    queue.push("LIKE");
+  }
+
+  if (activeNotifications.signup) {
+    queue.push("SIGNUP");
+  }
+
+  for (let index = 0; index < activeNotifications.referralCount; index += 1) {
+    queue.push("REFERRAL");
+  }
+
+  return queue;
+};
+
+const userNotificationModalTypes: readonly NotificationType[] = [
+  "LIKE",
+  "MATCH",
+];
+
 function HomePage() {
   const [theme] = useState(getThemeByTime());
   const [deleteMessage, setDeleteMessage] = useState("");
+  const [activeNotificationQueue, setActiveNotificationQueue] = useState<
+    NotificationType[]
+  >([]);
   const navigate = useNavigate();
   const { data: authMe } = useAuthMeQuery();
+  const { data: activeNotifications } = useActiveNotificationsQuery(
+    Boolean(authMe),
+  );
   const {
     mutateAsync: deleteMe,
     isPending: isDeletingMe,
@@ -45,6 +86,7 @@ function HomePage() {
   const status = authMe?.status;
   const matchCount = matchCountData?.matchCount ?? fallbackMatchCount;
   const mapImg = theme === "day" ? dayMapImg : nightMapImg;
+  const currentActiveNotificationType = activeNotificationQueue[0] ?? null;
 
   const themeClasses =
     theme == "day"
@@ -64,6 +106,20 @@ function HomePage() {
           inviteCard: "bg-home-friend-night",
           coupleTextBackGround: "bg-grey-100",
         };
+
+  useEffect(() => {
+    if (!authMe) {
+      setActiveNotificationQueue([]);
+    }
+  }, [authMe]);
+
+  useEffect(() => {
+    if (!activeNotifications) {
+      return;
+    }
+
+    setActiveNotificationQueue(buildActiveNotificationQueue(activeNotifications));
+  }, [activeNotifications]);
 
   const handleDatingClick = () => {
     const searchParams = new URLSearchParams({
@@ -100,6 +156,22 @@ function HomePage() {
     } catch (error) {
       console.error(error);
       setDeleteMessage("회원탈퇴에 실패했어요.");
+    }
+  };
+
+  const dismissActiveNotification = () => {
+    setActiveNotificationQueue((queue) => queue.slice(1));
+  };
+
+  const handleActiveNotificationConfirm = () => {
+    if (!currentActiveNotificationType) {
+      return;
+    }
+
+    dismissActiveNotification();
+
+    if (userNotificationModalTypes.includes(currentActiveNotificationType)) {
+      navigate("/notifications");
     }
   };
 
@@ -219,6 +291,13 @@ function HomePage() {
           ) : null}
         </div>
       </section>
+      {currentActiveNotificationType ? (
+        <AlarmModal
+          type={currentActiveNotificationType}
+          onClose={dismissActiveNotification}
+          onConfirm={handleActiveNotificationConfirm}
+        />
+      ) : null}
       <MessageSlider></MessageSlider>
     </div>
   );
