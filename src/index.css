@@ -4,10 +4,21 @@
   box-sizing: border-box;
 }
 
+:root {
+  --font-pretendard:
+    'Pretendard',
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    'Apple SD Gothic Neo',
+    'Noto Sans KR',
+    sans-serif;
+}
+
 body {
   background-color: white;
   margin: 0;
-  font-family: 'Pretendard';
+  font-family: var(--font-pretendard);
   overflow-x: hidden;
 }
 
@@ -43,7 +54,7 @@ body {
 }
 
 .typo-title-header-1 {
-  font-family: Pretendard;
+  font-family: var(--font-pretendard);
   font-size: 1.25rem;
   font-style: normal;
   font-weight: 600;
@@ -51,7 +62,7 @@ body {
 }
 
 .typo-title-header-1-b {
-  font-family: Pretendard;
+  font-family: var(--font-pretendard);
   font-size: 1.25rem;
   font-style: normal;
   font-weight: 700;
@@ -59,7 +70,7 @@ body {
 }
 
 .typo-subtitle-header-2 {
-  font-family: Pretendard;
+  font-family: var(--font-pretendard);
   font-size: 1.125rem;
   font-style: normal;
   font-weight: 600;
@@ -67,7 +78,7 @@ body {
 }
 
 .typo-header-3 {
-  font-family: Pretendard;
+  font-family: var(--font-pretendard);
   font-size: 1.125rem;
   font-style: normal;
   font-weight: 600;
@@ -75,7 +86,7 @@ body {
 }
 
 .typo-header-3-b {
-  font-family: Pretendard;
+  font-family: var(--font-pretendard);
   font-size: 1.125rem;
   font-style: normal;
   font-weight: 700;
@@ -83,7 +94,7 @@ body {
 }
 
 .typo-button-text {
-  font-family: Pretendard;
+  font-family: var(--font-pretendard);
   font-size: 1rem;
   font-style: normal;
   font-weight: 600;
@@ -91,7 +102,7 @@ body {
 }
 
 .typo-button-text-b {
-  font-family: Pretendard;
+  font-family: var(--font-pretendard);
   font-size: 1rem;
   font-style: normal;
   font-weight: 700;
@@ -99,7 +110,7 @@ body {
 }
 
 .typo-input-text {
-  font-family: Pretendard;
+  font-family: var(--font-pretendard);
   font-size: 0.875rem;
   font-style: normal;
   font-weight: 600;
@@ -107,7 +118,7 @@ body {
 }
 
 .typo-input-text-m {
-  font-family: Pretendard;
+  font-family: var(--font-pretendard);
   font-size: 0.875rem;
   font-style: normal;
   font-weight: 500;
@@ -115,7 +126,7 @@ body {
 }
 
 .typo-input-text-r {
-  font-family: Pretendard;
+  font-family: var(--font-pretendard);
   font-size: 0.875rem;
   font-style: normal;
   font-weight: 400;
@@ -123,7 +134,7 @@ body {
 }
 
 .typo-comment-1 {
-  font-family: Pretendard;
+  font-family: var(--font-pretendard);
   font-size: 0.875rem;
   font-style: normal;
   font-weight: 600;
@@ -131,7 +142,7 @@ body {
 }
 
 .typo-comment-1-b {
-  font-family: Pretendard;
+  font-family: var(--font-pretendard);
   font-size: 0.875rem;
   font-style: normal;
   font-weight: 700;
@@ -139,7 +150,7 @@ body {
 }
 
 .typo-comment-1-m {
-  font-family: Pretendard;
+  font-family: var(--font-pretendard);
   font-size: 0.875rem;
   font-style: normal;
   font-weight: 500;
@@ -147,7 +158,7 @@ body {
 }
 
 .typo-comment-2 {
-  font-family: Pretendard;
+  font-family: var(--font-pretendard);
   font-size: 0.75rem;
   font-style: normal;
   font-weight: 600;
