@@ -434,11 +434,9 @@ type DatingPreviewItem = Pick<DatingHomeCard, "id" | "profile">;
 
 function DatingPreviewCard({
   card,
-  isBlurred,
   onViewDetail,
 }: {
   card: DatingPreviewItem;
-  isBlurred: boolean;
   onViewDetail: (id: string) => void;
 }) {
   return (
@@ -451,9 +449,7 @@ function DatingPreviewCard({
       <img
         src={card.profile ?? sumnailIcon}
         alt=""
-        className={`h-full w-full rounded-[0.25rem] object-cover ${
-          isBlurred ? "blur-[0.125rem]" : ""
-        }`}
+        className="h-full w-full rounded-[0.25rem] object-cover"
       />
     </button>
   );
@@ -497,14 +493,12 @@ function DatingPreviewSection({
   cards,
   variant,
   emptyMessage,
-  isCardBlurred,
   onViewDetail,
 }: {
   title: string;
   cards: DatingPreviewItem[];
   variant: DatingPreviewSectionVariant;
   emptyMessage: string;
-  isCardBlurred: boolean;
   onViewDetail: (id: string, viewType: DatingCardDetailViewType) => void;
 }) {
   const detailViewType = datingPreviewDetailViewTypeByVariant[variant];
@@ -569,7 +563,6 @@ function DatingPreviewSection({
                 <DatingPreviewCard
                   key={card.id}
                   card={card}
-                  isBlurred={isCardBlurred}
                   onViewDetail={(id) => onViewDetail(id, detailViewType)}
                 />
               ))}
@@ -797,7 +790,6 @@ function DatingPage() {
             cards={data.receivedLikes}
             variant="received"
             emptyMessage="아직 받은 호감이 없어요"
-            isCardBlurred
             onViewDetail={handleViewCardDetail}
           />
           <DatingPreviewSection
@@ -805,7 +797,6 @@ function DatingPage() {
             cards={data.sentLikes}
             variant="sent"
             emptyMessage="아직 보낸 호감이 없어요"
-            isCardBlurred
             onViewDetail={handleViewCardDetail}
           />
           <DatingPreviewSection
@@ -813,7 +804,6 @@ function DatingPage() {
             cards={data.matches}
             variant="matched"
             emptyMessage="아직 매칭된 프로필이 없어요"
-            isCardBlurred={false}
             onViewDetail={handleViewCardDetail}
           />
         </div>
