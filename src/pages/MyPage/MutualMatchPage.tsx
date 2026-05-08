@@ -62,7 +62,7 @@ function MutualMatchPage() {
                 <ProfileCard
                   key={match.publicId}
                   match={match}
-                  onClick={() => navigate(`/dating/cards/${match.publicId}`)}
+                  onClick={() => navigate(`/dating/cards/${encodeURIComponent(match.publicId)}`)}
                 />
               ))}
             </div>

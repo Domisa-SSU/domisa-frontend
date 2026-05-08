@@ -53,7 +53,7 @@ function LikesSentPage() {
           ) : (
             <div className="grid grid-cols-4 gap-[0.625rem]">
               {myTypes.map((item) => (
-                <ProfileCard key={item.publicId} item={item} onClick={() => navigate(`/dating/cards/${item.publicId}`)} />
+                <ProfileCard key={item.publicId} item={item} onClick={() => navigate(`/dating/cards/${encodeURIComponent(item.publicId)}`)} />
               ))}
             </div>
           )}

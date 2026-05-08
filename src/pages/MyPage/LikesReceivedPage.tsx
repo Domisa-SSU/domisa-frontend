@@ -53,7 +53,7 @@ function LikesReceivedPage() {
           ) : (
             <div className="grid grid-cols-4 gap-[0.625rem]">
               {myFans.map((fan) => (
-                <ProfileCard key={fan.publicId} fan={fan} onClick={() => navigate(`/dating/cards/${fan.publicId}`)} />
+                <ProfileCard key={fan.publicId} fan={fan} onClick={() => navigate(`/dating/cards/${encodeURIComponent(fan.publicId)}?viewType=FAN`)} />
               ))}
             </div>
           )}
