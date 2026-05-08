@@ -13,12 +13,7 @@ import rightArrowBold from '../../assets/rightArrowBold.svg';
 import copyIcon from '../../assets/copy.svg';
 import forbiddenIcon from '../../assets/toastForbidden.svg';
 import checkIcon from '../../assets/check.svg';
-
-// TODO: API 연동 시 교체
-const MOCK_ORDER = {
-  billing_name: '입금A7K3Q9',
-  order_amount: 2000,
-};
+import { useCancelCookieOrderMutation, useCreateCookieOrderMutation } from '../../queries/orders';
 
 type CookiePurchaseLocationState = {
   count: number;
@@ -42,6 +37,18 @@ function CookiePurchasePage() {
   const location = useLocation();
   const state = location.state as CookiePurchaseLocationState | null;
 
+  const { mutate: createOrder, data: order, isPending: isOrderPending, isError: isOrderError } = useCreateCookieOrderMutation();
+  const { mutateAsync: cancelOrder } = useCancelCookieOrderMutation();
+
+  useEffect(() => {
+    if (!state) return;
+    createOrder({
+      cookieAmount: state.count,
+      orderAmount: Number(state.price.replace(/,/g, '')),
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [isNameConfirmed, setIsNameConfirmed] = useState(false);
   const [showCopyToast, setShowCopyToast] = useState(false);
   const [showWarningToast, setShowWarningToast] = useState(false);
@@ -49,7 +56,7 @@ function CookiePurchasePage() {
   const [cookieModalState, setCookieModalState] = useState<CookieModalState>('none');
   const [earnedCookieCount, setEarnedCookieCount] = useState(0);
 
-  const blocker = useBlocker(cookieModalState !== 'success' && cookieModalState !== 'failure');
+  const blocker = useBlocker(cookieModalState !== 'success' && cookieModalState !== 'failure' && !isOrderError);
 
   useEffect(() => {
     if (!showCopyToast) return;
@@ -106,15 +113,27 @@ function CookiePurchasePage() {
     return null;
   }
 
-  const { billing_name } = MOCK_ORDER;
+  if (isOrderError) {
+    return (
+      <div className="min-h-screen bg-grey-100">
+        <NotLoginHeader title="쿠키 구매" />
+        <div className="flex items-center justify-center px-5 pt-20">
+          <p className="typo-button-text text-grey-600">주문 생성에 실패했어요. 다시 시도해주세요.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const billingName = order?.billingName;
 
   const handleTransferComplete = () => {
     setCookieModalState('pending');
   };
 
   const handleCopy = async () => {
+    if (!billingName) return;
     try {
-      await navigator.clipboard.writeText(billing_name);
+      await navigator.clipboard.writeText(billingName);
       setShowCopyToast(true);
     } catch (e) {
       console.error(e);
@@ -137,11 +156,14 @@ function CookiePurchasePage() {
               <span className="text-primary-600">입금자명</span>에 아래 코드를 입력해주세요
             </p>
             <div className="flex items-center justify-between h-[3.125rem] bg-grey-100 px-2.5 py-2 rounded-[0.625rem]">
-              <span className="typo-comment-1 text-grey-900">{billing_name}</span>
+              <span className="typo-comment-1 text-grey-900">
+                {isOrderPending ? '불러오는 중...' : billingName}
+              </span>
               <button
                 type="button"
                 onClick={handleCopy}
-                className="flex items-center gap-1 bg-primary-100 px-3.5 py-2 rounded-[0.75rem]"
+                disabled={isOrderPending || !billingName}
+                className="flex items-center gap-1 bg-primary-100 px-3.5 py-2 rounded-[0.75rem] disabled:opacity-40"
               >
                 <img src={copyIcon} alt="" className="w-[0.648rem] h-[0.72rem]" />
                 <span className="typo-comment-2 text-primary-500">복사</span>
@@ -209,7 +231,15 @@ function CookiePurchasePage() {
         />
       )}
       {blocker.state === 'blocked' && (
-        <BackConfirmModal onConfirm={() => blocker.proceed()} onCancel={() => blocker.reset()} />
+        <BackConfirmModal
+          onConfirm={async () => {
+            if (order) {
+              await cancelOrder({ billing_name: order.billingName, order_amount: order.orderAmount });
+            }
+            blocker.proceed();
+          }}
+          onCancel={() => blocker.reset()}
+        />
       )}
 
       {/* 하단 고정 영역 */}

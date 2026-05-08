@@ -47,7 +47,7 @@ export type DatingProfileResponse = {
   mbti: string;
   datingStyle: string;
   idealType: string;
-  imageKey: string;
+  imageUrl: string;
   contactType: DatingProfileContactType;
   contact: string;
   notificationPhone: string | null;
@@ -57,7 +57,7 @@ type UpdateDatingProfileRequest = {
   mbti: string;
   datingStyle: string;
   idealType: string;
-  imageKey: string;
+  imageKey?: string;
   contactType: DatingProfileContactType;
   contact: string;
   notificationPhone: string | null;
@@ -71,7 +71,7 @@ const parseDatingProfileResponse = (value: unknown): DatingProfileResponse | nul
     typeof r.mbti !== 'string' ||
     typeof r.datingStyle !== 'string' ||
     typeof r.idealType !== 'string' ||
-    typeof r.imageKey !== 'string' ||
+    typeof r.imageUrl !== 'string' ||
     typeof r.contactType !== 'string' ||
     typeof r.contact !== 'string' ||
     (r.notificationPhone !== null && typeof r.notificationPhone !== 'string')
@@ -81,7 +81,7 @@ const parseDatingProfileResponse = (value: unknown): DatingProfileResponse | nul
     mbti: r.mbti,
     datingStyle: r.datingStyle,
     idealType: r.idealType,
-    imageKey: r.imageKey,
+    imageUrl: r.imageUrl,
     contactType: r.contactType as DatingProfileContactType,
     contact: r.contact,
     notificationPhone: r.notificationPhone as string | null,
