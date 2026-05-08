@@ -14,10 +14,16 @@ import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
 
 type MessageModalProps = {
   title: string;
-  description: string;
-  buttonLabel: string;
-  onConfirm: () => void;
+  description?: string;
+  actions: {
+    label: string;
+    onClick: () => void;
+    variant: "secondary" | "primary";
+    disabled?: boolean;
+  }[];
 };
+
+type AcceptSuccessType = "created" | "changed";
 
 const introductionQueryKey = (linkCode: string) =>
   ["introduction", "received", linkCode] as const;
@@ -36,26 +42,35 @@ function ReceiveIntroduceHeader() {
 function MessageModal({
   title,
   description,
-  buttonLabel,
-  onConfirm,
+  actions,
 }: MessageModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
       <div className="absolute inset-0 bg-grey-900/70" />
       <div className="relative z-10 flex w-full max-w-[21.25rem] flex-col items-center gap-[1.875rem] rounded-[0.875rem] bg-grey-100 px-5 pt-[1.875rem] pb-5 text-center">
-        <div className="flex flex-col items-center gap-[0.9375rem]">
+        <div className={`flex flex-col items-center ${description ? "gap-[0.9375rem]" : ""}`}>
           <h2 className="typo-subtitle-header-2 text-grey-900">{title}</h2>
-          <p className="typo-input-text-m text-grey-700">{description}</p>
+          {description ? (
+            <p className="typo-input-text-m text-grey-700">{description}</p>
+          ) : null}
         </div>
-        <button
-          type="button"
-          onClick={onConfirm}
-          className="flex h-[3.125rem] w-full max-w-[18.75rem] items-center justify-center rounded-[0.875rem] bg-primary-500 px-2.5 py-2.5"
-        >
-          <span className="typo-button-text-b text-grey-100">
-            {buttonLabel}
-          </span>
-        </button>
+        <div className="flex w-full max-w-[18.75rem] gap-2.5">
+          {actions.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              onClick={action.onClick}
+              disabled={action.disabled}
+              className={`flex h-[3.125rem] flex-1 items-center justify-center rounded-[0.875rem] p-2.5 typo-button-text-b disabled:cursor-wait disabled:opacity-80 ${
+                action.variant === "primary"
+                  ? "bg-gradient-to-b from-[#ff98b5] to-[#ff5a99] text-grey-100"
+                  : "bg-grey-400 text-grey-800"
+              }`}
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -85,7 +100,8 @@ function ReceiveIntroducePage() {
   const queryClient = useQueryClient();
   const { linkCode = "" } = useParams<{ linkCode: string }>();
   const { data: authMe } = useAuthMeQuery();
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [isReplaceConfirmOpen, setIsReplaceConfirmOpen] = useState(false);
+  const [acceptSuccessType, setAcceptSuccessType] = useState<AcceptSuccessType | null>(null);
 
   const {
     data: introduction,
@@ -126,6 +142,21 @@ function ReceiveIntroducePage() {
     [introduction],
   );
 
+  const submitAccept = async (successType: AcceptSuccessType) => {
+    if (!introduction || isAccepting) {
+      return;
+    }
+
+    try {
+      await acceptIntroduction(introduction.introductionId);
+      await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
+      setIsReplaceConfirmOpen(false);
+      setAcceptSuccessType(successType);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleAccept = async () => {
     if (!introduction || isAccepting) {
       return;
@@ -137,16 +168,15 @@ function ReceiveIntroducePage() {
       return;
     }
 
-    try {
-      await acceptIntroduction(introduction.introductionId);
-      await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
-      setIsSuccessModalOpen(true);
-    } catch (error) {
-      console.error(error);
+    if (authMe.status.hasIntroduction) {
+      setIsReplaceConfirmOpen(true);
+      return;
     }
+
+    await submitAccept("created");
   };
 
-  const handleSuccessConfirm = () => {
+  const handleGoDating = () => {
     const latestAuthMe =
       queryClient.getQueryData<AuthMeResponse | null>(authMeQueryKey) ?? authMe;
     const isProfileCompleted =
@@ -157,14 +187,24 @@ function ReceiveIntroducePage() {
     });
   };
 
+  const successModalTitle =
+    acceptSuccessType === "changed"
+      ? "소개서가 변경됐어요"
+      : "소개서가 만들어졌어요";
+
   if (!linkCode || isIntroductionError) {
     return (
       <div className="min-h-screen bg-grey-100">
         <MessageModal
           title="유효하지 않은 소개서예요"
           description="다시 링크를 확인해주세요"
-          buttonLabel="홈으로"
-          onConfirm={() => navigate("/", { replace: true })}
+          actions={[
+            {
+              label: "홈으로",
+              onClick: () => navigate("/", { replace: true }),
+              variant: "primary",
+            },
+          ]}
         />
       </div>
     );
@@ -230,12 +270,42 @@ function ReceiveIntroducePage() {
         </div>
       </div>
 
-      {isSuccessModalOpen && (
+      {isReplaceConfirmOpen && (
         <MessageModal
-          title="친구 소개서 수락 완료!"
-          description="이제 소개팅을 시작해볼까요?"
-          buttonLabel="확인"
-          onConfirm={handleSuccessConfirm}
+          title="소개서를 바꾸시겠어요?"
+          description="소개서를 바꾸면 그 전 소개서는 사라져요"
+          actions={[
+            {
+              label: "아니요",
+              onClick: () => setIsReplaceConfirmOpen(false),
+              variant: "secondary",
+              disabled: isAccepting,
+            },
+            {
+              label: isAccepting ? "변경 중..." : "바꾸기",
+              onClick: () => void submitAccept("changed"),
+              variant: "primary",
+              disabled: isAccepting,
+            },
+          ]}
+        />
+      )}
+
+      {acceptSuccessType && (
+        <MessageModal
+          title={successModalTitle}
+          actions={[
+            {
+              label: "홈으로",
+              onClick: () => navigate("/", { replace: true }),
+              variant: "secondary",
+            },
+            {
+              label: "소개팅 하러 가기",
+              onClick: handleGoDating,
+              variant: "primary",
+            },
+          ]}
         />
       )}
     </div>
