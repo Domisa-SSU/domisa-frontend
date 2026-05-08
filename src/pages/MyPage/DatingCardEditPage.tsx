@@ -182,7 +182,7 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
         mbti: draft.mbti,
         datingStyle: draft.romanticAnswer,
         idealType: draft.idealTypeAnswer,
-        ...(imageKeyRef.current !== null && { imageKey: imageKeyRef.current }),
+        imageKey: imageKeyRef.current,
         contactType: draft.contactMethod as DatingProfileContactType,
         contact: draft.contactValue,
         notificationPhone: draft.isSmsOptedOut ? null : draft.notifPhone,
