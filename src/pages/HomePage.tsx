@@ -2,7 +2,7 @@ import dayBgImg from "../assets/homePageDayBackGround.jpg";
 import nightBgImg from "../assets/homePageNightBackGround.jpg";
 import Header from "../components/homePageHeader";
 import MessageSlider from "../components/MessageSlider";
-import logo from "../assets/domisaLogo.svg";
+import logo from "../assets/domisaLogo.png";
 import dogImg from "../assets/dogIcon.png";
 import heartImg from "../assets/domisaHeartIcon.png";
 import catImg from "../assets/catIcon.png";
@@ -11,11 +11,20 @@ import nightMapImg from "../assets/nightMapIcon.png";
 import arrowImg from "../assets/arrowIcon.svg";
 import flowerIcon from "../assets/flowerIcon.svg";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDatingMatchCount } from "../api/datingHome";
+import AlarmModal from "../components/AlarmModal";
 import { useAuthMeQuery } from "../queries/auth";
+import {
+  useActiveNotificationsQuery,
+  useNotificationStatusQuery,
+} from "../queries/notifications";
 import { useDeleteMeMutation } from "../queries/users";
+import type {
+  ActiveNotificationsResponse,
+  NotificationType,
+} from "../types/notification";
 
 const datingMatchCountQueryKey = ["dating", "count"] as const;
 const fallbackMatchCount = 21;
@@ -28,11 +37,49 @@ const getThemeByTime = (): HomeTheme => {
   return hour >= 6 && hour < 18 ? `day` : `night`;
 };
 
+const buildActiveNotificationQueue = (
+  activeNotifications: ActiveNotificationsResponse,
+): NotificationType[] => {
+  const queue: NotificationType[] = [];
+
+  if (activeNotifications.match) {
+    queue.push("MATCH");
+  }
+
+  if (activeNotifications.like) {
+    queue.push("LIKE");
+  }
+
+  if (activeNotifications.signup) {
+    queue.push("SIGNUP");
+  }
+
+  for (let index = 0; index < activeNotifications.referralCount; index += 1) {
+    queue.push("REFERRAL");
+  }
+
+  return queue;
+};
+
+const userNotificationModalTypes: readonly NotificationType[] = [
+  "LIKE",
+  "MATCH",
+];
+
 function HomePage() {
   const [theme] = useState(getThemeByTime());
   const [deleteMessage, setDeleteMessage] = useState("");
+  const [activeNotificationQueue, setActiveNotificationQueue] = useState<
+    NotificationType[]
+  >([]);
   const navigate = useNavigate();
   const { data: authMe } = useAuthMeQuery();
+  const { data: activeNotifications } = useActiveNotificationsQuery(
+    Boolean(authMe),
+  );
+  const { data: notificationStatus } = useNotificationStatusQuery(
+    Boolean(authMe),
+  );
   const {
     mutateAsync: deleteMe,
     isPending: isDeletingMe,
@@ -45,6 +92,7 @@ function HomePage() {
   const status = authMe?.status;
   const matchCount = matchCountData?.matchCount ?? fallbackMatchCount;
   const mapImg = theme === "day" ? dayMapImg : nightMapImg;
+  const currentActiveNotificationType = activeNotificationQueue[0] ?? null;
 
   const themeClasses =
     theme == "day"
@@ -64,6 +112,20 @@ function HomePage() {
           inviteCard: "bg-home-friend-night",
           coupleTextBackGround: "bg-grey-100",
         };
+
+  useEffect(() => {
+    if (!authMe) {
+      setActiveNotificationQueue([]);
+    }
+  }, [authMe]);
+
+  useEffect(() => {
+    if (!activeNotifications) {
+      return;
+    }
+
+    setActiveNotificationQueue(buildActiveNotificationQueue(activeNotifications));
+  }, [activeNotifications]);
 
   const handleDatingClick = () => {
     const searchParams = new URLSearchParams({
@@ -103,6 +165,22 @@ function HomePage() {
     }
   };
 
+  const dismissActiveNotification = () => {
+    setActiveNotificationQueue((queue) => queue.slice(1));
+  };
+
+  const handleActiveNotificationConfirm = () => {
+    if (!currentActiveNotificationType) {
+      return;
+    }
+
+    dismissActiveNotification();
+
+    if (userNotificationModalTypes.includes(currentActiveNotificationType)) {
+      navigate("/notifications");
+    }
+  };
+
   return (
     <div
       className="flex min-h-screen w-full flex-col justify-between overflow-x-hidden bg-center bg-cover bg-no-repeat
@@ -119,6 +197,7 @@ function HomePage() {
           dayText={themeClasses.text}
           isLoggedIn={Boolean(authMe)}
           theme={theme}
+          unreadCount={notificationStatus?.unreadCount ?? 0}
         ></Header>
         <div className="mb-5"></div>
         <div className="flex flex-col items-center gap-4 mb-8">
@@ -219,6 +298,13 @@ function HomePage() {
           ) : null}
         </div>
       </section>
+      {currentActiveNotificationType ? (
+        <AlarmModal
+          type={currentActiveNotificationType}
+          onClose={dismissActiveNotification}
+          onConfirm={handleActiveNotificationConfirm}
+        />
+      ) : null}
       <MessageSlider></MessageSlider>
     </div>
   );
