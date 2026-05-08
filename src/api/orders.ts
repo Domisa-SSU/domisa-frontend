@@ -1,8 +1,14 @@
 import { apiClient } from './client';
 
+export type CookieProductCode =
+  | 'COOKIE_5'
+  | 'COOKIE_10'
+  | 'COOKIE_30'
+  | 'COOKIE_60'
+  | 'COOKIE_1000_TEST';
+
 export type CreateCookieOrderRequest = {
-  cookieAmount: number;
-  orderAmount: number;
+  productCode: CookieProductCode;
 };
 
 export type CreateCookieOrderResponse = {

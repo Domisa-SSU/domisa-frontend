@@ -14,10 +14,12 @@ import copyIcon from '../../assets/copy.svg';
 import forbiddenIcon from '../../assets/toastForbidden.svg';
 import checkIcon from '../../assets/check.svg';
 import { useCancelCookieOrderMutation, useCreateCookieOrderMutation } from '../../queries/orders';
+import type { CookieProductCode } from '../../api/orders';
 
 type CookiePurchaseLocationState = {
   count: number;
   price: string;
+  productCode: CookieProductCode;
 };
 
 type CookieModalState = 'none' | 'pending' | 'success' | 'failure';
@@ -42,10 +44,7 @@ function CookiePurchasePage() {
 
   useEffect(() => {
     if (!state) return;
-    createOrder({
-      cookieAmount: state.count,
-      orderAmount: Number(state.price.replace(/,/g, '')),
-    });
+    createOrder({ productCode: state.productCode });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
