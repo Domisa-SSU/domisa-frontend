@@ -10,6 +10,7 @@ import forbiddenIcon from '../SignupPage/asset/forbiddenIcon.svg';
 import selectArrow from '../SignupPage/asset/selectArrow.svg';
 import { useDatingProfileQuery, useUpdateDatingProfileMutation } from '../../queries/datingProfile';
 import type { DatingProfileResponse, DatingProfileContactType } from '../../api/datingProfile';
+import { createProfileImageUploadUrl, uploadProfileImageToS3, completeProfileImageUpload } from '../../api/s3';
 
 type ContactMethodType = 'INSTAGRAM' | 'KAKAO';
 
@@ -142,6 +143,7 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const objectUrlRef = useRef<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [toast, setToast] = useState<{ message: string; icon?: string } | null>(null);
   const [showMbtiModal, setShowMbtiModal] = useState(false);
 
@@ -154,8 +156,8 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
   const initialData = profileToDraftData(profile);
   const [saved, setSaved] = useState<DatingCardData>(initialData);
   const [draft, setDraft] = useState<DatingCardData>(initialData);
-  // TODO: 새 사진 선택 시 S3 업로드 후 설정
   const imageKeyRef = useRef<string | null>(null);
+  const photoFileRef = useRef<File | null>(null);
 
   const { mutateAsync: updateDatingProfile, isPending: isUpdating } =
     useUpdateDatingProfileMutation();
@@ -178,6 +180,17 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
 
   const handleComplete = async () => {
     try {
+      setIsUploading(true);
+      if (photoFileRef.current) {
+        const uploadInfo = await createProfileImageUploadUrl({
+          contentType: photoFileRef.current.type,
+          fileSize: photoFileRef.current.size,
+        });
+        await uploadProfileImageToS3({ presignedUrl: uploadInfo.presignedUrl, file: photoFileRef.current });
+        await completeProfileImageUpload({ uploadKey: uploadInfo.objectKey });
+        imageKeyRef.current = uploadInfo.objectKey;
+      }
+      setIsUploading(false);
       await updateDatingProfile({
         mbti: draft.mbti,
         datingStyle: draft.romanticAnswer,
@@ -192,6 +205,7 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
       setToast({ message: '수정 완료되었습니다' });
     } catch (error) {
       console.error(error);
+      setIsUploading(false);
       setToast({ message: '수정에 실패했어요. 다시 시도해주세요.', icon: forbiddenIcon });
     }
   };
@@ -203,13 +217,12 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-      const newUrl = URL.createObjectURL(file);
-      objectUrlRef.current = newUrl;
-      setDraft((prev) => ({ ...prev, photoUrl: newUrl }));
-      // TODO: S3 업로드 후 imageKeyRef.current = newImageUrl 설정
-    }
+    if (!file) return;
+    photoFileRef.current = file;
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    const newUrl = URL.createObjectURL(file);
+    objectUrlRef.current = newUrl;
+    setDraft((prev) => ({ ...prev, photoUrl: newUrl }));
   };
 
   const card = isEditing ? draft : saved;
@@ -463,15 +476,15 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
             <button
               type="button"
               onClick={handleComplete}
-              disabled={!isFormValid || isUpdating}
+              disabled={!isFormValid || isUploading || isUpdating}
               className={`flex h-[3.125rem] w-full items-center justify-center gap-2 rounded-[0.875rem] ${
-                isFormValid && !isUpdating ? 'bg-primary-500' : 'cursor-not-allowed bg-grey-400'
+                isFormValid && !isUploading && !isUpdating ? 'bg-primary-500' : 'cursor-not-allowed bg-grey-400'
               }`}
             >
               <span className="typo-button-text-b text-grey-100">
-                {isUpdating ? '수정 중' : '수정 완료'}
+                {isUploading ? '업로드 중' : isUpdating ? '수정 중' : '수정 완료'}
               </span>
-              {!isUpdating && <CheckIcon className="h-3 w-3 text-grey-100" />}
+              {!isUploading && !isUpdating && <CheckIcon className="h-3 w-3 text-grey-100" />}
             </button>
           ) : (
             <button

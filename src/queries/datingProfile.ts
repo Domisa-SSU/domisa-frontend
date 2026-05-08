@@ -17,7 +17,7 @@ export const useUpdateDatingProfileMutation = () => {
   return useMutation({
     mutationFn: updateDatingProfile,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: datingProfileQueryKey });
+      queryClient.invalidateQueries({ queryKey: datingProfileQueryKey, refetchType: 'none' });
     },
   });
 };
