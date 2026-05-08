@@ -1,5 +1,5 @@
 import logo from "../assets/domisaLogo.svg";
-import icon from "../assets/domisaHeartIcon.svg";
+import icon from "../assets/domisaHeartIcon.png";
 import { useNavigate } from "react-router-dom";
 
 type HeaderTopProps = {
