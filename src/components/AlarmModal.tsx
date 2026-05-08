@@ -1,51 +1,74 @@
 import ArrowIcon from '../assets/arrowIcon.svg';
+import HeartIcon from '../assets/heartIcon.svg';
 import XIcon from '../assets/X.svg';
-import type { Notification, NotificationType } from '../types/notification';
+import CookieIcon from '../pages/NotificationPage/assets/cookiesImg.png';
+import type { NotificationType } from '../types/notification';
 
 type AlarmModalProps = {
-  notification: Notification;
+  type: NotificationType;
   onClose: () => void;
   onConfirm: () => void;
 };
 
-const modalTitleByType: Partial<Record<NotificationType, string>> = {
+const modalTitleByType: Record<NotificationType, string> = {
   LIKE: '누군가 나에게 호감을 보냈어요!',
   MATCH: '쌍방 매칭이 이뤄졌어요!',
-  COOKIE: '내 친구가 등록했어요!\n쿠키 2개 지급 완료',
+  SIGNUP: '가입 보상으로\n쿠키 3개 지급해드려요',
+  REFERRAL: '내 친구가 가입했어요!\n쿠키 2개 지급 완료',
 };
 
-function AlarmModal({ notification, onClose, onConfirm }: AlarmModalProps) {
-  const title = modalTitleByType[notification.type] ?? notification.title;
+const rewardNotificationTypes: readonly NotificationType[] = ['SIGNUP', 'REFERRAL'];
+
+function ModalTitle({ type }: { type: NotificationType }) {
+  if (type === 'SIGNUP') {
+    return (
+      <div className="typo-subtitle-header-2 flex flex-col items-center text-center text-grey-900">
+        <span>가입 보상으로</span>
+        <span className="flex items-center justify-center gap-1">
+          쿠키 3개 지급해드려요
+          <img src={HeartIcon} alt="" className="size-[1.125rem]" />
+          <img src={CookieIcon} alt="" className="size-4" />
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <p className="typo-subtitle-header-2 whitespace-pre-line text-center text-grey-900">
+      {modalTitleByType[type]}
+    </p>
+  );
+}
+
+function AlarmModal({ type, onClose, onConfirm }: AlarmModalProps) {
+  const isRewardNotification = rewardNotificationTypes.includes(type);
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+      onClick={isRewardNotification ? undefined : onClose}
     >
       <div
         className="relative flex w-[calc(100%-2.5rem)] max-w-[21.25rem] flex-col items-center gap-[1.875rem] rounded-[0.875rem] bg-grey-100 pb-5 pt-10"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 닫기 버튼 */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-2.5 top-5 flex p-2.5"
-          aria-label="닫기"
-        >
-          <img src={XIcon} alt="닫기" width={16} height={17} />
-        </button>
+        {!isRewardNotification ? (
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-2.5 top-5 flex p-2.5"
+            aria-label="닫기"
+          >
+            <img src={XIcon} alt="닫기" width={16} height={17} />
+          </button>
+        ) : null}
 
-        {/* 내용 */}
         <div className="flex flex-col items-center gap-[0.9375rem]">
           <span className="typo-input-text-m text-grey-700">알람</span>
-          <p className="typo-subtitle-header-2 whitespace-pre-line text-center text-grey-900">
-            {title}
-          </p>
+          <ModalTitle type={type} />
         </div>
 
-        {/* 확인 버튼 */}
-        {notification.type === 'COOKIE' ? (
+        {isRewardNotification ? (
           <button
             type="button"
             onClick={onConfirm}
