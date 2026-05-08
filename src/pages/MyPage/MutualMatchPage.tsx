@@ -1,27 +1,11 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HeaderTop from '../../components/HeaderTop';
 import headerArrow from '../../assets/headerArrow.svg';
 import heartIconOrange from '../../assets/heartIconOrange.svg';
 import loginImg from '../LoginPage/asset/loginImg.png';
-import testImg from '../../assets/testImg.png';
-
-interface Match {
-  userId: string;
-  profile: string;
-}
-
-// TODO: API 연동 시 GET /api/likes/mutual 응답으로 교체
-const mockData: { myMatchNumber: number; myMatches: Match[] } = {
-  myMatchNumber: 0,
-  myMatches: [
-    { userId: 'type1', profile: testImg },
-    { userId: 'type2', profile: testImg },
-    { userId: 'type3', profile: testImg },
-    { userId: 'type4', profile: testImg },
-    { userId: 'type5', profile: testImg },
-    { userId: 'type6', profile: testImg },
-  ],
-};
+import { getDatingMatches } from '../../api/datingHome';
+import type { DatingMatch } from '../../api/datingHome';
 
 function ProfileCard({ match, onClick }: { match: DatingMatch; onClick: () => void }) {
   return (
@@ -31,7 +15,9 @@ function ProfileCard({ match, onClick }: { match: DatingMatch; onClick: () => vo
       className="w-full aspect-[85/123] bg-white rounded-[0.3125rem] flex items-center justify-center"
     >
       <div className="w-[88.235%] aspect-[75/113] overflow-hidden">
-        <img src={match.profile} alt="" className="w-full h-full object-cover" />
+        {match.profile && (
+          <img src={match.profile} alt="" className="w-full h-full object-cover" />
+        )}
       </div>
     </button>
   );
@@ -39,7 +25,13 @@ function ProfileCard({ match, onClick }: { match: DatingMatch; onClick: () => vo
 
 function MutualMatchPage() {
   const navigate = useNavigate();
-  const { myMatches } = mockData;
+  const [matches, setMatches] = useState<DatingMatch[]>([]);
+
+  useEffect(() => {
+    getDatingMatches()
+      .then((res) => setMatches(res.matches))
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col bg-grey-100">
@@ -57,7 +49,7 @@ function MutualMatchPage() {
       </div>
       <div className="flex flex-1 justify-center bg-grey-400">
         <div className="w-full max-w-[22.6875rem] px-5 pt-6 pb-10">
-          {myMatches.length === 0 ? (
+          {matches.length === 0 ? (
             <div className="flex flex-col items-center justify-center pt-24">
               <span className="typo-header-3 text-grey-700 leading-7 text-center">
                 아직 쌍방 매칭이 없어요
