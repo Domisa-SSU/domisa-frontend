@@ -15,6 +15,7 @@ export type DatingCardDetailResponse = {
   publicId: string;
   nickName: string;
   age: number;
+  gender: boolean;
   animalProfile: AnimalProfile;
   profile: string | null;
   q1: string;
@@ -66,11 +67,13 @@ const MOCK_SENT_USER_ID = "mock-sent";
 const MOCK_RECEIVED_USER_ID = "mock-received";
 const MOCK_RECEIVED_PAID_USER_ID = "mock-received-paid";
 const MOCK_MATCHED_USER_ID = "mock-matched";
+const MOCK_FREE_EXHAUSTED_USER_ID = "mock-free-exhausted";
 
 const baseMockDatingCardDetail: DatingCardDetailResponse = {
   publicId: "mock-default",
   nickName: "숭실대칼이",
   age: 23,
+  gender: false,
   animalProfile: "CAPYBARA",
   profile: testImg,
   q1: "제 친구는 정말로.. 귀여워요!!",
@@ -143,6 +146,13 @@ const mockDatingCardDetails: Record<string, DatingCardDetailResponse> = {
     hasReceivedLike: true,
     isMatched: true,
   },
+  [MOCK_FREE_EXHAUSTED_USER_ID]: {
+    ...baseMockDatingCardDetail,
+    publicId: "mock-free-exhausted",
+    nickName: "유료호감",
+    animalProfile: "FOX",
+    freeLikeRemaining: 0,
+  },
 };
 
 const isMockDatingCardId = (publicId: string) =>
@@ -194,6 +204,7 @@ const isDatingCardDetailResponse = (
     typeof response.publicId === "string" &&
     typeof response.nickName === "string" &&
     typeof response.age === "number" &&
+    typeof response.gender === "boolean" &&
     isAnimalProfile(response.animalProfile) &&
     (typeof response.profile === "string" || response.profile === null) &&
     typeof response.q1 === "string" &&
