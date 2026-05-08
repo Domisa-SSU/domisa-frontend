@@ -1,4 +1,5 @@
 import icon from "../assets/domisaHeartIcon.png"
+import existNotificationIcon from "../assets/existNotificationHeartIcon.png"
 import { useNavigate } from "react-router-dom";
 
 const festivalStart = { year: 2026, month: 5, day: 13 };
@@ -11,6 +12,7 @@ type HeaderProps = {
     dayText: string;
     isLoggedIn: boolean;
     theme: HomeTheme;
+    unreadCount?: number;
 };
 
 type DateParts = {
@@ -76,7 +78,7 @@ const getFestivalLabel = (date = new Date()) => {
     };
 };
 
-function Header({dayText, isLoggedIn, theme} : HeaderProps) {
+function Header({dayText, isLoggedIn, theme, unreadCount = 0} : HeaderProps) {
     const navigate = useNavigate();
     const rightLabel = isLoggedIn ? "내정보" : "로그인";
     const rightPath = isLoggedIn ? "/my" : "/auth";
@@ -85,11 +87,26 @@ function Header({dayText, isLoggedIn, theme} : HeaderProps) {
     const headerLabel = festivalLabel.showTimeLabel
         ? `${festivalLabel.label} ${timeLabel}`
         : festivalLabel.label;
+    const hasUnreadNotification = unreadCount > 0;
+    const notificationCountLabel = Math.min(unreadCount, 99);
 
     return (
         <div className="px-5 py-2.5 flex justify-between items-center">
-            <button onClick={() => navigate("/notifications")}>
-                <img src={icon} alt="알림" className="w-10.5"/>
+            <button
+                type="button"
+                onClick={() => navigate("/notifications")}
+                className="relative flex size-11 items-center justify-center"
+            >
+                <img
+                    src={hasUnreadNotification ? existNotificationIcon : icon}
+                    alt="알림"
+                    className="size-11"
+                />
+                {hasUnreadNotification ? (
+                    <span className="absolute left-[1.625rem] top-[1.625rem] flex size-[1.125rem] items-center justify-center rounded-[0.525rem] bg-warning pt-px typo-comment-1-b text-grey-100">
+                        {notificationCountLabel}
+                    </span>
+                ) : null}
             </button>
             <h1 className="text-primary-500 typo-button-text-b">{headerLabel}</h1>
             <button className={`typo-comment-1 ${dayText}`} onClick={() => {navigate(rightPath)}}>{rightLabel}</button>

@@ -2,6 +2,7 @@ import ArrowIcon from '../assets/arrowIcon.svg';
 import HeartIcon from '../assets/heartIcon.svg';
 import XIcon from '../assets/X.svg';
 import CookieIcon from '../pages/NotificationPage/assets/cookiesImg.png';
+import EyeIcon from '../pages/SignupPage/asset/eyeIcon.svg';
 import type { NotificationType } from '../types/notification';
 
 type AlarmModalProps = {
@@ -83,7 +84,7 @@ function AlarmModal({ type, onClose, onConfirm }: AlarmModalProps) {
             className="flex h-[3.125rem] w-[18.75rem] shrink-0 items-center justify-center gap-1 rounded-[0.875rem] bg-primary-500 typo-button-text-b text-grey-100"
           >
             <span>확인하러 가기</span>
-            <span className="text-[1.125rem] leading-none">👀</span>
+            <img src={EyeIcon} alt="" className="size-[1.125rem]" />
             <img src={ArrowIcon} alt="" width={13} height={12} />
           </button>
         )}

@@ -16,7 +16,10 @@ import { useNavigate } from "react-router-dom";
 import { getDatingMatchCount } from "../api/datingHome";
 import AlarmModal from "../components/AlarmModal";
 import { useAuthMeQuery } from "../queries/auth";
-import { useActiveNotificationsQuery } from "../queries/notifications";
+import {
+  useActiveNotificationsQuery,
+  useNotificationStatusQuery,
+} from "../queries/notifications";
 import { useDeleteMeMutation } from "../queries/users";
 import type {
   ActiveNotificationsResponse,
@@ -72,6 +75,9 @@ function HomePage() {
   const navigate = useNavigate();
   const { data: authMe } = useAuthMeQuery();
   const { data: activeNotifications } = useActiveNotificationsQuery(
+    Boolean(authMe),
+  );
+  const { data: notificationStatus } = useNotificationStatusQuery(
     Boolean(authMe),
   );
   const {
@@ -191,6 +197,7 @@ function HomePage() {
           dayText={themeClasses.text}
           isLoggedIn={Boolean(authMe)}
           theme={theme}
+          unreadCount={notificationStatus?.unreadCount ?? 0}
         ></Header>
         <div className="mb-5"></div>
         <div className="flex flex-col items-center gap-4 mb-8">
