@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -13,13 +13,16 @@ import {
   type DatingCardDetailResponse,
   type DatingCardDetailViewType,
 } from "../../api/datingCardDetail";
-import type { AnimalProfile } from "../../api/users";
+import { getCookies, type AnimalProfile } from "../../api/users";
 import { userCookiesQueryKey } from "../../queries/users";
 import HeaderTop from "../../components/HeaderTop";
 import Toast from "../../components/Toast";
+import arrowIcon from "../../assets/arrowIcon.svg";
+import cookieIcon from "../../assets/cookie.svg";
 import flowerIcon from "../../assets/flowerIcon.svg";
 import headerArrow from "../../assets/headerArrow.svg";
 import heartIcon from "../../assets/heartIcon.svg";
+import XIcon from "../../assets/X.svg";
 import alphacaImg from "../SignupPage/asset/alphacaImg.png";
 import bearImg from "../SignupPage/asset/bearImg.png";
 import capibaraImg from "../SignupPage/asset/capibaraImg.png";
@@ -33,12 +36,23 @@ import rabbitImg from "../SignupPage/asset/rabbitImg.png";
 import sudalImg from "../SignupPage/asset/sudalImg.png";
 import wolfImg from "../SignupPage/asset/wolfImg.png";
 import inviteCreatedIcon from "../IntroduceFriendPage/assets/inviteCreatedIcon.svg";
+import doubleArrowIcon from "./assets/doubleArrowIcon.svg";
 import lockIcon from "./assets/lockIcon.png";
 
 type DatingCardDetailSectionItem = {
   title: string;
   content: string;
   isLocked?: boolean;
+};
+
+type DatingDetailModal =
+  | { type: "send-like-success" }
+  | { type: "paid-like-confirm" }
+  | { type: "received-unblur-success"; remainingCookieCount: number | null };
+
+const cookiePurchaseFallbackState = {
+  count: 5,
+  price: "2,000",
 };
 
 const animalProfileImageMap: Record<AnimalProfile, string> = {
@@ -126,6 +140,22 @@ const getApiErrorMessage = (error: unknown, fallbackMessage: string) => {
     : fallbackMessage;
 };
 
+const isInsufficientCookiesError = (error: unknown) => {
+  if (!axios.isAxiosError(error) || error.response?.status !== 402) {
+    return false;
+  }
+
+  const responseData = error.response.data;
+
+  if (!responseData || typeof responseData !== "object") {
+    return false;
+  }
+
+  return (
+    (responseData as Record<string, unknown>).code === "INSUFFICIENT_COOKIES"
+  );
+};
+
 function CoverImage({
   src,
 }: {
@@ -167,20 +197,60 @@ function CoverImage({
   );
 }
 
+function ProfileImageViewer({
+  src,
+  onClose,
+}: {
+  src: string;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-grey-900/80 px-3 py-6"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="프로필 사진 확대 보기"
+        className="relative flex h-full w-full max-w-[calc(100vw-1.5rem)] items-center justify-center"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-0 top-0 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-grey-900/70"
+          aria-label="사진 확대 닫기"
+        >
+          <img src={XIcon} alt="" className="h-4 w-4 brightness-0 invert" />
+        </button>
+        <img
+          src={src}
+          alt=""
+          className="max-h-[92vh] max-w-full rounded-[0.875rem] object-contain"
+        />
+      </div>
+    </div>
+  );
+}
+
 function ProfileSummary({
   nickName,
   age,
   mbti,
+  gender,
   animalProfile,
 }: {
   nickName: string;
   age: number;
   mbti: string;
+  gender: boolean;
   animalProfile: AnimalProfile;
 }) {
   const summaryItems = [
     `${age}세`,
     mbti,
+    gender ? "남" : "여",
   ].filter((item): item is string => Boolean(item));
 
   return (
@@ -300,6 +370,140 @@ function DetailSection({
         ))}
       </div>
     </section>
+  );
+}
+
+function ModalShell({
+  children,
+  onClose,
+}: {
+  children: ReactNode;
+  onClose?: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-grey-900/70 px-[1.9375rem]"
+      onClick={() => onClose?.()}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="relative flex w-full max-w-[21.25rem] flex-col items-center justify-center rounded-[0.875rem] bg-grey-100"
+        onClick={(event) => event.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function DatingDetailActionModal({
+  modal,
+  cookieCount,
+  isSendLikePending,
+  onClose,
+  onConfirmPaidLike,
+  onGoDatingHome,
+  onConfirmReceivedUnblur,
+}: {
+  modal: DatingDetailModal;
+  cookieCount: number | null;
+  isSendLikePending: boolean;
+  onClose: () => void;
+  onConfirmPaidLike: () => void;
+  onGoDatingHome: () => void;
+  onConfirmReceivedUnblur: () => void;
+}) {
+  if (modal.type === "send-like-success") {
+    return (
+      <ModalShell>
+        <div className="flex flex-col items-center gap-5 pb-5 pt-[1.875rem]">
+          <div className="flex flex-col items-center gap-[0.9375rem]">
+            <p className="typo-subtitle-header-2 text-center text-grey-900">
+              호감을 보냈어요!
+            </p>
+            <div className="flex items-center justify-center gap-1">
+              <p className="typo-input-text-m text-center text-grey-700">
+                매칭되면 문자로 알려드릴게요
+              </p>
+              <img src={flowerIcon} alt="" className="h-4 w-4" />
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onGoDatingHome}
+            className="flex h-[3.125rem] w-[18.75rem] items-center justify-center gap-1 rounded-[0.875rem] bg-primary-500 px-2.5 py-2.5 text-grey-100"
+          >
+            <span className="typo-button-text-b">소개팅 홈으로</span>
+            <span className="typo-button-text-b" aria-hidden="true">👀</span>
+            <img src={arrowIcon} alt="" className="h-3 w-[0.8125rem]" />
+          </button>
+        </div>
+      </ModalShell>
+    );
+  }
+
+  if (modal.type === "paid-like-confirm") {
+    return (
+      <ModalShell onClose={onClose}>
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-[1.0625rem] top-5 flex p-2.5"
+          aria-label="닫기"
+        >
+          <img src={XIcon} alt="" className="h-[1.0625rem] w-4" />
+        </button>
+        <div className="flex flex-col items-center gap-[0.9375rem] pb-5 pt-10">
+          <div className="flex flex-col items-center gap-[0.9375rem]">
+            <div className="typo-subtitle-header-2 text-center text-grey-900">
+              <p>앗! 무료로 제공된 호감을</p>
+              <p>모두 사용하셨어요</p>
+            </div>
+            <p className="typo-input-text-m text-center text-grey-700">
+              내 쿠키 : {cookieCount ?? "-"}개
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onConfirmPaidLike}
+            disabled={isSendLikePending}
+            className="flex h-[3.125rem] w-[18.75rem] items-center justify-center gap-1 rounded-[0.875rem] bg-primary-500 px-2.5 py-2.5 text-grey-100 disabled:cursor-wait disabled:opacity-80"
+          >
+            <span className="typo-button-text-b">
+              {isSendLikePending ? "호감 보내는 중..." : "쿠키 1개로 호감 보내기"}
+            </span>
+            <img src={cookieIcon} alt="" className="h-4 w-4" />
+            <img src={arrowIcon} alt="" className="h-3 w-[0.8125rem]" />
+          </button>
+        </div>
+      </ModalShell>
+    );
+  }
+
+  return (
+    <ModalShell>
+      <div className="flex flex-col items-center gap-5 pb-5 pt-[1.875rem]">
+        <div className="flex flex-col items-center gap-[0.9375rem]">
+          <div className="flex items-center justify-center gap-1">
+            <p className="typo-subtitle-header-2 text-center text-grey-900">
+              쿠키 2개로 소개팅 카드를 열었어요
+            </p>
+            <img src={heartIcon} alt="" className="h-4 w-4" />
+          </div>
+          <p className="typo-input-text-m text-center text-grey-700">
+            남은 쿠키 : {modal.remainingCookieCount ?? "-"}개
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onConfirmReceivedUnblur}
+          className="flex h-[3.125rem] w-[18.75rem] items-center justify-center rounded-[0.875rem] bg-primary-500 px-2.5 py-2.5 text-grey-100"
+        >
+          <span className="typo-button-text-b">확인</span>
+        </button>
+      </div>
+    </ModalShell>
   );
 }
 
@@ -430,6 +634,8 @@ function DatingCardDetailPage() {
   const [searchParams] = useSearchParams();
   const detailViewType = getDatingCardDetailViewType(searchParams.get("viewType"));
   const [toastMessage, setToastMessage] = useState("");
+  const [actionModal, setActionModal] = useState<DatingDetailModal | null>(null);
+  const [isProfilePreviewOpen, setIsProfilePreviewOpen] = useState(false);
 
   const {
     data: cardDetail,
@@ -441,6 +647,12 @@ function DatingCardDetailPage() {
     enabled: cardId.trim().length > 0,
   });
 
+  const { data: userCookies } = useQuery({
+    queryKey: userCookiesQueryKey,
+    queryFn: getCookies,
+    enabled: actionModal?.type === "paid-like-confirm",
+  });
+
   useEffect(() => {
     if (!toastMessage) {
       return;
@@ -450,17 +662,62 @@ function DatingCardDetailPage() {
     return () => window.clearTimeout(timerId);
   }, [toastMessage]);
 
+  useEffect(() => {
+    if (!isProfilePreviewOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsProfilePreviewOpen(false);
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isProfilePreviewOpen]);
+
+  const navigateToCookiePurchase = () => {
+    navigate("/my/cookie/purchase", {
+      state: cookiePurchaseFallbackState,
+    });
+  };
+
   const invalidateDatingQueries = async () => {
     await queryClient.invalidateQueries({ queryKey: datingQueryRootKey });
+  };
+
+  const fetchCurrentCookieCount = async () => {
+    try {
+      const result = await queryClient.fetchQuery({
+        queryKey: userCookiesQueryKey,
+        queryFn: getCookies,
+      });
+
+      return result.cookieCount;
+    } catch {
+      return null;
+    }
   };
 
   const sendLikeMutation = useMutation({
     mutationFn: sendDatingLike,
     onSuccess: async () => {
-      setToastMessage("호감을 보냈어요");
       await invalidateDatingQueries();
+      setActionModal({ type: "send-like-success" });
     },
     onError: (error) => {
+      if (isInsufficientCookiesError(error)) {
+        navigateToCookiePurchase();
+        return;
+      }
+
       setToastMessage(
         getApiErrorMessage(error, "호감 보내기에 실패했어요"),
       );
@@ -469,14 +726,19 @@ function DatingCardDetailPage() {
 
   const unblurMutation = useMutation({
     mutationFn: unblurReceivedDatingLike,
-    onSuccess: async (result) => {
-      setToastMessage(result.message);
-      await Promise.all([
-        invalidateDatingQueries(),
-        queryClient.invalidateQueries({ queryKey: userCookiesQueryKey }),
-      ]);
+    onSuccess: async () => {
+      const remainingCookieCount = await fetchCurrentCookieCount();
+      setActionModal({
+        type: "received-unblur-success",
+        remainingCookieCount,
+      });
     },
     onError: (error) => {
+      if (isInsufficientCookiesError(error)) {
+        navigateToCookiePurchase();
+        return;
+      }
+
       setToastMessage(
         getApiErrorMessage(error, "소개팅 카드 확인에 실패했어요"),
       );
@@ -497,6 +759,19 @@ function DatingCardDetailPage() {
   });
 
   const handleSendLike = () => {
+    if (!cardId || !cardDetail || sendLikeMutation.isPending) {
+      return;
+    }
+
+    if (cardDetail.freeLikeRemaining <= 0) {
+      setActionModal({ type: "paid-like-confirm" });
+      return;
+    }
+
+    sendLikeMutation.mutate(cardId);
+  };
+
+  const handleConfirmPaidLike = () => {
     if (!cardId || sendLikeMutation.isPending) {
       return;
     }
@@ -518,6 +793,14 @@ function DatingCardDetailPage() {
     }
 
     matchMutation.mutate(cardId);
+  };
+
+  const handleConfirmReceivedUnblur = () => {
+    setActionModal(null);
+    void Promise.all([
+      invalidateDatingQueries(),
+      queryClient.invalidateQueries({ queryKey: userCookiesQueryKey }),
+    ]);
   };
 
   if (!cardId || isError) {
@@ -564,9 +847,22 @@ function DatingCardDetailPage() {
             type="button"
             onClick={() => navigate(-1)}
             aria-label="이전 페이지로 이동"
-            className="absolute left-5 top-[0.6875rem] z-10 flex h-[2.15rem] w-[1.7rem] items-center drop-shadow-[0_0_5px_rgba(0,0,0,0.6)]"
+            className="absolute left-5 top-[0.6875rem] z-10 flex h-[2.125rem] w-[2.125rem] items-center justify-center rounded-[0.625rem] bg-grey-900/70"
           >
-            <img src={headerArrow} alt="" className="h-[0.9rem] w-[0.45rem]" />
+            <img src={headerArrow} alt="" className="h-[0.9rem] w-[0.45rem] brightness-0 invert" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (cardDetail.profile) {
+                setIsProfilePreviewOpen(true);
+              }
+            }}
+            disabled={!cardDetail.profile}
+            aria-label="프로필 사진 확대"
+            className="absolute bottom-[0.8125rem] right-5 z-10 flex h-[2.375rem] w-[2.375rem] items-center justify-center rounded-[0.625rem] bg-grey-900/60 disabled:cursor-default disabled:opacity-50"
+          >
+            <img src={doubleArrowIcon} alt="" className="h-5 w-5" />
           </button>
         </section>
 
@@ -576,6 +872,7 @@ function DatingCardDetailPage() {
               nickName={cardDetail.nickName}
               age={cardDetail.age}
               mbti={cardDetail.mbti}
+              gender={cardDetail.gender}
               animalProfile={cardDetail.animalProfile}
             />
             {isMatched ? (
@@ -616,6 +913,25 @@ function DatingCardDetailPage() {
         onUnblurReceivedLike={handleUnblurReceivedLike}
         onConfirmMatch={handleConfirmMatch}
       />
+
+      {isProfilePreviewOpen && cardDetail.profile ? (
+        <ProfileImageViewer
+          src={cardDetail.profile}
+          onClose={() => setIsProfilePreviewOpen(false)}
+        />
+      ) : null}
+
+      {actionModal ? (
+        <DatingDetailActionModal
+          modal={actionModal}
+          cookieCount={userCookies?.cookieCount ?? null}
+          isSendLikePending={sendLikeMutation.isPending}
+          onClose={() => setActionModal(null)}
+          onConfirmPaidLike={handleConfirmPaidLike}
+          onGoDatingHome={() => navigate("/dating")}
+          onConfirmReceivedUnblur={handleConfirmReceivedUnblur}
+        />
+      ) : null}
 
       {toastMessage && <Toast message={toastMessage} />}
     </div>
