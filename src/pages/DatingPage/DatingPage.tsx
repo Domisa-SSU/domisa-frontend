@@ -383,7 +383,7 @@ function MainCardSection({
   onOpenCard: (id: string) => void;
   onViewCardDetail: (id: string) => void;
 }) {
-  const heartCount = Math.max(Math.min(maxFreeLikeCount, profileNum), 0);
+  const heartCount = maxFreeLikeCount;
   const deletedHeartCount = Math.max(
     Math.min(heartCount - freeLikeRemaining, heartCount),
     0,

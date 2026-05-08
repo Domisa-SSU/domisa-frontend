@@ -49,7 +49,7 @@ function RequireIntroducePage() {
 
             <main className="flex min-h-[calc(100vh-5.9rem)] flex-col items-center px-5 pt-[5.75rem] pb-[12.5rem]">
                 <h1 className="typo-header-3 text-center text-grey-900">
-                    소개를 받으려면{" "}
+                    앗! {" "}
                     <span className="text-primary-500">친구 소개서</span>가 필요해요!
                     <br />
                     친구에게 도미사를 공유한 뒤,
