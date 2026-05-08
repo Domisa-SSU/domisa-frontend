@@ -40,7 +40,7 @@ function CookiePurchasePage() {
   const state = location.state as CookiePurchaseLocationState | null;
 
   const { mutate: createOrder, data: order, isPending: isOrderPending, isError: isOrderError } = useCreateCookieOrderMutation();
-  const { mutateAsync: cancelOrder } = useCancelCookieOrderMutation();
+  const { mutateAsync: cancelOrder, isPending: isCancelPending } = useCancelCookieOrderMutation();
 
   useEffect(() => {
     if (!state) return;
@@ -231,9 +231,10 @@ function CookiePurchasePage() {
       )}
       {blocker.state === 'blocked' && (
         <BackConfirmModal
+          isConfirming={isCancelPending}
           onConfirm={async () => {
             if (order) {
-              await cancelOrder({ billing_name: order.billingName, order_amount: order.orderAmount });
+              await cancelOrder({ billing_name: order.billingName, order_amount: order.orderAmount }).catch(console.error);
             }
             blocker.proceed();
           }}

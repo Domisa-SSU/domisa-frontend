@@ -3,9 +3,10 @@ import XIcon from '../../assets/X.svg';
 type BackConfirmModalProps = {
   onConfirm: () => void;
   onCancel: () => void;
+  isConfirming?: boolean;
 };
 
-function BackConfirmModal({ onConfirm, onCancel }: BackConfirmModalProps) {
+function BackConfirmModal({ onConfirm, onCancel, isConfirming }: BackConfirmModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
@@ -37,22 +38,26 @@ function BackConfirmModal({ onConfirm, onCancel }: BackConfirmModalProps) {
         </div>
 
         {/* 버튼 영역 */}
-        <div className="flex w-[18.75rem] gap-2.5">
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="flex flex-1 h-[3.125rem] items-center justify-center rounded-[0.875rem] bg-grey-400 typo-button-text-b text-grey-800"
-          >
-            나갈래요
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex flex-1 h-[3.125rem] items-center justify-center rounded-[0.875rem] bg-primary-500 typo-button-text-b text-grey-100"
-          >
-            닫기
-          </button>
-        </div>
+        {isConfirming ? (
+          <p className="typo-button-text text-grey-600">처리 중입니다...</p>
+        ) : (
+          <div className="flex w-[18.75rem] gap-2.5">
+            <button
+              type="button"
+              onClick={onConfirm}
+              className="flex flex-1 h-[3.125rem] items-center justify-center rounded-[0.875rem] bg-grey-400 typo-button-text-b text-grey-800"
+            >
+              나갈래요
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex flex-1 h-[3.125rem] items-center justify-center rounded-[0.875rem] bg-primary-500 typo-button-text-b text-grey-100"
+            >
+              닫기
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
