@@ -39,3 +39,8 @@ export type ActiveNotificationsResponse = {
   like: boolean;
   match: boolean;
 };
+
+export type NotificationStatusResponse = {
+  hasUnread: boolean;
+  unreadCount: number;
+};

@@ -3,6 +3,7 @@ import type { AnimalProfile } from "./users";
 import type {
   ActiveNotificationsResponse,
   Notification,
+  NotificationStatusResponse,
   NotificationType,
   NotificationsResponse,
   RewardNotificationType,
@@ -107,6 +108,23 @@ const isActiveNotificationsResponse = (
   );
 };
 
+const isNotificationStatusResponse = (
+  value: unknown,
+): value is NotificationStatusResponse => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return (
+    typeof response.hasUnread === "boolean" &&
+    typeof response.unreadCount === "number" &&
+    Number.isInteger(response.unreadCount) &&
+    response.unreadCount >= 0
+  );
+};
+
 export const getNotifications = async (): Promise<NotificationsResponse> => {
   const { data } = await apiClient.get<unknown>("/api/notifications");
 
@@ -123,6 +141,17 @@ export const getActiveNotifications =
 
     if (!isActiveNotificationsResponse(data)) {
       throw new Error("Invalid active notifications response");
+    }
+
+    return data;
+  };
+
+export const getNotificationStatus =
+  async (): Promise<NotificationStatusResponse> => {
+    const { data } = await apiClient.get<unknown>("/api/notifications/status");
+
+    if (!isNotificationStatusResponse(data)) {
+      throw new Error("Invalid notification status response");
     }
 
     return data;
