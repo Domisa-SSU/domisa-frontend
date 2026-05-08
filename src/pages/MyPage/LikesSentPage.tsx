@@ -6,15 +6,15 @@ import loginImg from '../LoginPage/asset/loginImg.png';
 import { getSentLikes } from '../../api/datingHome';
 import type { DatingHomeCard } from '../../api/datingHome';
 
-function ProfileCard({ item }: { item: DatingHomeCard }) {
+function ProfileCard({ item, onClick }: { item: DatingHomeCard; onClick: () => void }) {
   return (
-    <div className="w-full aspect-[85/123] bg-white rounded-[0.3125rem] flex items-center justify-center">
+    <button type="button" onClick={onClick} className="w-full aspect-[85/123] bg-white rounded-[0.3125rem] flex items-center justify-center">
       <div className="w-[88.235%] aspect-[75/113] overflow-hidden">
         {item.profile && (
           <img src={item.profile} alt="" className="w-full h-full object-cover" />
         )}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -53,7 +53,7 @@ function LikesSentPage() {
           ) : (
             <div className="grid grid-cols-4 gap-[0.625rem]">
               {myTypes.map((item) => (
-                <ProfileCard key={item.publicId} item={item} />
+                <ProfileCard key={item.publicId} item={item} onClick={() => navigate(`/dating/cards/${item.publicId}`)} />
               ))}
             </div>
           )}
