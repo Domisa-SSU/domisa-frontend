@@ -1,4 +1,4 @@
-import logo from "../assets/domisaLogo.svg";
+import logo from "../assets/domisaLogo.png";
 import icon from "../assets/domisaHeartIcon.png";
 import { useNavigate } from "react-router-dom";
 
