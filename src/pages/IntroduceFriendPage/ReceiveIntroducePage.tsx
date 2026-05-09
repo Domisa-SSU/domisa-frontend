@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -10,6 +11,11 @@ import type { AuthMeResponse } from "../../types/user";
 import Button from "../../components/Button/Button";
 import HeaderTop from "../../components/HeaderTop";
 import { authMeQueryKey, useAuthMeQuery } from "../../queries/auth";
+import {
+  clearReceiveIntroductionPending,
+  getReceiveIntroductionPending,
+  setReceiveIntroductionPending,
+} from "../../utils/receiveIntroductionPending";
 import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
 
 type MessageModalProps = {
@@ -28,11 +34,27 @@ type AcceptSuccessType = "created" | "changed";
 const introductionQueryKey = (linkCode: string) =>
   ["introduction", "received", linkCode] as const;
 
+const isIntroductionAlreadyAcceptedError = (error: unknown) => {
+  if (!isAxiosError(error)) {
+    return false;
+  }
+
+  const data = error.response?.data;
+
+  if (!data || typeof data !== "object") {
+    return false;
+  }
+
+  return (
+    (data as Record<string, unknown>).code === "INTRODUCTION_ALREADY_ACCEPTED"
+  );
+};
+
 function ReceiveIntroduceHeader() {
   return (
     <header className="border-b-[0.8px] border-grey-500 bg-grey-100">
       <HeaderTop />
-      <div className="relative flex h-[3.4rem] items-center justify-center px-5">
+      <div className="relative mx-auto flex h-[3.4rem] w-full max-w-[25.1875rem] items-center justify-center px-5">
         <h1 className="typo-subtitle-header-2 text-grey-700">친구 소개서</h1>
       </div>
     </header>
@@ -100,8 +122,12 @@ function ReceiveIntroducePage() {
   const queryClient = useQueryClient();
   const { linkCode = "" } = useParams<{ linkCode: string }>();
   const { data: authMe } = useAuthMeQuery();
+  const pendingAutoAcceptRef = useRef(false);
   const [isReplaceConfirmOpen, setIsReplaceConfirmOpen] = useState(false);
   const [acceptSuccessType, setAcceptSuccessType] = useState<AcceptSuccessType | null>(null);
+  const [isSignupCompleteModalOpen, setIsSignupCompleteModalOpen] = useState(false);
+  const [invalidIntroductionDescription, setInvalidIntroductionDescription] =
+    useState("");
 
   const {
     data: introduction,
@@ -150,12 +176,98 @@ function ReceiveIntroducePage() {
     try {
       await acceptIntroduction(introduction.introductionId);
       await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
+      const pending = getReceiveIntroductionPending();
+
+      if (
+        pending?.linkCode === linkCode &&
+        pending.introductionId === introduction.introductionId
+      ) {
+        clearReceiveIntroductionPending();
+      }
+
       setIsReplaceConfirmOpen(false);
       setAcceptSuccessType(successType);
     } catch (error) {
+      if (isIntroductionAlreadyAcceptedError(error)) {
+        clearReceiveIntroductionPending();
+        setIsReplaceConfirmOpen(false);
+        setInvalidIntroductionDescription("이미 수락된 소개서입니다.");
+        return;
+      }
+
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    if (
+      !authMe ||
+      authMe.status.isRegistered !== true ||
+      !introduction ||
+      isAccepting ||
+      acceptSuccessType ||
+      isSignupCompleteModalOpen ||
+      pendingAutoAcceptRef.current
+    ) {
+      return;
+    }
+
+    const pending = getReceiveIntroductionPending();
+
+    if (!pending || pending.linkCode !== linkCode) {
+      return;
+    }
+
+    if (pending.introductionId !== introduction.introductionId) {
+      clearReceiveIntroductionPending();
+      return;
+    }
+
+    pendingAutoAcceptRef.current = true;
+
+    if (authMe.status.hasIntroduction) {
+      if (pending.shouldShowSignupCompleteModal) {
+        clearReceiveIntroductionPending();
+        setIsSignupCompleteModalOpen(true);
+        return;
+      }
+
+      setIsReplaceConfirmOpen(true);
+      return;
+    }
+
+    acceptIntroduction(pending.introductionId)
+      .then(async () => {
+        await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
+        clearReceiveIntroductionPending();
+
+        if (pending.shouldShowSignupCompleteModal) {
+          setIsSignupCompleteModalOpen(true);
+          return;
+        }
+
+        setAcceptSuccessType("created");
+      })
+      .catch((error) => {
+        if (isIntroductionAlreadyAcceptedError(error)) {
+          clearReceiveIntroductionPending();
+          setInvalidIntroductionDescription("이미 수락된 소개서입니다.");
+          return;
+        }
+
+        console.error(error);
+        pendingAutoAcceptRef.current = false;
+      });
+  }, [
+    acceptIntroduction,
+    acceptSuccessType,
+    authMe,
+    introduction,
+    isAccepting,
+    isSignupCompleteModalOpen,
+    linkCode,
+    queryClient,
+  ]);
 
   const handleAccept = async () => {
     if (!introduction || isAccepting) {
@@ -164,7 +276,23 @@ function ReceiveIntroducePage() {
 
     if (!authMe) {
       const returnTo = `/introduce/${encodeURIComponent(linkCode)}`;
+      setReceiveIntroductionPending({
+        linkCode,
+        introductionId: introduction.introductionId,
+        shouldShowSignupCompleteModal: false,
+      });
       navigate(`/auth?returnTo=${encodeURIComponent(returnTo)}`);
+      return;
+    }
+
+    if (authMe.status.isRegistered !== true) {
+      const returnTo = `/introduce/${encodeURIComponent(linkCode)}`;
+      setReceiveIntroductionPending({
+        linkCode,
+        introductionId: introduction.introductionId,
+        shouldShowSignupCompleteModal: false,
+      });
+      navigate(`/auth/signup?returnTo=${encodeURIComponent(returnTo)}`);
       return;
     }
 
@@ -187,17 +315,30 @@ function ReceiveIntroducePage() {
     });
   };
 
+  const handleCancelReplace = () => {
+    const pending = getReceiveIntroductionPending();
+
+    if (
+      pending?.linkCode === linkCode &&
+      pending.introductionId === introduction?.introductionId
+    ) {
+      clearReceiveIntroductionPending();
+    }
+
+    setIsReplaceConfirmOpen(false);
+  };
+
   const successModalTitle =
     acceptSuccessType === "changed"
       ? "소개서가 변경됐어요"
       : "소개서가 만들어졌어요";
 
-  if (!linkCode || isIntroductionError) {
+  if (!linkCode || isIntroductionError || invalidIntroductionDescription) {
     return (
       <div className="min-h-screen bg-grey-100">
         <MessageModal
           title="유효하지 않은 소개서예요"
-          description="다시 링크를 확인해주세요"
+          description={invalidIntroductionDescription || "다시 링크를 확인해주세요"}
           actions={[
             {
               label: "홈으로",
@@ -277,7 +418,7 @@ function ReceiveIntroducePage() {
           actions={[
             {
               label: "아니요",
-              onClick: () => setIsReplaceConfirmOpen(false),
+              onClick: handleCancelReplace,
               variant: "secondary",
               disabled: isAccepting,
             },
@@ -308,6 +449,21 @@ function ReceiveIntroducePage() {
           ]}
         />
       )}
+
+      {isSignupCompleteModalOpen && (
+        <MessageModal
+          title="회원가입이 완료됐어요"
+          description="친구 소개서가 반영됐어요"
+          actions={[
+            {
+              label: "홈으로",
+              onClick: () => navigate("/", { replace: true }),
+              variant: "primary",
+            },
+          ]}
+        />
+      )}
+
     </div>
   );
 }

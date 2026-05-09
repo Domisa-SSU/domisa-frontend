@@ -5,6 +5,7 @@ import BottomActionBar from "../../components/BottomActionBar";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import type { AnimalProfile } from "../../api/users";
 import { useRegisterUserMutation } from "../../queries/users";
+import { markReceiveIntroductionPendingAfterSignup } from "../../utils/receiveIntroductionPending";
 import { useSignupFlow } from "./useSignupFlow";
 import alphacaImg from "./asset/alphacaImg.png";
 import bearImg from "./asset/bearImg.png";
@@ -69,6 +70,21 @@ const getSafeReturnTo = (value: string | null) => {
     }
 
     return value;
+};
+
+const getIntroduceReturnLinkCode = (returnTo: string | null) => {
+    if (!returnTo) {
+        return null;
+    }
+
+    const pathname = new URL(returnTo, window.location.origin).pathname;
+    const [, path, linkCode] = pathname.split("/");
+
+    if (path !== "introduce" || !linkCode) {
+        return null;
+    }
+
+    return decodeURIComponent(linkCode);
 };
 
 function SignupCharacterSelectPage() {
@@ -155,6 +171,11 @@ function SignupCharacterSelectPage() {
             const isIntroduceFriendFlow =
                 searchParams.get("flow") === "introduce-friend";
             const returnTo = getSafeReturnTo(searchParams.get("returnTo"));
+            const introduceLinkCode = getIntroduceReturnLinkCode(returnTo);
+
+            if (introduceLinkCode) {
+                markReceiveIntroductionPendingAfterSignup(introduceLinkCode);
+            }
 
             resetSignupFlow();
             navigate(
@@ -223,7 +244,7 @@ function SignupCharacterSelectPage() {
                     src={bottomArrow}
                     alt=""
                     aria-hidden="true"
-                    className="pointer-events-none fixed left-1/2 z-30 h-[2.5rem] w-[2.5rem] -translate-x-1/2 opacity-80"
+                    className="pointer-events-none fixed left-1/2 z-30 h-[2.5rem] w-[2.5rem] -translate-x-1/2"
                     style={{ bottom: `calc(${bottomBarHeight}px + 1.2rem)` }}
                 />
             )}

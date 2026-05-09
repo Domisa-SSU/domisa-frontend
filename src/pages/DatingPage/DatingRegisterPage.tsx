@@ -618,20 +618,31 @@ function DatingRegisterPhotoStep() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="relative mx-auto flex aspect-[71/109] w-full max-w-[13.3125rem] items-center justify-center overflow-hidden rounded-[0.625rem] border-[1.8px] border-dashed border-grey-700 bg-grey-300"
+              className={`relative mx-auto flex aspect-[1086/591] w-full items-center justify-center overflow-hidden rounded-[0.625rem] bg-grey-300 ${
+                formData.photoPreviewUrl ? "" : "border-[1.8px] border-dashed border-grey-700"
+              }`}
             >
               {formData.photoPreviewUrl ? (
-                <img
-                  src={formData.photoPreviewUrl}
-                  alt="선택한 프로필 사진"
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
+                <>
+                  <img
+                    src={formData.photoPreviewUrl}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 h-full w-full scale-[1.08] object-cover brightness-[0.88] saturate-[1.08] blur-[10px]"
+                  />
+                  <div className="absolute inset-0 bg-black/10" />
+                  <img
+                    src={formData.photoPreviewUrl}
+                    alt="선택한 프로필 사진"
+                    className="relative z-10 h-full w-auto max-w-full object-contain"
+                  />
+                </>
               ) : (
                 <>
                   <img
                     src={sumnailIcon}
                     alt=""
-                    className="absolute left-1/2 top-[2.31875rem] h-[9.9375rem] w-[10.3125rem] -translate-x-1/2 object-contain opacity-50"
+                    className="absolute left-1/2 top-1/2 h-[9.9375rem] w-[10.3125rem] -translate-x-1/2 -translate-y-1/2 object-contain opacity-50"
                   />
                   <div className="relative z-10 flex flex-col items-center gap-2.5">
                     <img src={uploadIcon} alt="" className="h-6 w-6" />
@@ -691,7 +702,8 @@ function DatingRegisterNotificationPhoneStep() {
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [totalUserCount, setTotalUserCount] = useState<number | null>(null);
 
-  const isPhoneComplete = formData.notificationPhone.length >= 10 || formData.isSmsOptedOut;
+  const isPhoneComplete =
+    formData.notificationPhone.length === NOTIFICATION_PHONE_MAX_LENGTH || formData.isSmsOptedOut;
   const isFormComplete =
     formData.mbti.length === 4 &&
     formData.romanticStyle.trim().length > 0 &&
@@ -762,7 +774,7 @@ function DatingRegisterNotificationPhoneStep() {
 
   const handleCompleteConfirm = () => {
     resetRegisterFlow();
-    navigate('/dating');
+    navigate('/dating', { replace: true });
   };
 
   return (

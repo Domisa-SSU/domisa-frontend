@@ -12,7 +12,7 @@ import arrowImg from "../assets/arrowIcon.svg";
 import flowerIcon from "../assets/flowerIcon.svg";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { getDatingMatchCount } from "../api/datingHome";
 import AlarmModal from "../components/AlarmModal";
 import { useAuthMeQuery } from "../queries/auth";
@@ -72,6 +72,7 @@ function HomePage() {
   const [activeNotificationQueue, setActiveNotificationQueue] = useState<
     NotificationType[]
   >([]);
+  const location = useLocation();
   const navigate = useNavigate();
   const { data: authMe } = useAuthMeQuery();
   const { data: activeNotifications } = useActiveNotificationsQuery(
@@ -128,22 +129,25 @@ function HomePage() {
   }, [activeNotifications]);
 
   const handleDatingClick = () => {
+    const flowOrigin = {
+      from: `${location.pathname}${location.search}${location.hash}`,
+    };
     const searchParams = new URLSearchParams({
       returnTo: "/dating/register",
     });
 
     if (!authMe) {
-      navigate(`/auth?${searchParams.toString()}`);
+      navigate(`/auth?${searchParams.toString()}`, { state: flowOrigin });
       return;
     }
 
     if (status?.isRegistered === false) {
-      navigate(`/auth/signup?${searchParams.toString()}`);
+      navigate(`/auth/signup?${searchParams.toString()}`, { state: flowOrigin });
       return;
     }
 
     if (status?.isProfileCompleted !== true) {
-      navigate("/dating/register");
+      navigate("/dating/register", { state: flowOrigin });
       return;
     }
 

@@ -194,16 +194,20 @@ function DatingSubHeader() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex items-center gap-3.5 border-b-[0.8px] border-grey-500 bg-grey-100 px-5 py-2.5">
-      <button
-        type="button"
-        onClick={() => navigate(-1)}
-        className="flex h-[2.375rem] w-[1.75rem] items-center justify-start"
-        aria-label="이전 페이지로 이동"
-      >
-        <img src={headerArrow} alt="" className="h-[0.9rem] w-[0.45rem]" />
-      </button>
-      <h1 className="typo-subtitle-header-2 text-grey-900">소개팅</h1>
+    <div className="border-b-[0.8px] border-grey-500 bg-grey-100">
+      <div className="relative mx-auto flex w-full max-w-[25.1875rem] items-center px-5 py-2.5">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="flex h-[2.375rem] w-[1.75rem] items-center justify-start"
+          aria-label="이전 페이지로 이동"
+        >
+          <img src={headerArrow} alt="" className="h-[0.9rem] w-[0.45rem]" />
+        </button>
+        <h1 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 typo-subtitle-header-2 text-grey-900">
+          소개팅
+        </h1>
+      </div>
     </div>
   );
 }
@@ -310,11 +314,11 @@ function ShuffleConfirmModal({
 
 function ClosedDatingCard() {
   return (
-    <div className="h-full w-full rounded-[0.3125rem] bg-[#FFFFFF] p-[0.3125rem] shadow-[0_1px_5px_rgba(0,0,0,0.25)]">
+    <div className="h-full w-full rounded-[0.3125rem] bg-grey-100 p-[0.3rem] shadow-[0_1px_5px_rgba(0,0,0,0.25)]">
       <img
         src={cardBackImage}
         alt=""
-        className="h-full w-full rounded-[0.1875rem] object-cover"
+        className="h-full w-full rounded-[0.25rem] object-cover"
       />
     </div>
   );
@@ -322,7 +326,7 @@ function ClosedDatingCard() {
 
 function OpenDatingCard({ profile }: { profile: string | null }) {
   return (
-    <div className="h-full w-full rounded-[0.3125rem] border-[0.25rem] border-grey-100 bg-grey-100 p-[0.1875rem] shadow-[0_1px_5px_rgba(0,0,0,0.2)]">
+    <div className="h-full w-full rounded-[0.3125rem] bg-grey-100 p-[0.3rem] shadow-[0_1px_5px_rgba(0,0,0,0.2)]">
       <img
         src={profile ?? sumnailIcon}
         alt=""

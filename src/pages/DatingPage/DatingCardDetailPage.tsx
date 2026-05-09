@@ -214,11 +214,13 @@ function ProfileImageViewer({
         aria-modal="true"
         aria-label="프로필 사진 확대 보기"
         className="relative flex h-full w-full max-w-[calc(100vw-1.5rem)] items-center justify-center"
-        onClick={(event) => event.stopPropagation()}
       >
         <button
           type="button"
-          onClick={onClose}
+          onClick={(event) => {
+            event.stopPropagation();
+            onClose();
+          }}
           className="absolute right-0 top-0 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-grey-900/70"
           aria-label="사진 확대 닫기"
         >
@@ -228,6 +230,7 @@ function ProfileImageViewer({
           src={src}
           alt=""
           className="max-h-[92vh] max-w-full rounded-[0.875rem] object-contain"
+          onClick={(event) => event.stopPropagation()}
         />
       </div>
     </div>
