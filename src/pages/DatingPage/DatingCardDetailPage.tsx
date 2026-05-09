@@ -15,6 +15,8 @@ import {
 } from "../../api/datingCardDetail";
 import { getCookies, type AnimalProfile } from "../../api/users";
 import { userCookiesQueryKey } from "../../queries/users";
+import { insufficientCookiesLocationState } from "../../constants/cookieNavigation";
+import { isInsufficientCookiesError } from "../../utils/apiError";
 import HeaderTop from "../../components/HeaderTop";
 import Toast from "../../components/Toast";
 import arrowIcon from "../../assets/arrowIcon.svg";
@@ -49,11 +51,6 @@ type DatingDetailModal =
   | { type: "send-like-success" }
   | { type: "paid-like-confirm" }
   | { type: "received-unblur-success"; remainingCookieCount: number | null };
-
-const cookiePurchaseFallbackState = {
-  count: 5,
-  price: "2,000",
-};
 
 const animalProfileImageMap: Record<AnimalProfile, string> = {
   DOG: dogImg,
@@ -138,22 +135,6 @@ const getApiErrorMessage = (error: unknown, fallbackMessage: string) => {
   return typeof message === "string" && message.trim().length > 0
     ? message
     : fallbackMessage;
-};
-
-const isInsufficientCookiesError = (error: unknown) => {
-  if (!axios.isAxiosError(error) || error.response?.status !== 402) {
-    return false;
-  }
-
-  const responseData = error.response.data;
-
-  if (!responseData || typeof responseData !== "object") {
-    return false;
-  }
-
-  return (
-    (responseData as Record<string, unknown>).code === "INSUFFICIENT_COOKIES"
-  );
 };
 
 function CoverImage({
@@ -686,9 +667,9 @@ function DatingCardDetailPage() {
     };
   }, [isProfilePreviewOpen]);
 
-  const navigateToCookiePurchase = () => {
-    navigate("/my/cookie/purchase", {
-      state: cookiePurchaseFallbackState,
+  const navigateToInsufficientCookiesPage = () => {
+    navigate("/my/cookie", {
+      state: insufficientCookiesLocationState,
     });
   };
 
@@ -717,7 +698,7 @@ function DatingCardDetailPage() {
     },
     onError: (error) => {
       if (isInsufficientCookiesError(error)) {
-        navigateToCookiePurchase();
+        navigateToInsufficientCookiesPage();
         return;
       }
 
@@ -738,7 +719,7 @@ function DatingCardDetailPage() {
     },
     onError: (error) => {
       if (isInsufficientCookiesError(error)) {
-        navigateToCookiePurchase();
+        navigateToInsufficientCookiesPage();
         return;
       }
 

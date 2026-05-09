@@ -1,19 +1,28 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import ReferralSection from "../../components/ReferralSection";
 import { useUserCookiesQuery } from "../../queries/users";
+import {
+  INSUFFICIENT_COOKIES_REASON,
+  type CookiePageLocationState,
+} from "../../constants/cookieNavigation";
 import cookieImg from "../../assets/cookie.svg";
+import type { CookieProductCode } from "../../api/orders";
 
-const COOKIE_PACKAGES = [
-  { count: 5, price: "2,000" },
-  { count: 10, price: "4,000" },
-  { count: 30, price: "5,000" },
-  { count: 60, price: "9,000" },
+const COOKIE_PACKAGES: { count: number; price: string; productCode: CookieProductCode }[] = [
+  { count: 5, price: "2,000", productCode: "COOKIE_5" },
+  { count: 10, price: "4,000", productCode: "COOKIE_10" },
+  { count: 30, price: "5,000", productCode: "COOKIE_30" },
+  { count: 60, price: "9,000", productCode: "COOKIE_60" },
 ];
 
 function MyCookiePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: cookies } = useUserCookiesQuery();
+  const locationState = location.state as CookiePageLocationState | null;
+  const isInsufficientCookiesEntry =
+    locationState?.reason === INSUFFICIENT_COOKIES_REASON;
 
   return (
     <div className="min-h-screen bg-grey-100">
@@ -23,7 +32,18 @@ function MyCookiePage() {
         <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-10">
 
           {/* 보유 쿠키 수 */}
-          <div className="flex items-center justify-center h-[3.75rem] bg-primary-100 rounded-[0.625rem]">
+          <div
+            className={`flex items-center justify-center rounded-[0.625rem] bg-primary-100 px-2.5 ${
+              isInsufficientCookiesEntry
+                ? "min-h-[5.1875rem] flex-col gap-1.5 py-4"
+                : "h-[3.75rem]"
+            }`}
+          >
+            {isInsufficientCookiesEntry && (
+              <p className="typo-comment-1 text-center text-warning">
+                쿠키가 부족해요
+              </p>
+            )}
             <div className="flex items-center gap-1">
               <img src={cookieImg} alt="" className="w-4 h-4" />
               <span className="typo-header-3-b text-primary-500">{cookies?.cookieCount ?? '-'}개</span>
@@ -34,7 +54,7 @@ function MyCookiePage() {
           <div className="flex flex-col gap-3.5">
             <span className="typo-button-text text-grey-900">쿠키 구매하기</span>
             <div className="flex flex-col">
-              {COOKIE_PACKAGES.map(({ count, price }) => (
+              {COOKIE_PACKAGES.map(({ count, price, productCode }) => (
                 <div
                   key={count}
                   className="flex items-center justify-between h-[3.125rem] px-2.5 py-2 border-b border-b-[0.8px] border-grey-400"
@@ -44,7 +64,7 @@ function MyCookiePage() {
                     <span className="typo-comment-1 text-grey-900">쿠키 {count}개</span>
                   </div>
                   <button
-                    onClick={() => navigate("/my/cookie/purchase", { state: { count, price } })}
+                    onClick={() => navigate("/my/cookie/purchase", { state: { count, price, productCode } })}
                     className="flex items-center justify-center h-8 w-20 rounded-[0.3125rem] typo-comment-2 text-grey-100"
                     style={{
                       background:

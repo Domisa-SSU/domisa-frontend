@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import NotLoginHeader from '../../components/NotLoginHeader';
 import Toast from '../../components/Toast';
+import { PhotoCropModal } from '../../components/PhotoCropModal';
 import editPencilImg from '../../assets/edit_pencil.svg';
 import ProfileChangeIcon from '../../assets/profile_change.svg?react';
 import PhotoUploadIcon from '../../assets/photo_upload.svg?react';
@@ -10,6 +11,7 @@ import forbiddenIcon from '../SignupPage/asset/forbiddenIcon.svg';
 import selectArrow from '../SignupPage/asset/selectArrow.svg';
 import { useDatingProfileQuery, useUpdateDatingProfileMutation } from '../../queries/datingProfile';
 import type { DatingProfileResponse, DatingProfileContactType } from '../../api/datingProfile';
+import { createProfileImageUploadUrl, uploadProfileImageToS3, completeProfileImageUpload } from '../../api/s3';
 
 type ContactMethodType = 'INSTAGRAM' | 'KAKAO';
 
@@ -43,7 +45,7 @@ const profileToDraftData = (profile: DatingProfileResponse): DatingCardData => (
   mbti: profile.mbti,
   romanticAnswer: profile.datingStyle,
   idealTypeAnswer: profile.idealType,
-  photoUrl: null, // TODO: imageKey로 S3 URL 구성
+  photoUrl: profile.imageUrl,
   contactMethod: profile.contactType,
   contactValue: profile.contact,
   notifPhone: profile.notificationPhone ?? '',
@@ -142,20 +144,31 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const objectUrlRef = useRef<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [toast, setToast] = useState<{ message: string; icon?: string } | null>(null);
   const [showMbtiModal, setShowMbtiModal] = useState(false);
+
+  const [cropSourceFile, setCropSourceFile] = useState<File | null>(null);
+  const [cropSourceUrl, setCropSourceUrl] = useState('');
 
   useEffect(() => {
     return () => {
       if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+      if (cropSourceUrl) URL.revokeObjectURL(cropSourceUrl);
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const closeCropModal = () => {
+    if (cropSourceUrl) URL.revokeObjectURL(cropSourceUrl);
+    setCropSourceFile(null);
+    setCropSourceUrl('');
+  };
 
   const initialData = profileToDraftData(profile);
   const [saved, setSaved] = useState<DatingCardData>(initialData);
   const [draft, setDraft] = useState<DatingCardData>(initialData);
-  // TODO: 새 사진 선택 시 S3 업로드 후 교체
-  const imageKeyRef = useRef(profile.imageKey);
+  const imageKeyRef = useRef<string | null>(null);
+  const photoFileRef = useRef<File | null>(null);
 
   const { mutateAsync: updateDatingProfile, isPending: isUpdating } =
     useUpdateDatingProfileMutation();
@@ -178,6 +191,17 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
 
   const handleComplete = async () => {
     try {
+      setIsUploading(true);
+      if (photoFileRef.current) {
+        const uploadInfo = await createProfileImageUploadUrl({
+          contentType: photoFileRef.current.type,
+          fileSize: photoFileRef.current.size,
+        });
+        await uploadProfileImageToS3({ presignedUrl: uploadInfo.presignedUrl, file: photoFileRef.current });
+        await completeProfileImageUpload({ uploadKey: uploadInfo.objectKey });
+        imageKeyRef.current = uploadInfo.objectKey;
+      }
+      setIsUploading(false);
       await updateDatingProfile({
         mbti: draft.mbti,
         datingStyle: draft.romanticAnswer,
@@ -188,10 +212,12 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
         notificationPhone: draft.isSmsOptedOut ? null : draft.notifPhone,
       });
       setSaved({ ...draft });
+      photoFileRef.current = null;
       setIsEditing(false);
       setToast({ message: '수정 완료되었습니다' });
     } catch (error) {
       console.error(error);
+      setIsUploading(false);
       setToast({ message: '수정에 실패했어요. 다시 시도해주세요.', icon: forbiddenIcon });
     }
   };
@@ -203,13 +229,20 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-      const newUrl = URL.createObjectURL(file);
-      objectUrlRef.current = newUrl;
-      setDraft((prev) => ({ ...prev, photoUrl: newUrl }));
-      // TODO: S3 업로드 후 imageKeyRef.current = newObjectKey 설정
-    }
+    e.target.value = '';
+    if (!file) return;
+    if (cropSourceUrl) URL.revokeObjectURL(cropSourceUrl);
+    setCropSourceFile(file);
+    setCropSourceUrl(URL.createObjectURL(file));
+  };
+
+  const handleCropConfirm = (croppedFile: File) => {
+    photoFileRef.current = croppedFile;
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    const previewUrl = URL.createObjectURL(croppedFile);
+    objectUrlRef.current = previewUrl;
+    setDraft((prev) => ({ ...prev, photoUrl: previewUrl }));
+    closeCropModal();
   };
 
   const card = isEditing ? draft : saved;
@@ -326,7 +359,7 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
                 </>
               )}
             </div>
-            <div className="relative w-full overflow-hidden rounded-[0.875rem] bg-grey-300 aspect-[363/197]">
+            <div className="relative mx-auto flex aspect-[71/109] w-full max-w-[13.3125rem] items-center justify-center overflow-hidden rounded-[0.625rem] bg-grey-300">
               {card.photoUrl && (
                 <img src={card.photoUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
               )}
@@ -463,15 +496,15 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
             <button
               type="button"
               onClick={handleComplete}
-              disabled={!isFormValid || isUpdating}
+              disabled={!isFormValid || isUploading || isUpdating}
               className={`flex h-[3.125rem] w-full items-center justify-center gap-2 rounded-[0.875rem] ${
-                isFormValid && !isUpdating ? 'bg-primary-500' : 'cursor-not-allowed bg-grey-400'
+                isFormValid && !isUploading && !isUpdating ? 'bg-primary-500' : 'cursor-not-allowed bg-grey-400'
               }`}
             >
               <span className="typo-button-text-b text-grey-100">
-                {isUpdating ? '수정 중' : '수정 완료'}
+                {isUploading ? '업로드 중' : isUpdating ? '수정 중' : '수정 완료'}
               </span>
-              {!isUpdating && <CheckIcon className="h-3 w-3 text-grey-100" />}
+              {!isUploading && !isUpdating && <CheckIcon className="h-3 w-3 text-grey-100" />}
             </button>
           ) : (
             <button
@@ -491,6 +524,15 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
           mbti={draft.mbti}
           onConfirm={handleMbtiModalClose}
           onCancel={() => setShowMbtiModal(false)}
+        />
+      )}
+
+      {cropSourceFile && cropSourceUrl && (
+        <PhotoCropModal
+          sourceFile={cropSourceFile}
+          imageUrl={cropSourceUrl}
+          onCancel={closeCropModal}
+          onConfirm={handleCropConfirm}
         />
       )}
 
