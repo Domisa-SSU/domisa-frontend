@@ -773,7 +773,7 @@ function DatingRegisterNotificationPhoneStep() {
 
   const handleCompleteConfirm = () => {
     resetRegisterFlow();
-    navigate('/dating');
+    navigate('/dating', { replace: true });
   };
 
   return (
