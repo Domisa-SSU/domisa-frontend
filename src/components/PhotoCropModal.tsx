@@ -125,7 +125,7 @@ export function PhotoCropModal({ sourceFile, imageUrl, onConfirm, onCancel }: Ph
       <button
         type="button"
         aria-label="사진 크롭 닫기"
-        onClick={onCancel}
+        onClick={isSubmitting ? undefined : onCancel}
         className="absolute inset-0 bg-grey-900/70"
       />
       <div className="relative z-10 flex w-full max-w-[22.6875rem] flex-col gap-5 rounded-[0.875rem] bg-grey-100 px-5 py-5">
