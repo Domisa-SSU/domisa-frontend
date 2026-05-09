@@ -10,7 +10,7 @@ function BackConfirmModal({ onConfirm, onCancel, isConfirming }: BackConfirmModa
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={onCancel}
+      onClick={isConfirming ? undefined : onCancel}
     >
       <div
         className="relative flex w-[calc(100%-2.5rem)] max-w-[21.25rem] flex-col items-center gap-[1.875rem] rounded-[0.875rem] bg-white pb-5 pt-10"
@@ -20,7 +20,8 @@ function BackConfirmModal({ onConfirm, onCancel, isConfirming }: BackConfirmModa
         <button
           type="button"
           onClick={onCancel}
-          className="absolute right-2.5 top-5 flex p-2.5"
+          disabled={isConfirming}
+          className="absolute right-2.5 top-5 flex p-2.5 disabled:opacity-40"
           aria-label="닫기"
         >
           <img src={XIcon} alt="닫기" width={16} height={17} />
@@ -38,26 +39,24 @@ function BackConfirmModal({ onConfirm, onCancel, isConfirming }: BackConfirmModa
         </div>
 
         {/* 버튼 영역 */}
-        {isConfirming ? (
-          <p className="typo-button-text text-grey-600">처리 중입니다...</p>
-        ) : (
-          <div className="flex w-[18.75rem] gap-2.5">
-            <button
-              type="button"
-              onClick={onConfirm}
-              className="flex flex-1 h-[3.125rem] items-center justify-center rounded-[0.875rem] bg-grey-400 typo-button-text-b text-grey-800"
-            >
-              나갈래요
-            </button>
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex flex-1 h-[3.125rem] items-center justify-center rounded-[0.875rem] bg-primary-500 typo-button-text-b text-grey-100"
-            >
-              닫기
-            </button>
-          </div>
-        )}
+        <div className="flex w-[18.75rem] gap-2.5">
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isConfirming}
+            className="flex flex-1 h-[3.125rem] items-center justify-center rounded-[0.875rem] bg-grey-400 typo-button-text-b text-grey-800 disabled:opacity-40"
+          >
+            {isConfirming ? '처리 중...' : '나갈래요'}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isConfirming}
+            className="flex flex-1 h-[3.125rem] items-center justify-center rounded-[0.875rem] bg-primary-500 typo-button-text-b text-grey-100 disabled:opacity-40"
+          >
+            닫기
+          </button>
+        </div>
       </div>
     </div>
   );
