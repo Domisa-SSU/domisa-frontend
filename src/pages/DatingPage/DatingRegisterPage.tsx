@@ -734,7 +734,6 @@ function DatingRegisterNotificationPhoneStep() {
         mbti: formData.mbti,
         datingStyle: formData.romanticStyle,
         idealType: formData.idealType,
-        imageKey: profileImageUpload.objectKey,
         contactType: formData.contactMethod,
         contact: formData.contactValue.trim(),
         notificationPhone: formData.isSmsOptedOut ? null : formData.notificationPhone,
