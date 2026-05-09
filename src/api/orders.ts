@@ -4,8 +4,7 @@ export type CookieProductCode =
   | 'COOKIE_5'
   | 'COOKIE_10'
   | 'COOKIE_30'
-  | 'COOKIE_60'
-  | 'COOKIE_1000_TEST';
+  | 'COOKIE_60';
 
 export type CreateCookieOrderRequest = {
   productCode: CookieProductCode;
