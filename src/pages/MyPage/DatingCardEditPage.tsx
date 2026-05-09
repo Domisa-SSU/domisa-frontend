@@ -167,7 +167,6 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
   const initialData = profileToDraftData(profile);
   const [saved, setSaved] = useState<DatingCardData>(initialData);
   const [draft, setDraft] = useState<DatingCardData>(initialData);
-  const imageKeyRef = useRef<string | null>(null);
   const photoFileRef = useRef<File | null>(null);
 
   const { mutateAsync: updateDatingProfile, isPending: isUpdating } =
@@ -199,14 +198,12 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
         });
         await uploadProfileImageToS3({ presignedUrl: uploadInfo.presignedUrl, file: photoFileRef.current });
         await completeProfileImageUpload({ uploadKey: uploadInfo.objectKey });
-        imageKeyRef.current = uploadInfo.objectKey;
       }
       setIsUploading(false);
       await updateDatingProfile({
         mbti: draft.mbti,
         datingStyle: draft.romanticAnswer,
         idealType: draft.idealTypeAnswer,
-        imageKey: imageKeyRef.current,
         contactType: draft.contactMethod as DatingProfileContactType,
         contact: draft.contactValue,
         notificationPhone: draft.isSmsOptedOut ? null : draft.notifPhone,
