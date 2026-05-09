@@ -25,26 +25,27 @@ type CookiePurchaseLocationState = {
 
 type CookieModalState = 'none' | 'pending' | 'success' | 'failure';
 
-const MAX_POLL_COUNT = 20; // 최대 1분 (3초 × 20회)
+const MAX_POLL_COUNT = 3; // 3초마다 호출. 최대 3번. (최대 9초 대기)
 
-const PAYMENT_METHODS = [
-  { label: '토스페이로 송금하기' },
-  { label: '계좌이체 하기' },
-];
-
+const PAYMENT_METHODS = [{ label: '토스페이로 송금하기' }, { label: '계좌이체 하기' }];
 
 function CookiePurchasePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as CookiePurchaseLocationState | null;
 
-  const { mutate: createOrder, data: order, isPending: isOrderPending, isError: isOrderError } = useCreateCookieOrderMutation();
+  const {
+    mutate: createOrder,
+    data: order,
+    isPending: isOrderPending,
+    isError: isOrderError,
+  } = useCreateCookieOrderMutation();
   const { mutateAsync: cancelOrder, isPending: isCancelPending } = useCancelCookieOrderMutation();
 
   useEffect(() => {
     if (!state) return;
     createOrder({ productCode: state.productCode });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [isNameConfirmed, setIsNameConfirmed] = useState(false);
@@ -56,7 +57,9 @@ function CookiePurchasePage() {
   const [pollTick, setPollTick] = useState(0);
   const pollCountRef = useRef(0);
 
-  const blocker = useBlocker(cookieModalState !== 'success' && cookieModalState !== 'failure' && !isOrderError);
+  const blocker = useBlocker(
+    cookieModalState !== 'success' && cookieModalState !== 'failure' && !isOrderError
+  );
 
   useEffect(() => {
     if (!showCopyToast) return;
@@ -135,7 +138,9 @@ function CookiePurchasePage() {
       <div className="min-h-screen bg-grey-100">
         <NotLoginHeader title="쿠키 구매" />
         <div className="flex items-center justify-center px-5 pt-20">
-          <p className="typo-button-text text-grey-600">주문 생성에 실패했어요. 다시 시도해주세요.</p>
+          <p className="typo-button-text text-grey-600">
+            주문 생성에 실패했어요. 다시 시도해주세요.
+          </p>
         </div>
       </div>
     );
@@ -144,6 +149,7 @@ function CookiePurchasePage() {
   const billingName = order?.billingName;
 
   const handleTransferComplete = () => {
+    pollCountRef.current = 0;
     setCookieModalState('pending');
   };
 
@@ -245,6 +251,7 @@ function CookiePurchasePage() {
             /* TODO: 문의하기 페이지 연결 */
           }}
           onBack={handleNavigateToCookie}
+          onClose={() => setCookieModalState('none')}
         />
       )}
       {blocker.state === 'blocked' && (
@@ -252,7 +259,10 @@ function CookiePurchasePage() {
           isConfirming={isCancelPending}
           onConfirm={async () => {
             if (order) {
-              await cancelOrder({ billing_name: order.billingName, order_amount: order.orderAmount }).catch(console.error);
+              await cancelOrder({
+                billing_name: order.billingName,
+                order_amount: order.orderAmount,
+              }).catch(console.error);
             }
             blocker.proceed();
           }}
