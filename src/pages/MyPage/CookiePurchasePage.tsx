@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Toast from '../../components/Toast';
 import BankTransferModal from './BankTransferModal';
 import BackConfirmModal from './BackConfirmModal';
@@ -24,6 +24,8 @@ type CookiePurchaseLocationState = {
 };
 
 type CookieModalState = 'none' | 'pending' | 'success' | 'failure';
+
+const MAX_POLL_COUNT = 20; // 최대 1분 (3초 × 20회)
 
 const PAYMENT_METHODS = [
   { label: '토스페이로 송금하기' },
@@ -52,6 +54,7 @@ function CookiePurchasePage() {
   const [cookieModalState, setCookieModalState] = useState<CookieModalState>('none');
   const [earnedCookieCount, setEarnedCookieCount] = useState(0);
   const [pollTick, setPollTick] = useState(0);
+  const pollCountRef = useRef(0);
 
   const blocker = useBlocker(cookieModalState !== 'success' && cookieModalState !== 'failure' && !isOrderError);
 
@@ -77,9 +80,18 @@ function CookiePurchasePage() {
           orderAmount: order.orderAmount,
         });
         if (result.confirmed) {
-          setEarnedCookieCount(result.cookieAmount!);
+          if (result.cookieAmount === null) {
+            setCookieModalState('failure');
+            return;
+          }
+          setEarnedCookieCount(result.cookieAmount);
           setCookieModalState('success');
         } else if (result.status === 'PAYMENT_PENDING') {
+          if (pollCountRef.current >= MAX_POLL_COUNT) {
+            setCookieModalState('failure');
+            return;
+          }
+          pollCountRef.current += 1;
           setPollTick((t) => t + 1);
         } else {
           setCookieModalState('failure');

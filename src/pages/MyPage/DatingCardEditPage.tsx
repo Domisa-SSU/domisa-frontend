@@ -212,6 +212,7 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
         notificationPhone: draft.isSmsOptedOut ? null : draft.notifPhone,
       });
       setSaved({ ...draft });
+      photoFileRef.current = null;
       setIsEditing(false);
       setToast({ message: '수정 완료되었습니다' });
     } catch (error) {
