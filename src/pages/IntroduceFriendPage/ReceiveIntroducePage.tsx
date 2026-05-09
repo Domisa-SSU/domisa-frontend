@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -10,6 +10,11 @@ import type { AuthMeResponse } from "../../types/user";
 import Button from "../../components/Button/Button";
 import HeaderTop from "../../components/HeaderTop";
 import { authMeQueryKey, useAuthMeQuery } from "../../queries/auth";
+import {
+  clearReceiveIntroductionPending,
+  getReceiveIntroductionPending,
+  setReceiveIntroductionPending,
+} from "../../utils/receiveIntroductionPending";
 import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
 
 type MessageModalProps = {
@@ -100,6 +105,7 @@ function ReceiveIntroducePage() {
   const queryClient = useQueryClient();
   const { linkCode = "" } = useParams<{ linkCode: string }>();
   const { data: authMe } = useAuthMeQuery();
+  const pendingAutoAcceptRef = useRef(false);
   const [isReplaceConfirmOpen, setIsReplaceConfirmOpen] = useState(false);
   const [acceptSuccessType, setAcceptSuccessType] = useState<AcceptSuccessType | null>(null);
 
@@ -150,12 +156,71 @@ function ReceiveIntroducePage() {
     try {
       await acceptIntroduction(introduction.introductionId);
       await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
+      const pending = getReceiveIntroductionPending();
+
+      if (
+        pending?.linkCode === linkCode &&
+        pending.introductionId === introduction.introductionId
+      ) {
+        clearReceiveIntroductionPending();
+      }
+
       setIsReplaceConfirmOpen(false);
       setAcceptSuccessType(successType);
     } catch (error) {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    if (
+      !authMe ||
+      authMe.status.isRegistered !== true ||
+      !introduction ||
+      isAccepting ||
+      acceptSuccessType ||
+      pendingAutoAcceptRef.current
+    ) {
+      return;
+    }
+
+    const pending = getReceiveIntroductionPending();
+
+    if (!pending || pending.linkCode !== linkCode) {
+      return;
+    }
+
+    if (pending.introductionId !== introduction.introductionId) {
+      clearReceiveIntroductionPending();
+      return;
+    }
+
+    pendingAutoAcceptRef.current = true;
+
+    if (authMe.status.hasIntroduction) {
+      setIsReplaceConfirmOpen(true);
+      return;
+    }
+
+    acceptIntroduction(pending.introductionId)
+      .then(async () => {
+        await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
+        clearReceiveIntroductionPending();
+        setAcceptSuccessType("created");
+      })
+      .catch((error) => {
+        console.error(error);
+        pendingAutoAcceptRef.current = false;
+      });
+  }, [
+    acceptIntroduction,
+    acceptSuccessType,
+    authMe,
+    introduction,
+    isAccepting,
+    linkCode,
+    queryClient,
+  ]);
 
   const handleAccept = async () => {
     if (!introduction || isAccepting) {
@@ -164,7 +229,21 @@ function ReceiveIntroducePage() {
 
     if (!authMe) {
       const returnTo = `/introduce/${encodeURIComponent(linkCode)}`;
+      setReceiveIntroductionPending({
+        linkCode,
+        introductionId: introduction.introductionId,
+      });
       navigate(`/auth?returnTo=${encodeURIComponent(returnTo)}`);
+      return;
+    }
+
+    if (authMe.status.isRegistered !== true) {
+      const returnTo = `/introduce/${encodeURIComponent(linkCode)}`;
+      setReceiveIntroductionPending({
+        linkCode,
+        introductionId: introduction.introductionId,
+      });
+      navigate(`/auth/signup?returnTo=${encodeURIComponent(returnTo)}`);
       return;
     }
 
@@ -185,6 +264,19 @@ function ReceiveIntroducePage() {
     navigate(isProfileCompleted ? "/dating" : "/dating/register", {
       replace: true,
     });
+  };
+
+  const handleCancelReplace = () => {
+    const pending = getReceiveIntroductionPending();
+
+    if (
+      pending?.linkCode === linkCode &&
+      pending.introductionId === introduction?.introductionId
+    ) {
+      clearReceiveIntroductionPending();
+    }
+
+    setIsReplaceConfirmOpen(false);
   };
 
   const successModalTitle =
@@ -277,7 +369,7 @@ function ReceiveIntroducePage() {
           actions={[
             {
               label: "아니요",
-              onClick: () => setIsReplaceConfirmOpen(false),
+              onClick: handleCancelReplace,
               variant: "secondary",
               disabled: isAccepting,
             },
@@ -308,6 +400,7 @@ function ReceiveIntroducePage() {
           ]}
         />
       )}
+
     </div>
   );
 }
