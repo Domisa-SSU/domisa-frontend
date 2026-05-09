@@ -108,6 +108,7 @@ function ReceiveIntroducePage() {
   const pendingAutoAcceptRef = useRef(false);
   const [isReplaceConfirmOpen, setIsReplaceConfirmOpen] = useState(false);
   const [acceptSuccessType, setAcceptSuccessType] = useState<AcceptSuccessType | null>(null);
+  const [isSignupCompleteModalOpen, setIsSignupCompleteModalOpen] = useState(false);
 
   const {
     data: introduction,
@@ -179,6 +180,7 @@ function ReceiveIntroducePage() {
       !introduction ||
       isAccepting ||
       acceptSuccessType ||
+      isSignupCompleteModalOpen ||
       pendingAutoAcceptRef.current
     ) {
       return;
@@ -198,6 +200,12 @@ function ReceiveIntroducePage() {
     pendingAutoAcceptRef.current = true;
 
     if (authMe.status.hasIntroduction) {
+      if (pending.shouldShowSignupCompleteModal) {
+        clearReceiveIntroductionPending();
+        setIsSignupCompleteModalOpen(true);
+        return;
+      }
+
       setIsReplaceConfirmOpen(true);
       return;
     }
@@ -206,6 +214,12 @@ function ReceiveIntroducePage() {
       .then(async () => {
         await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
         clearReceiveIntroductionPending();
+
+        if (pending.shouldShowSignupCompleteModal) {
+          setIsSignupCompleteModalOpen(true);
+          return;
+        }
+
         setAcceptSuccessType("created");
       })
       .catch((error) => {
@@ -218,6 +232,7 @@ function ReceiveIntroducePage() {
     authMe,
     introduction,
     isAccepting,
+    isSignupCompleteModalOpen,
     linkCode,
     queryClient,
   ]);
@@ -232,6 +247,7 @@ function ReceiveIntroducePage() {
       setReceiveIntroductionPending({
         linkCode,
         introductionId: introduction.introductionId,
+        shouldShowSignupCompleteModal: false,
       });
       navigate(`/auth?returnTo=${encodeURIComponent(returnTo)}`);
       return;
@@ -242,6 +258,7 @@ function ReceiveIntroducePage() {
       setReceiveIntroductionPending({
         linkCode,
         introductionId: introduction.introductionId,
+        shouldShowSignupCompleteModal: false,
       });
       navigate(`/auth/signup?returnTo=${encodeURIComponent(returnTo)}`);
       return;
@@ -395,6 +412,20 @@ function ReceiveIntroducePage() {
             {
               label: "소개팅 하러 가기",
               onClick: handleGoDating,
+              variant: "primary",
+            },
+          ]}
+        />
+      )}
+
+      {isSignupCompleteModalOpen && (
+        <MessageModal
+          title="회원가입이 완료됐어요"
+          description="친구 소개서가 반영됐어요"
+          actions={[
+            {
+              label: "홈으로",
+              onClick: () => navigate("/", { replace: true }),
               variant: "primary",
             },
           ]}

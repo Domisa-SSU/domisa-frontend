@@ -1,17 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { isAxiosError } from "axios";
-import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BottomActionBar from "../../components/BottomActionBar";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import type { AnimalProfile } from "../../api/users";
-import { acceptReceivedIntroduction } from "../../api/introduction";
-import { authMeQueryKey } from "../../queries/auth";
 import { useRegisterUserMutation } from "../../queries/users";
-import {
-    clearReceiveIntroductionPending,
-    getReceiveIntroductionPending,
-} from "../../utils/receiveIntroductionPending";
+import { markReceiveIntroductionPendingAfterSignup } from "../../utils/receiveIntroductionPending";
 import { useSignupFlow } from "./useSignupFlow";
 import alphacaImg from "./asset/alphacaImg.png";
 import bearImg from "./asset/bearImg.png";
@@ -93,38 +87,8 @@ const getIntroduceReturnLinkCode = (returnTo: string | null) => {
     return decodeURIComponent(linkCode);
 };
 
-type SignupCompleteModalProps = {
-    onConfirm: () => void;
-};
-
-function SignupCompleteModal({ onConfirm }: SignupCompleteModalProps) {
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
-            <div className="absolute inset-0 bg-grey-900/70" />
-            <div className="relative z-10 flex w-full max-w-[21.25rem] flex-col items-center gap-[1.875rem] rounded-[0.875rem] bg-grey-100 px-5 pt-[1.875rem] pb-5 text-center">
-                <div className="flex flex-col items-center gap-[0.9375rem]">
-                    <h2 className="typo-subtitle-header-2 text-grey-900">
-                        회원가입이 완료됐어요
-                    </h2>
-                    <p className="typo-input-text-m text-grey-700">
-                        친구 소개서가 반영됐어요
-                    </p>
-                </div>
-                <button
-                    type="button"
-                    onClick={onConfirm}
-                    className="flex h-[3.125rem] w-full max-w-[18.75rem] items-center justify-center rounded-[0.875rem] bg-primary-500 p-2.5 typo-button-text-b text-grey-100"
-                >
-                    홈으로
-                </button>
-            </div>
-        </div>
-    );
-}
-
 function SignupCharacterSelectPage() {
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
     const [searchParams] = useSearchParams();
     const {
         signupFormData,
@@ -135,7 +99,6 @@ function SignupCharacterSelectPage() {
     const [showScrollHint, setShowScrollHint] = useState(false);
     const [bottomBarHeight, setBottomBarHeight] = useState(0);
     const [errorMessage, setErrorMessage] = useState("");
-    const [isSignupCompleteModalOpen, setIsSignupCompleteModalOpen] = useState(false);
     const bottomBarRef = useRef<HTMLDivElement>(null);
     const {
         mutateAsync: registerUser,
@@ -209,24 +172,9 @@ function SignupCharacterSelectPage() {
                 searchParams.get("flow") === "introduce-friend";
             const returnTo = getSafeReturnTo(searchParams.get("returnTo"));
             const introduceLinkCode = getIntroduceReturnLinkCode(returnTo);
-            const pendingIntroduction = getReceiveIntroductionPending();
 
-            if (
-                introduceLinkCode &&
-                pendingIntroduction?.linkCode === introduceLinkCode
-            ) {
-                try {
-                    await acceptReceivedIntroduction(pendingIntroduction.introductionId);
-                    await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
-                    clearReceiveIntroductionPending();
-                    resetSignupFlow();
-                    setIsSignupCompleteModalOpen(true);
-                    return;
-                } catch (error) {
-                    console.error(error);
-                    navigate("/error", { replace: true });
-                    return;
-                }
+            if (introduceLinkCode) {
+                markReceiveIntroductionPendingAfterSignup(introduceLinkCode);
             }
 
             resetSignupFlow();
@@ -320,11 +268,6 @@ function SignupCharacterSelectPage() {
                     </div>
                 }
             />
-            {isSignupCompleteModalOpen && (
-                <SignupCompleteModal
-                    onConfirm={() => navigate("/", { replace: true })}
-                />
-            )}
         </div>
     );
 }

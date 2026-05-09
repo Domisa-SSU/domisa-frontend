@@ -3,6 +3,7 @@ import { RECEIVE_INTRODUCTION_PENDING_STORAGE_KEY } from "../constants/storageKe
 export type ReceiveIntroductionPending = {
   linkCode: string;
   introductionId: number;
+  shouldShowSignupCompleteModal: boolean;
 };
 
 const isReceiveIntroductionPending = (
@@ -16,7 +17,8 @@ const isReceiveIntroductionPending = (
 
   return (
     typeof pending.linkCode === "string" &&
-    typeof pending.introductionId === "number"
+    typeof pending.introductionId === "number" &&
+    typeof pending.shouldShowSignupCompleteModal === "boolean"
   );
 };
 
@@ -49,4 +51,17 @@ export const setReceiveIntroductionPending = (
 
 export const clearReceiveIntroductionPending = () => {
   sessionStorage.removeItem(RECEIVE_INTRODUCTION_PENDING_STORAGE_KEY);
+};
+
+export const markReceiveIntroductionPendingAfterSignup = (linkCode: string) => {
+  const pending = getReceiveIntroductionPending();
+
+  if (!pending || pending.linkCode !== linkCode) {
+    return;
+  }
+
+  setReceiveIntroductionPending({
+    ...pending,
+    shouldShowSignupCompleteModal: true,
+  });
 };
