@@ -310,11 +310,11 @@ function ShuffleConfirmModal({
 
 function ClosedDatingCard() {
   return (
-    <div className="h-full w-full rounded-[0.3125rem] bg-[#FFFFFF] p-[0.3125rem] shadow-[0_1px_5px_rgba(0,0,0,0.25)]">
+    <div className="h-full w-full rounded-[0.3125rem] bg-grey-100 p-[0.3rem] shadow-[0_1px_5px_rgba(0,0,0,0.25)]">
       <img
         src={cardBackImage}
         alt=""
-        className="h-full w-full rounded-[0.1875rem] object-cover"
+        className="h-full w-full rounded-[0.25rem] object-cover"
       />
     </div>
   );
@@ -322,7 +322,7 @@ function ClosedDatingCard() {
 
 function OpenDatingCard({ profile }: { profile: string | null }) {
   return (
-    <div className="h-full w-full rounded-[0.3125rem] border-[0.25rem] border-grey-100 bg-grey-100 p-[0.1875rem] shadow-[0_1px_5px_rgba(0,0,0,0.2)]">
+    <div className="h-full w-full rounded-[0.3125rem] bg-grey-100 p-[0.3rem] shadow-[0_1px_5px_rgba(0,0,0,0.2)]">
       <img
         src={profile ?? sumnailIcon}
         alt=""
