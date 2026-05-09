@@ -37,7 +37,7 @@ function ReceiveIntroduceHeader() {
   return (
     <header className="border-b-[0.8px] border-grey-500 bg-grey-100">
       <HeaderTop />
-      <div className="relative flex h-[3.4rem] items-center justify-center px-5">
+      <div className="relative mx-auto flex h-[3.4rem] w-full max-w-[25.1875rem] items-center justify-center px-5">
         <h1 className="typo-subtitle-header-2 text-grey-700">친구 소개서</h1>
       </div>
     </header>
