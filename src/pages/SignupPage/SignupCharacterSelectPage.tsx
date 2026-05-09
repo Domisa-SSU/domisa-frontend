@@ -244,7 +244,7 @@ function SignupCharacterSelectPage() {
                     src={bottomArrow}
                     alt=""
                     aria-hidden="true"
-                    className="pointer-events-none fixed left-1/2 z-30 h-[2.5rem] w-[2.5rem] -translate-x-1/2 opacity-80"
+                    className="pointer-events-none fixed left-1/2 z-30 h-[2.5rem] w-[2.5rem] -translate-x-1/2"
                     style={{ bottom: `calc(${bottomBarHeight}px + 1.2rem)` }}
                 />
             )}
