@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -32,6 +33,22 @@ type AcceptSuccessType = "created" | "changed";
 
 const introductionQueryKey = (linkCode: string) =>
   ["introduction", "received", linkCode] as const;
+
+const isIntroductionAlreadyAcceptedError = (error: unknown) => {
+  if (!isAxiosError(error)) {
+    return false;
+  }
+
+  const data = error.response?.data;
+
+  if (!data || typeof data !== "object") {
+    return false;
+  }
+
+  return (
+    (data as Record<string, unknown>).code === "INTRODUCTION_ALREADY_ACCEPTED"
+  );
+};
 
 function ReceiveIntroduceHeader() {
   return (
@@ -109,6 +126,8 @@ function ReceiveIntroducePage() {
   const [isReplaceConfirmOpen, setIsReplaceConfirmOpen] = useState(false);
   const [acceptSuccessType, setAcceptSuccessType] = useState<AcceptSuccessType | null>(null);
   const [isSignupCompleteModalOpen, setIsSignupCompleteModalOpen] = useState(false);
+  const [invalidIntroductionDescription, setInvalidIntroductionDescription] =
+    useState("");
 
   const {
     data: introduction,
@@ -169,6 +188,13 @@ function ReceiveIntroducePage() {
       setIsReplaceConfirmOpen(false);
       setAcceptSuccessType(successType);
     } catch (error) {
+      if (isIntroductionAlreadyAcceptedError(error)) {
+        clearReceiveIntroductionPending();
+        setIsReplaceConfirmOpen(false);
+        setInvalidIntroductionDescription("이미 수락된 소개서입니다.");
+        return;
+      }
+
       console.error(error);
     }
   };
@@ -223,6 +249,12 @@ function ReceiveIntroducePage() {
         setAcceptSuccessType("created");
       })
       .catch((error) => {
+        if (isIntroductionAlreadyAcceptedError(error)) {
+          clearReceiveIntroductionPending();
+          setInvalidIntroductionDescription("이미 수락된 소개서입니다.");
+          return;
+        }
+
         console.error(error);
         pendingAutoAcceptRef.current = false;
       });
