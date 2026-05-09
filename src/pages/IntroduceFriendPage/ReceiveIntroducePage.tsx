@@ -333,12 +333,12 @@ function ReceiveIntroducePage() {
       ? "소개서가 변경됐어요"
       : "소개서가 만들어졌어요";
 
-  if (!linkCode || isIntroductionError) {
+  if (!linkCode || isIntroductionError || invalidIntroductionDescription) {
     return (
       <div className="min-h-screen bg-grey-100">
         <MessageModal
           title="유효하지 않은 소개서예요"
-          description="다시 링크를 확인해주세요"
+          description={invalidIntroductionDescription || "다시 링크를 확인해주세요"}
           actions={[
             {
               label: "홈으로",
