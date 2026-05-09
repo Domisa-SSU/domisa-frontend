@@ -6,7 +6,6 @@ type CreateDatingProfileRequest = {
   mbti: string;
   datingStyle: string;
   idealType: string;
-  imageKey: string;
   contactType: DatingProfileContactType;
   contact: string;
   notificationPhone: string | null;
