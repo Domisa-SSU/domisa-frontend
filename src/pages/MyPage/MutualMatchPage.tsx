@@ -87,11 +87,11 @@ function MutualMatchPage() {
     <div className="flex min-h-screen flex-col bg-grey-100">
       <div className="border-b-[0.8px] border-grey-500">
         <HeaderTop showNotificationIcon rightLabel="내정보" onRightClick={() => navigate('/my')} />
-        <div className="relative flex items-center px-5 py-2.5">
-          <button className="p-[0.62rem]" onClick={() => navigate(-1)}>
+        <div className="relative mx-auto flex w-full max-w-[25.1875rem] items-center px-5 py-2.5">
+          <button className="flex h-[2.375rem] w-[1.75rem] items-center justify-start" onClick={() => navigate(-1)}>
             <img src={headerArrow} alt="" className="w-[0.45rem] h-[0.9rem]" />
           </button>
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1">
+          <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1">
             <span className="typo-subtitle-header-2 text-grey-900">쌍방 매칭</span>
             <img src={heartIconOrange} alt="" className="w-4 h-4" />
           </div>

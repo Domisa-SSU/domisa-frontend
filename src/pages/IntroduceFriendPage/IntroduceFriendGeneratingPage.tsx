@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import BottomActionBar from "../../components/BottomActionBar";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import Toast from "../../components/Toast";
 import RightArrow from "../../assets/right_arrow.svg?react";
@@ -8,7 +7,7 @@ import {
     INTRODUCE_FRIEND_DRAFT_STORAGE_KEY,
 } from "../../constants/storageKeys";
 import { createIntroductionLink } from "../../api/introduction";
-import copyIcon from "../SignupPage/asset/copyIcon.svg";
+import copyIcon from "../SignupPage/asset/copyIcon.png";
 import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
 import requireIcon from "./assets/requireIcon.png";
 
@@ -86,12 +85,17 @@ const createInvitationUrl = (draft: IntroduceFriendDraft) => {
     return promise;
 };
 
+const minimumGeneratingDelayMs = 2000;
+
+const wait = (delayMs: number) =>
+    new Promise<void>((resolve) => {
+        window.setTimeout(resolve, delayMs);
+    });
+
 function IntroduceFriendGeneratingPage() {
     const navigate = useNavigate();
-    const [isInvitationReady, setIsInvitationReady] = useState(false);
     const [isResultVisible, setIsResultVisible] = useState(false);
     const [invitationUrl, setInvitationUrl] = useState("");
-    const [isCreationError, setIsCreationError] = useState(false);
     const [showCopyToast, setShowCopyToast] = useState(false);
 
     useEffect(() => {
@@ -99,31 +103,34 @@ function IntroduceFriendGeneratingPage() {
         const draft = getIntroduceFriendDraft();
 
         if (!draft) {
-            setIsCreationError(true);
+            navigate("/error", { replace: true });
             return () => {
                 isMounted = false;
             };
         }
 
-        createInvitationUrl(draft)
-            .then((nextInvitationUrl) => {
+        Promise.all([
+            createInvitationUrl(draft),
+            wait(minimumGeneratingDelayMs),
+        ])
+            .then(([nextInvitationUrl]) => {
                 if (isMounted) {
                     setInvitationUrl(nextInvitationUrl);
-                    setIsInvitationReady(true);
+                    setIsResultVisible(true);
                     sessionStorage.removeItem(INTRODUCE_FRIEND_DRAFT_STORAGE_KEY);
                 }
             })
             .catch((error) => {
                 console.error(error);
                 if (isMounted) {
-                    setIsCreationError(true);
+                    navigate("/error", { replace: true });
                 }
             });
 
         return () => {
             isMounted = false;
         };
-    }, []);
+    }, [navigate]);
 
     useEffect(() => {
         if (!showCopyToast) {
@@ -136,17 +143,6 @@ function IntroduceFriendGeneratingPage() {
 
         return () => window.clearTimeout(timeoutId);
     }, [showCopyToast]);
-
-    const handleNext = () => {
-        if (isCreationError) {
-            navigate("/introduce-friend");
-            return;
-        }
-
-        if (isInvitationReady) {
-            setIsResultVisible(true);
-        }
-    };
 
     const handleCopy = async (value: string) => {
         try {
@@ -240,26 +236,17 @@ function IntroduceFriendGeneratingPage() {
                 <div className="flex flex-col items-center gap-[0.375rem] text-center">
                     <p className="typo-comment-1 text-primary-500">따끈따끈하게</p>
                     <h1 className="typo-title-header-1 text-grey-900">
-                        {isCreationError ? "초대장 생성에 실패했어요" : "초대장 요리 중"}
-                        {!isCreationError && (
-                            <span
-                                className={`ml-0.5 inline-flex w-[1.1rem] justify-between ${
-                                    isInvitationReady ? "" : "animate-generating-dots"
-                                }`}
-                                aria-hidden="true"
-                            >
-                                <span>.</span>
-                                <span>.</span>
-                                <span>.</span>
-                            </span>
-                        )}
-                        {!isCreationError && <span className="sr-only">...</span>}
+                        초대장 요리 중
+                        <span
+                            className="ml-0.5 inline-flex w-[1.1rem] animate-generating-dots justify-between"
+                            aria-hidden="true"
+                        >
+                            <span>.</span>
+                            <span>.</span>
+                            <span>.</span>
+                        </span>
+                        <span className="sr-only">...</span>
                     </h1>
-                    {isCreationError && (
-                        <p className="typo-input-text text-grey-700">
-                            다시 작성 후 시도해주세요
-                        </p>
-                    )}
                 </div>
 
                 <img
@@ -269,12 +256,6 @@ function IntroduceFriendGeneratingPage() {
                     className="mt-8 h-[15.36rem] w-[15.36rem] object-contain"
                 />
             </main>
-
-            <BottomActionBar
-                label={isCreationError ? "다시 작성하기" : "다음"}
-                disabled={!isInvitationReady && !isCreationError}
-                onClick={handleNext}
-            />
         </div>
     );
 }

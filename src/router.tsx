@@ -22,6 +22,8 @@ import DatingRegisterPage from "./pages/DatingPage/DatingRegisterPage";
 import NotificationPage from "./pages/NotificationPage/NotificationPage";
 import RequireIntroducePage from "./pages/DatingPage/RequireIntroducePage";
 import DatingAccessGuard from "./routes/DatingAccessGuard";
+import RegisteredOnlyRoute from "./routes/RegisteredOnlyRoute";
+import ErrorPage from "./pages/ErrorPage/ErrorPage";
 
 const router = createBrowserRouter([
   {
@@ -35,6 +37,7 @@ const router = createBrowserRouter([
       { path: "introduce-friend", element: <IntroduceFriendPage /> },
       { path: "introduce-friend/generating", element: <IntroduceFriendGeneratingPage /> },
       { path: "introduce/:linkCode", element: <ReceiveIntroducePage /> },
+      { path: "error", element: <ErrorPage /> },
       {
         path: "dating",
         element: (
@@ -53,16 +56,86 @@ const router = createBrowserRouter([
       },
       { path: "dating/require-introduce", element: <RequireIntroducePage /> },
       { path: "dating/register", element: <DatingRegisterPage /> },
-      { path: "my", element: <MyPage /> },
-      { path: "my/cookie", element: <MyCookiePage /> },
-      { path: "my/cookie/purchase", element: <CookiePurchasePage /> },
-      { path: "my/edit-profile", element: <EditProfilePage /> },
-      { path: "my/dating-card", element: <DatingCardEditPage /> },
-      { path: "my/likes-received", element: <LikesReceivedPage /> },
-      { path: "my/likes-sent", element: <LikesSentPage /> },
-      { path: "my/mutual-match", element: <MutualMatchPage /> },
-      { path: "my/friend-intro", element: <FriendIntroCheckPage /> },
-      { path: "notifications", element: <NotificationPage /> },
+      {
+        path: "my",
+        element: (
+          <RegisteredOnlyRoute>
+            <MyPage />
+          </RegisteredOnlyRoute>
+        ),
+      },
+      {
+        path: "my/cookie",
+        element: (
+          <RegisteredOnlyRoute>
+            <MyCookiePage />
+          </RegisteredOnlyRoute>
+        ),
+      },
+      {
+        path: "my/cookie/purchase",
+        element: (
+          <RegisteredOnlyRoute>
+            <CookiePurchasePage />
+          </RegisteredOnlyRoute>
+        ),
+      },
+      {
+        path: "my/edit-profile",
+        element: (
+          <RegisteredOnlyRoute>
+            <EditProfilePage />
+          </RegisteredOnlyRoute>
+        ),
+      },
+      {
+        path: "my/dating-card",
+        element: (
+          <RegisteredOnlyRoute>
+            <DatingCardEditPage />
+          </RegisteredOnlyRoute>
+        ),
+      },
+      {
+        path: "my/likes-received",
+        element: (
+          <RegisteredOnlyRoute>
+            <LikesReceivedPage />
+          </RegisteredOnlyRoute>
+        ),
+      },
+      {
+        path: "my/likes-sent",
+        element: (
+          <RegisteredOnlyRoute>
+            <LikesSentPage />
+          </RegisteredOnlyRoute>
+        ),
+      },
+      {
+        path: "my/mutual-match",
+        element: (
+          <RegisteredOnlyRoute>
+            <MutualMatchPage />
+          </RegisteredOnlyRoute>
+        ),
+      },
+      {
+        path: "my/friend-intro",
+        element: (
+          <RegisteredOnlyRoute>
+            <FriendIntroCheckPage />
+          </RegisteredOnlyRoute>
+        ),
+      },
+      {
+        path: "notifications",
+        element: (
+          <RegisteredOnlyRoute>
+            <NotificationPage />
+          </RegisteredOnlyRoute>
+        ),
+      },
     ],
   },
 ]);

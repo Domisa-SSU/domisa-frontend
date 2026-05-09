@@ -10,7 +10,7 @@ import forbiddenIcon from "./asset/forbiddenIcon.svg";
 import pinkCheckIcon from "./asset/pinkCheckIcon.svg";
 import selectArrow from "./asset/selectArrow.svg";
 
-const birthYears = Array.from({ length: 21 }, (_, index) => `${2006 - index}`);
+const birthYears = Array.from({ length: 10 }, (_, index) => `${2007 - index}`);
 
 const fieldClassName =
     "h-10 w-full rounded-[0.625rem] border-[1.2px] border-transparent bg-primary-100 px-[0.875rem] typo-input-text-m text-primary-500 placeholder:text-grey-600 focus:outline-none";
