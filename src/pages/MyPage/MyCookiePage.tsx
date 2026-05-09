@@ -1,7 +1,11 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import ReferralSection from "../../components/ReferralSection";
 import { useUserCookiesQuery } from "../../queries/users";
+import {
+  INSUFFICIENT_COOKIES_REASON,
+  type CookiePageLocationState,
+} from "../../constants/cookieNavigation";
 import cookieImg from "../../assets/cookie.svg";
 import type { CookieProductCode } from "../../api/orders";
 
@@ -14,7 +18,11 @@ const COOKIE_PACKAGES: { count: number; price: string; productCode: CookieProduc
 
 function MyCookiePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: cookies } = useUserCookiesQuery();
+  const locationState = location.state as CookiePageLocationState | null;
+  const isInsufficientCookiesEntry =
+    locationState?.reason === INSUFFICIENT_COOKIES_REASON;
 
   return (
     <div className="min-h-screen bg-grey-100">
@@ -24,7 +32,18 @@ function MyCookiePage() {
         <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-10">
 
           {/* 보유 쿠키 수 */}
-          <div className="flex items-center justify-center h-[3.75rem] bg-primary-100 rounded-[0.625rem]">
+          <div
+            className={`flex items-center justify-center rounded-[0.625rem] bg-primary-100 px-2.5 ${
+              isInsufficientCookiesEntry
+                ? "min-h-[5.1875rem] flex-col gap-1.5 py-4"
+                : "h-[3.75rem]"
+            }`}
+          >
+            {isInsufficientCookiesEntry && (
+              <p className="typo-comment-1 text-center text-warning">
+                쿠키가 부족해요
+              </p>
+            )}
             <div className="flex items-center gap-1">
               <img src={cookieImg} alt="" className="w-4 h-4" />
               <span className="typo-header-3-b text-primary-500">{cookies?.cookieCount ?? '-'}개</span>

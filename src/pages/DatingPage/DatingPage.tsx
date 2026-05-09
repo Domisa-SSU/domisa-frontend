@@ -11,7 +11,9 @@ import {
 import type { DatingCardDetailViewType } from "../../api/datingCardDetail";
 import HeaderTop from "../../components/HeaderTop";
 import Toast from "../../components/Toast";
+import { insufficientCookiesLocationState } from "../../constants/cookieNavigation";
 import { DATING_OPENED_CARDS_STORAGE_KEY } from "../../constants/storageKeys";
+import { isInsufficientCookiesError } from "../../utils/apiError";
 import headerArrow from "../../assets/headerArrow.svg";
 import XIcon from "../../assets/X.svg";
 import cookieIcon from "../../assets/cookie.svg";
@@ -261,8 +263,6 @@ function ShuffleConfirmModal({
   onClose: () => void;
   onConfirm: () => void;
 }) {
-  const canShuffle = cookieCount >= 2;
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-grey-900/70 px-[1.9375rem]"
@@ -300,8 +300,8 @@ function ShuffleConfirmModal({
         <button
           type="button"
           onClick={onConfirm}
-          disabled={!canShuffle || isShuffling}
-          className="flex h-[3.125rem] w-[18.75rem] items-center justify-center gap-1 rounded-[0.875rem] bg-primary-500 typo-button-text-b text-grey-100 disabled:cursor-default disabled:opacity-100"
+          disabled={isShuffling}
+          className="flex h-[3.125rem] w-[18.75rem] items-center justify-center gap-1 rounded-[0.875rem] bg-primary-500 typo-button-text-b text-grey-100 disabled:cursor-wait disabled:opacity-80"
         >
           <span>쿠키 2개로 카드 섞기</span>
           <img src={cookieIcon} alt="" className="h-4 w-4" />
@@ -611,6 +611,12 @@ function DatingPage() {
     window.setTimeout(() => setToastMessage(message), 0);
   };
 
+  const navigateToInsufficientCookiesPage = () => {
+    navigate("/my/cookie", {
+      state: insufficientCookiesLocationState,
+    });
+  };
+
   const userCookiesMutation = useMutation({
     mutationFn: getUserCookies,
     onSuccess: (result) => {
@@ -633,7 +639,13 @@ function DatingPage() {
       showToast("카드가 섞였어요!");
       await queryClient.invalidateQueries({ queryKey: datingHomeQueryKey });
     },
-    onError: () => {
+    onError: (error) => {
+      if (isInsufficientCookiesError(error)) {
+        setShuffleCookieCount(null);
+        navigateToInsufficientCookiesPage();
+        return;
+      }
+
       showToast("카드 섞기에 실패했어요");
     },
   });
@@ -715,7 +727,6 @@ function DatingPage() {
   const handleShuffleConfirm = () => {
     if (
       shuffleCookieCount === null ||
-      shuffleCookieCount < 2 ||
       shuffleCardsMutation.isPending
     ) {
       return;
