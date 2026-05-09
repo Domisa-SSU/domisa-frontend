@@ -1,6 +1,9 @@
 import logo from "../assets/domisaLogo.png";
 import icon from "../assets/domisaHeartIcon.png";
+import existNotificationIcon from "../assets/existNotificationHeartIcon.png";
 import { useNavigate } from "react-router-dom";
+import { useAuthMeQuery } from "../queries/auth";
+import { useNotificationStatusQuery } from "../queries/notifications";
 
 type HeaderTopProps = {
   rightLabel?: string;
@@ -14,6 +17,13 @@ function Header({
   showNotificationIcon = false,
 }: HeaderTopProps) {
   const navigate = useNavigate();
+  const { data: authMe } = useAuthMeQuery();
+  const { data: notificationStatus } = useNotificationStatusQuery(
+    showNotificationIcon && Boolean(authMe),
+  );
+  const unreadCount = notificationStatus?.unreadCount ?? 0;
+  const hasUnreadNotification = unreadCount > 0;
+  const notificationCountLabel = Math.min(unreadCount, 99);
 
   return (
     <div className="relative flex justify-center py-2.5">
@@ -21,10 +31,19 @@ function Header({
         <button
           type="button"
           onClick={() => navigate("/notifications")}
-          className="absolute left-5 top-1/2 -translate-y-1/2"
+          className="absolute left-5 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center"
           aria-label="알림"
         >
-          <img src={icon} alt="" className="w-10.5" />
+          <img
+            src={hasUnreadNotification ? existNotificationIcon : icon}
+            alt=""
+            className="size-11"
+          />
+          {hasUnreadNotification ? (
+            <span className="absolute left-[1.625rem] top-[1.625rem] flex size-[1.125rem] items-center justify-center rounded-[0.525rem] bg-warning pt-px typo-comment-1-b text-grey-100">
+              {notificationCountLabel}
+            </span>
+          ) : null}
         </button>
       )}
       <button
