@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import NotLoginHeader from '../../components/NotLoginHeader';
 import Toast from '../../components/Toast';
+import { PhotoCropModal } from '../../components/PhotoCropModal';
 import editPencilImg from '../../assets/edit_pencil.svg';
 import ProfileChangeIcon from '../../assets/profile_change.svg?react';
 import PhotoUploadIcon from '../../assets/photo_upload.svg?react';
@@ -147,11 +148,21 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
   const [toast, setToast] = useState<{ message: string; icon?: string } | null>(null);
   const [showMbtiModal, setShowMbtiModal] = useState(false);
 
+  const [cropSourceFile, setCropSourceFile] = useState<File | null>(null);
+  const [cropSourceUrl, setCropSourceUrl] = useState('');
+
   useEffect(() => {
     return () => {
       if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+      if (cropSourceUrl) URL.revokeObjectURL(cropSourceUrl);
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const closeCropModal = () => {
+    if (cropSourceUrl) URL.revokeObjectURL(cropSourceUrl);
+    setCropSourceFile(null);
+    setCropSourceUrl('');
+  };
 
   const initialData = profileToDraftData(profile);
   const [saved, setSaved] = useState<DatingCardData>(initialData);
@@ -217,12 +228,20 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
-    photoFileRef.current = file;
+    if (cropSourceUrl) URL.revokeObjectURL(cropSourceUrl);
+    setCropSourceFile(file);
+    setCropSourceUrl(URL.createObjectURL(file));
+  };
+
+  const handleCropConfirm = (croppedFile: File) => {
+    photoFileRef.current = croppedFile;
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-    const newUrl = URL.createObjectURL(file);
-    objectUrlRef.current = newUrl;
-    setDraft((prev) => ({ ...prev, photoUrl: newUrl }));
+    const previewUrl = URL.createObjectURL(croppedFile);
+    objectUrlRef.current = previewUrl;
+    setDraft((prev) => ({ ...prev, photoUrl: previewUrl }));
+    closeCropModal();
   };
 
   const card = isEditing ? draft : saved;
@@ -339,7 +358,7 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
                 </>
               )}
             </div>
-            <div className="relative w-full overflow-hidden rounded-[0.875rem] bg-grey-300 aspect-[363/197]">
+            <div className="relative mx-auto flex aspect-[71/109] w-full max-w-[13.3125rem] items-center justify-center overflow-hidden rounded-[0.625rem] bg-grey-300">
               {card.photoUrl && (
                 <img src={card.photoUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
               )}
@@ -504,6 +523,15 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
           mbti={draft.mbti}
           onConfirm={handleMbtiModalClose}
           onCancel={() => setShowMbtiModal(false)}
+        />
+      )}
+
+      {cropSourceFile && cropSourceUrl && (
+        <PhotoCropModal
+          sourceFile={cropSourceFile}
+          imageUrl={cropSourceUrl}
+          onCancel={closeCropModal}
+          onConfirm={handleCropConfirm}
         />
       )}
 
