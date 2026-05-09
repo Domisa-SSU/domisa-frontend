@@ -302,7 +302,7 @@ function Kakao() {
                             <img
                                 src={loginImage}
                                 alt=""
-                                className="mt-[2.375rem] h-[15.36rem] w-[15.36rem] object-contain"
+                                className="h-[15.36rem] w-[15.36rem] object-contain"
                             />
                         </div>
                     </main>
@@ -351,7 +351,7 @@ function Kakao() {
                 <>
                     <main className="flex min-h-0 flex-1 items-center justify-center px-5">
                         <div className="flex flex-col items-center">
-                            <p className="mb-[1.19rem] whitespace-pre-line text-center typo-title-header-1 text-grey-900">
+                            <p className="whitespace-pre-line text-center typo-title-header-1 text-grey-900">
                                 {"3초만에 로그인하고\n캠퍼스에서 기다리고 있는\n내 인연을 만나보세요"}
                             </p>
                             <img
