@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import BottomActionBar from "../../components/BottomActionBar";
 import Toast from "../../components/Toast";
 import { KAKAO_LOGIN_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
@@ -18,6 +18,7 @@ const selectClassName =
     "h-10 w-full appearance-none rounded-[0.625rem] bg-primary-100 px-[0.875rem] pr-9 typo-input-text-m focus:outline-none";
 
 function SignupPage() {
+    const location = useLocation();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { signupFormData, setSignupFormData } = useSignupFlow();
@@ -98,7 +99,9 @@ function SignupPage() {
         });
 
         const nextSearch = searchParams.toString();
-        navigate(`/auth/signup/next${nextSearch ? `?${nextSearch}` : ""}`);
+        navigate(`/auth/signup/next${nextSearch ? `?${nextSearch}` : ""}`, {
+            state: location.state,
+        });
     };
 
     useEffect(() => {

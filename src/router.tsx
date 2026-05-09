@@ -21,6 +21,7 @@ import DatingCardDetailPage from "./pages/DatingPage/DatingCardDetailPage";
 import DatingRegisterPage from "./pages/DatingPage/DatingRegisterPage";
 import NotificationPage from "./pages/NotificationPage/NotificationPage";
 import RequireIntroducePage from "./pages/DatingPage/RequireIntroducePage";
+import CompletedFlowRoute from "./routes/CompletedFlowRoute";
 import DatingAccessGuard from "./routes/DatingAccessGuard";
 import RegisteredOnlyRoute from "./routes/RegisteredOnlyRoute";
 import ErrorPage from "./pages/ErrorPage/ErrorPage";
@@ -32,8 +33,22 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: "auth", element: <Kakao /> },
-      { path: "auth/signup", element: <SignupPage /> },
-      { path: "auth/signup/next", element: <SignupCharacterSelectPage /> },
+      {
+        path: "auth/signup",
+        element: (
+          <CompletedFlowRoute flow="signup">
+            <SignupPage />
+          </CompletedFlowRoute>
+        ),
+      },
+      {
+        path: "auth/signup/next",
+        element: (
+          <CompletedFlowRoute flow="signup">
+            <SignupCharacterSelectPage />
+          </CompletedFlowRoute>
+        ),
+      },
       { path: "introduce-friend", element: <IntroduceFriendPage /> },
       { path: "introduce-friend/generating", element: <IntroduceFriendGeneratingPage /> },
       { path: "introduce/:linkCode", element: <ReceiveIntroducePage /> },
@@ -55,7 +70,14 @@ const router = createBrowserRouter([
         ),
       },
       { path: "dating/require-introduce", element: <RequireIntroducePage /> },
-      { path: "dating/register", element: <DatingRegisterPage /> },
+      {
+        path: "dating/register",
+        element: (
+          <CompletedFlowRoute flow="datingRegister">
+            <DatingRegisterPage />
+          </CompletedFlowRoute>
+        ),
+      },
       {
         path: "my",
         element: (

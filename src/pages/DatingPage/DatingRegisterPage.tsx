@@ -702,7 +702,8 @@ function DatingRegisterNotificationPhoneStep() {
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [totalUserCount, setTotalUserCount] = useState<number | null>(null);
 
-  const isPhoneComplete = formData.notificationPhone.length >= 10 || formData.isSmsOptedOut;
+  const isPhoneComplete =
+    formData.notificationPhone.length === NOTIFICATION_PHONE_MAX_LENGTH || formData.isSmsOptedOut;
   const isFormComplete =
     formData.mbti.length === 4 &&
     formData.romanticStyle.trim().length > 0 &&
@@ -773,7 +774,7 @@ function DatingRegisterNotificationPhoneStep() {
 
   const handleCompleteConfirm = () => {
     resetRegisterFlow();
-    navigate('/dating');
+    navigate('/dating', { replace: true });
   };
 
   return (
