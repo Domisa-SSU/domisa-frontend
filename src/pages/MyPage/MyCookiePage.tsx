@@ -3,12 +3,13 @@ import NotLoginHeader from "../../components/NotLoginHeader";
 import ReferralSection from "../../components/ReferralSection";
 import { useUserCookiesQuery } from "../../queries/users";
 import cookieImg from "../../assets/cookie.svg";
+import type { CookieProductCode } from "../../api/orders";
 
-const COOKIE_PACKAGES = [
-  { count: 5, price: "2,000" },
-  { count: 10, price: "4,000" },
-  { count: 30, price: "5,000" },
-  { count: 60, price: "9,000" },
+const COOKIE_PACKAGES: { count: number; price: string; productCode: CookieProductCode }[] = [
+  { count: 5, price: "2,000", productCode: "COOKIE_5" },
+  { count: 10, price: "4,000", productCode: "COOKIE_10" },
+  { count: 30, price: "5,000", productCode: "COOKIE_30" },
+  { count: 60, price: "9,000", productCode: "COOKIE_60" },
 ];
 
 function MyCookiePage() {
@@ -34,7 +35,7 @@ function MyCookiePage() {
           <div className="flex flex-col gap-3.5">
             <span className="typo-button-text text-grey-900">쿠키 구매하기</span>
             <div className="flex flex-col">
-              {COOKIE_PACKAGES.map(({ count, price }) => (
+              {COOKIE_PACKAGES.map(({ count, price, productCode }) => (
                 <div
                   key={count}
                   className="flex items-center justify-between h-[3.125rem] px-2.5 py-2 border-b border-b-[0.8px] border-grey-400"
@@ -44,7 +45,7 @@ function MyCookiePage() {
                     <span className="typo-comment-1 text-grey-900">쿠키 {count}개</span>
                   </div>
                   <button
-                    onClick={() => navigate("/my/cookie/purchase", { state: { count, price } })}
+                    onClick={() => navigate("/my/cookie/purchase", { state: { count, price, productCode } })}
                     className="flex items-center justify-center h-8 w-20 rounded-[0.3125rem] typo-comment-2 text-grey-100"
                     style={{
                       background:

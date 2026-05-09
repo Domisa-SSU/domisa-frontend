@@ -8,7 +8,7 @@ export const useDatingProfileQuery = () =>
   useQuery({
     queryKey: datingProfileQueryKey,
     queryFn: getDatingProfile,
-    staleTime: Infinity,
+    staleTime: 10 * 60 * 1000, // 10분 (Signed URL 만료 20분보다 짧게)
   });
 
 export const useUpdateDatingProfileMutation = () => {
@@ -17,7 +17,7 @@ export const useUpdateDatingProfileMutation = () => {
   return useMutation({
     mutationFn: updateDatingProfile,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: datingProfileQueryKey });
+      queryClient.invalidateQueries({ queryKey: datingProfileQueryKey, refetchType: 'none' });
     },
   });
 };
