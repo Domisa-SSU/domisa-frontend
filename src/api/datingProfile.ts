@@ -56,7 +56,6 @@ type UpdateDatingProfileRequest = {
   mbti: string;
   datingStyle: string;
   idealType: string;
-  imageKey: string | null;
   contactType: DatingProfileContactType;
   contact: string;
   notificationPhone: string | null;
