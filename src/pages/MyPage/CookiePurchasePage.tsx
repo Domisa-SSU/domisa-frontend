@@ -15,6 +15,7 @@ import forbiddenIcon from '../../assets/toastForbidden.svg';
 import checkIcon from '../../assets/check.svg';
 import { useCancelCookieOrderMutation, useCreateCookieOrderMutation } from '../../queries/orders';
 import type { CookieProductCode } from '../../api/orders';
+import { getCookieOrderStatus } from '../../api/orders';
 
 type CookiePurchaseLocationState = {
   count: number;
@@ -29,10 +30,6 @@ const PAYMENT_METHODS = [
   { label: '계좌이체 하기' },
 ];
 
-// TODO: API 연동 시 실제 함수로 교체
-async function purchaseCookieAPI(): Promise<{ cookieCount: number }> {
-  throw new Error('mock failure');
-}
 
 function CookiePurchasePage() {
   const navigate = useNavigate();
@@ -54,6 +51,7 @@ function CookiePurchasePage() {
   const [showBankModal, setShowBankModal] = useState(false);
   const [cookieModalState, setCookieModalState] = useState<CookieModalState>('none');
   const [earnedCookieCount, setEarnedCookieCount] = useState(0);
+  const [pollTick, setPollTick] = useState(0);
 
   const blocker = useBlocker(cookieModalState !== 'success' && cookieModalState !== 'failure' && !isOrderError);
 
@@ -69,22 +67,30 @@ function CookiePurchasePage() {
     return () => window.clearTimeout(timerId);
   }, [showWarningToast]);
 
-  // 2초 지연 후 API 호출
   useEffect(() => {
-    if (cookieModalState !== 'pending') return;
+    if (cookieModalState !== 'pending' || !order) return;
 
     const timerId = window.setTimeout(async () => {
       try {
-        const result = await purchaseCookieAPI();
-        setEarnedCookieCount(result.cookieCount);
-        setCookieModalState('success');
+        const result = await getCookieOrderStatus({
+          billingName: order.billingName,
+          orderAmount: order.orderAmount,
+        });
+        if (result.confirmed) {
+          setEarnedCookieCount(result.cookieAmount!);
+          setCookieModalState('success');
+        } else if (result.status === 'PAYMENT_PENDING') {
+          setPollTick((t) => t + 1);
+        } else {
+          setCookieModalState('failure');
+        }
       } catch {
         setCookieModalState('failure');
       }
     }, 3000);
 
     return () => window.clearTimeout(timerId);
-  }, [cookieModalState, state]);
+  }, [cookieModalState, order, pollTick]);
 
   const handlePaymentMethodClick = (label: string) => {
     if (!isNameConfirmed) {
