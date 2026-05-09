@@ -11,11 +11,18 @@ function ErrorPage() {
     <div className="flex min-h-screen flex-col overflow-hidden bg-[linear-gradient(111.45deg,#ffcde3_2.77%,#ffe8f2_95.22%)]">
       <header className="h-16 border-b-[0.8px] border-grey-500 bg-grey-100">
         <div className="flex h-full items-center justify-center">
-          <img
-            src={domisaLogo}
-            alt="DOMISA"
-            className="h-[1.97rem] w-[3.36rem] object-contain"
-          />
+          <button
+            type="button"
+            onClick={() => navigate("/", { replace: true })}
+            aria-label="홈으로 이동"
+            className="flex h-11 w-16 items-center justify-center"
+          >
+            <img
+              src={domisaLogo}
+              alt="DOMISA"
+              className="h-[1.97rem] w-[3.36rem] object-contain"
+            />
+          </button>
         </div>
       </header>
 
