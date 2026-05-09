@@ -8,7 +8,7 @@ import {
     INTRODUCE_FRIEND_DRAFT_STORAGE_KEY,
 } from "../../constants/storageKeys";
 import { createIntroductionLink } from "../../api/introduction";
-import copyIcon from "../SignupPage/asset/copyIcon.svg";
+import copyIcon from "../SignupPage/asset/copyIcon.png";
 import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
 import requireIcon from "./assets/requireIcon.png";
 

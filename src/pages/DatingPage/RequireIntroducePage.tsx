@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import Toast from "../../components/Toast";
 import heartIcon from "../../assets/heartIcon.svg";
-import copyIcon from "../SignupPage/asset/copyIcon.svg";
+import copyIcon from "../SignupPage/asset/copyIcon.png";
 import eyeIcon from "../SignupPage/asset/eyeIcon.svg";
 import requireIcon from "../SignupPage/asset/requireIcon.png";
 
