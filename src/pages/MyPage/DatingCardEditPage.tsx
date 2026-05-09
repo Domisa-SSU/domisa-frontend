@@ -154,8 +154,6 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
   const initialData = profileToDraftData(profile);
   const [saved, setSaved] = useState<DatingCardData>(initialData);
   const [draft, setDraft] = useState<DatingCardData>(initialData);
-  // TODO: 새 사진 선택 시 S3 업로드 후 교체
-  const imageKeyRef = useRef(profile.imageKey);
 
   const { mutateAsync: updateDatingProfile, isPending: isUpdating } =
     useUpdateDatingProfileMutation();
@@ -182,7 +180,6 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
         mbti: draft.mbti,
         datingStyle: draft.romanticAnswer,
         idealType: draft.idealTypeAnswer,
-        imageKey: imageKeyRef.current,
         contactType: draft.contactMethod as DatingProfileContactType,
         contact: draft.contactValue,
         notificationPhone: draft.isSmsOptedOut ? null : draft.notifPhone,
@@ -208,7 +205,6 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
       const newUrl = URL.createObjectURL(file);
       objectUrlRef.current = newUrl;
       setDraft((prev) => ({ ...prev, photoUrl: newUrl }));
-      // TODO: S3 업로드 후 imageKeyRef.current = newObjectKey 설정
     }
   };
 
