@@ -133,6 +133,18 @@ body {
   line-height: 1.25rem;
 }
 
+input.typo-input-text,
+input.typo-input-text-m,
+input.typo-input-text-r,
+textarea.typo-input-text,
+textarea.typo-input-text-m,
+textarea.typo-input-text-r,
+select.typo-input-text,
+select.typo-input-text-m,
+select.typo-input-text-r {
+  font-size: 1rem;
+}
+
 .typo-comment-1 {
   font-family: var(--font-pretendard);
   font-size: 0.875rem;
