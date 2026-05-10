@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Toast from '../../components/Toast';
+import ErrorPage from '../ErrorPage/ErrorPage';
 import BankTransferModal from './BankTransferModal';
 import BackConfirmModal from './BackConfirmModal';
 import TransferPendingModal from './TransferPendingModal';
@@ -19,6 +20,7 @@ import { useCancelCookieOrderMutation, useCreateCookieOrderMutation } from '../.
 import { useUserCookiesQuery } from '../../queries/users';
 import type { CookieProductCode } from '../../api/orders';
 import { getCookieOrderStatus } from '../../api/orders';
+import { isServerError } from '../../utils/apiError';
 
 type CookiePurchaseLocationState = {
   count: number;
@@ -41,6 +43,7 @@ function CookiePurchasePage() {
   const {
     mutate: createOrder,
     data: order,
+    error: orderError,
     isPending: isOrderPending,
     isError: isOrderError,
   } = useCreateCookieOrderMutation();
@@ -57,9 +60,10 @@ function CookiePurchasePage() {
   const [showWarningToast, setShowWarningToast] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
   const [cookieModalState, setCookieModalState] = useState<CookieModalState>('none');
+  const [serverError, setServerError] = useState(false);
   const [pollTick, setPollTick] = useState(0);
 
-  const { data: cookiesData, isSuccess: isCookiesLoaded } = useUserCookiesQuery({ enabled: cookieModalState === 'success' });
+  const { data: cookiesData, error: cookiesError, isSuccess: isCookiesLoaded } = useUserCookiesQuery({ enabled: cookieModalState === 'success' });
   const pollCountRef = useRef(0);
 
   const blocker = useBlocker(
@@ -105,7 +109,12 @@ function CookiePurchasePage() {
         } else {
           setCookieModalState('failure');
         }
-      } catch {
+      } catch (error) {
+        if (isServerError(error)) {
+          setServerError(true);
+          return;
+        }
+
         setCookieModalState('failure');
       }
     }, 3000);
@@ -137,6 +146,10 @@ function CookiePurchasePage() {
 
   if (!state) {
     return null;
+  }
+
+  if (serverError || isServerError(orderError) || isServerError(cookiesError)) {
+    return <ErrorPage />;
   }
 
   if (isOrderError) {
@@ -270,10 +283,19 @@ function CookiePurchasePage() {
           isConfirming={isCancelPending}
           onConfirm={async () => {
             if (order) {
-              await cancelOrder({
-                billing_name: order.billingName,
-                order_amount: order.orderAmount,
-              }).catch(console.error);
+              try {
+                await cancelOrder({
+                  billing_name: order.billingName,
+                  order_amount: order.orderAmount,
+                });
+              } catch (error) {
+                if (isServerError(error)) {
+                  setServerError(true);
+                  return;
+                }
+
+                console.error(error);
+              }
             }
             blocker.proceed();
           }}

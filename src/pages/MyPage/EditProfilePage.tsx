@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomActionBar from '../../components/BottomActionBar';
+import ErrorPage from '../ErrorPage/ErrorPage';
 import NotLoginHeader from '../../components/NotLoginHeader';
 import Toast from '../../components/Toast';
 import { EDIT_PROFILE_TOAST_STORAGE_KEY } from '../../constants/storageKeys';
@@ -17,6 +18,7 @@ import {
   animalNameByProfile,
   animalProfileByName,
 } from '../../constants/animalProfile';
+import { isServerError } from '../../utils/apiError';
 
 const birthYears = Array.from({ length: 21 }, (_, index) => `${2008 - index}`);
 
@@ -105,6 +107,7 @@ function EditProfileForm({ me }: EditProfileFormProps) {
     useCheckNicknameMutation();
   const { mutateAsync: updateMe, isPending: isUpdating } = useUpdateMeMutation();
   const [toastMessage, setToastMessage] = useState('');
+  const [serverError, setServerError] = useState(false);
 
   useEffect(() => {
     if (!toastMessage) return;
@@ -120,6 +123,10 @@ function EditProfileForm({ me }: EditProfileFormProps) {
       birthYear.length > 0
     );
   }, [birthYear, gender, isNicknameChecked, nickname]);
+
+  if (serverError) {
+    return <ErrorPage />;
+  }
 
   const handleLimitedChange = (
     value: string,
@@ -152,6 +159,11 @@ function EditProfileForm({ me }: EditProfileFormProps) {
       setIsNicknameChecked(isAvailable);
       setNicknameErrorMessage(isAvailable ? '' : '이미 사용 중인 닉네임입니다');
     } catch (error) {
+      if (isServerError(error)) {
+        setServerError(true);
+        return;
+      }
+
       console.error(error);
       setIsNicknameChecked(false);
       setNicknameErrorMessage('닉네임 확인에 실패했어요. 다시 시도해주세요');
@@ -169,6 +181,11 @@ function EditProfileForm({ me }: EditProfileFormProps) {
       sessionStorage.setItem(EDIT_PROFILE_TOAST_STORAGE_KEY, 'true');
       navigate(-1);
     } catch (error) {
+      if (isServerError(error)) {
+        setServerError(true);
+        return;
+      }
+
       console.error(error);
       setToastMessage('정보 수정에 실패했어요. 다시 시도해주세요.');
     }
@@ -327,7 +344,11 @@ function EditProfileForm({ me }: EditProfileFormProps) {
 }
 
 function EditProfilePage() {
-  const { data: me, isLoading } = useUserMeQuery();
+  const { data: me, error, isLoading } = useUserMeQuery();
+
+  if (isServerError(error)) {
+    return <ErrorPage />;
+  }
 
   if (isLoading || !me) {
     return (

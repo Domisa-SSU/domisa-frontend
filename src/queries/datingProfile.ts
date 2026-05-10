@@ -8,6 +8,7 @@ export const useDatingProfileQuery = () =>
   useQuery({
     queryKey: datingProfileQueryKey,
     queryFn: getDatingProfile,
+    retry: false,
     staleTime: 10 * 60 * 1000, // 10분 (Signed URL 만료 20분보다 짧게)
   });
 

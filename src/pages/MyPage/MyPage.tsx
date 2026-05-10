@@ -6,6 +6,7 @@ import { EDIT_PROFILE_TOAST_STORAGE_KEY } from '../../constants/storageKeys';
 import { useLogoutMutation } from '../../queries/auth';
 import { useUserMeQuery, useUserCookiesQuery, useDeleteMeMutation } from '../../queries/users';
 import ReferralSection from '../../components/ReferralSection';
+import ErrorPage from '../ErrorPage/ErrorPage';
 import RightArrow from '../../assets/right_arrow.svg?react';
 import WithdrawConfirmModal from './WithdrawConfirmModal';
 import editPencilImg from '../../assets/edit_pencil.svg';
@@ -17,14 +18,16 @@ import flowerImg from '../../assets/flowerIcon.svg';
 import arrowIcon from '../../assets/arrowIcon.svg';
 import heartIconOrange from '../../assets/heartIconOrange.svg';
 import { animalProfileImageMap } from '../../constants/animalProfile';
+import { isServerError } from '../../utils/apiError';
 
 function MyPage() {
   const navigate = useNavigate();
-  const { data: me, isLoading: isMeLoading } = useUserMeQuery();
-  const { data: cookies, isLoading: isCookiesLoading } = useUserCookiesQuery();
+  const { data: me, error: meError, isLoading: isMeLoading } = useUserMeQuery();
+  const { data: cookies, error: cookiesError, isLoading: isCookiesLoading } = useUserCookiesQuery();
   const { mutateAsync: logout, isPending: isLoggingOut } = useLogoutMutation();
   const { mutateAsync: deleteMe, isPending: isDeleting } = useDeleteMeMutation();
   const [logoutErrorMessage, setLogoutErrorMessage] = useState('');
+  const [serverError, setServerError] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showEditProfileToast, setShowEditProfileToast] = useState(() => {
     const shouldShow = sessionStorage.getItem(EDIT_PROFILE_TOAST_STORAGE_KEY) === 'true';
@@ -39,6 +42,10 @@ function MyPage() {
     const timer = setTimeout(() => setShowEditProfileToast(false), 3000);
     return () => clearTimeout(timer);
   }, [showEditProfileToast]);
+
+  if (serverError || isServerError(meError) || isServerError(cookiesError)) {
+    return <ErrorPage />;
+  }
 
   if (isMeLoading || isCookiesLoading || !me || !cookies) {
     return (
@@ -222,6 +229,11 @@ function MyPage() {
                   await logout();
                   navigate('/', { replace: true });
                 } catch (error) {
+                  if (isServerError(error)) {
+                    setServerError(true);
+                    return;
+                  }
+
                   console.error(error);
                   setLogoutErrorMessage('로그아웃에 실패했어요. 다시 시도해주세요.');
                 }
@@ -249,6 +261,11 @@ function MyPage() {
               await deleteMe();
               navigate('/', { replace: true });
             } catch (error) {
+              if (isServerError(error)) {
+                setServerError(true);
+                return;
+              }
+
               console.error(error);
             }
           }}

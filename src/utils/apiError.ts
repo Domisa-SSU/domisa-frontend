@@ -15,3 +15,13 @@ export const isInsufficientCookiesError = (error: unknown) => {
     (responseData as Record<string, unknown>).code === "INSUFFICIENT_COOKIES"
   );
 };
+
+export const isServerError = (error: unknown) => {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+
+  const status = error.response?.status ?? 0;
+
+  return status >= 500 && status < 600;
+};
