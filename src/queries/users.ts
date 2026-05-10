@@ -39,6 +39,7 @@ export const useRegisterUserMutation = () => {
     mutationFn: registerUser,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
+      await queryClient.invalidateQueries({ queryKey: userMeQueryKey });
     },
   });
 };

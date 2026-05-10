@@ -30,6 +30,7 @@ import Button from '../../components/Button/Button';
 import { ButtonVariant } from '../../components/Button/ButtonEnums';
 import NotLoginHeader from '../../components/NotLoginHeader';
 import { authMeQueryKey } from '../../queries/auth';
+import { userMeQueryKey } from '../../queries/users';
 import type { DatingRegisterContactMethod } from './DatingRegisterFlowState';
 import { DatingRegisterFlowProvider } from './DatingRegisterFlowContext';
 import smileIcon from './assets/smileIcon.svg';
@@ -751,9 +752,8 @@ function DatingRegisterNotificationPhoneStep() {
         notificationPhone: formData.isSmsOptedOut ? null : formData.notificationPhone,
       });
 
-      await queryClient.invalidateQueries({
-        queryKey: authMeQueryKey,
-      });
+      await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
+      await queryClient.invalidateQueries({ queryKey: userMeQueryKey });
 
       if (!createdProfile.status.hasIntroduction) {
         resetRegisterFlow();
