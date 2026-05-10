@@ -274,14 +274,27 @@ function HomePage() {
         </div>
         <div className="absolute bottom-[6%] left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 whitespace-nowrap">
           <div
-            aria-disabled="true"
-            className={`pointer-events-none flex items-center justify-center gap-1 typo-comment-2 ${
+            className={`flex items-center justify-center gap-1 typo-comment-2 ${
               theme == "day" ? "text-grey-700" : "text-grey-400"
             }`}
           >
-            <span className="underline">이용약관</span>
+            <a
+              href="https://jungle-friend-b65.notion.site/35a755591c5c80abbde1c17845ec516f"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              이용약관
+            </a>
             <span>・</span>
-            <span className="underline">개인정보처리방침</span>
+            <a
+              href="https://jungle-friend-b65.notion.site/35a755591c5c80008b96e1b0805a5619?pvs=73"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              개인정보처리방침
+            </a>
           </div>
           {shouldShowDeleteMeButton ? (
             <>
