@@ -43,6 +43,32 @@ const createSignupPath = (isIntroduceFriendFlow: boolean, returnTo: string | nul
     return `/auth/signup${search ? `?${search}` : ""}`;
 };
 
+const createAuthPath = (isIntroduceFriendFlow: boolean, returnTo: string | null) => {
+    const params = new URLSearchParams();
+
+    if (isIntroduceFriendFlow) {
+        params.set("flow", INTRODUCE_FRIEND_FLOW);
+    }
+
+    if (returnTo) {
+        params.set("returnTo", returnTo);
+    }
+
+    const search = params.toString();
+
+    return `/auth${search ? `?${search}` : ""}`;
+};
+
+const getReceiveIntroduceReturnTo = (returnTo: string | null) => {
+    if (!returnTo) {
+        return null;
+    }
+
+    const pathname = new URL(returnTo, window.location.origin).pathname;
+
+    return pathname.startsWith("/introduce/") ? returnTo : null;
+};
+
 const createKakaoOAuthState = () => {
     if (window.crypto?.getRandomValues) {
         const randomValues = new Uint32Array(4);
@@ -128,9 +154,8 @@ function Kakao() {
         ? "/introduce-friend/generating"
         : "/auth/signup";
     const headerTitle = isIntroduceFriendFlow ? "친구 소개하기" : "로그인";
-    const currentAuthPath = isIntroduceFriendFlow
-        ? "/auth?flow=introduce-friend"
-        : "/auth";
+    const currentAuthPath = createAuthPath(isIntroduceFriendFlow, returnTo);
+    const receiveIntroduceReturnTo = getReceiveIntroduceReturnTo(returnTo);
 
     useEffect(() => {
         if (!isIntroduceFriendFlow || !authMe || authorizationCode || kakaoError || kakaoErrorDescription) {
@@ -157,6 +182,12 @@ function Kakao() {
 
         if (kakaoError || kakaoErrorDescription) {
             clearKakaoOAuthContext();
+
+            if (kakaoError === "access_denied" && receiveIntroduceReturnTo) {
+                navigate(receiveIntroduceReturnTo, { replace: true });
+                return;
+            }
+
             setDeferredErrorMessage(
                 kakaoError === "access_denied"
                     ? "카카오 로그인이 취소되었어요."
@@ -224,6 +255,7 @@ function Kakao() {
         isIntroduceFriendFlow,
         loginWithKakao,
         navigate,
+        receiveIntroduceReturnTo,
         returnTo,
     ]);
 
@@ -263,7 +295,14 @@ function Kakao() {
 
     const handleHeaderBack = () => {
         clearKakaoOAuthContext();
-        navigate(isIntroduceFriendFlow ? "/introduce-friend" : "/", { replace: true });
+        navigate(
+            receiveIntroduceReturnTo
+                ? receiveIntroduceReturnTo
+                : isIntroduceFriendFlow
+                ? "/introduce-friend"
+                : "/",
+            { replace: true },
+        );
     };
 
     const handleSkip = () => {
