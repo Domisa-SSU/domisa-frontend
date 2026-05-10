@@ -26,11 +26,11 @@ function CookieFailureModal({ onBack, onClose }: CookieFailureModalProps) {
           <p className="typo-title-header-1-b text-warning text-center">쿠키 지급 실패</p>
           <p className="typo-button-text text-grey-900 text-center">이런 경우에 실패할 수 있어요</p>
           <div className="typo-input-text-m text-grey-700 text-center">
-            <ol className="list-decimal text-left pl-[1.3125rem] space-y-0">
+            <ol className="list-inside list-decimal">
               <li>입금자명 혹은 금액을 잘못 입력한 경우</li>
               <li>계좌번호를 잘못 입력한 경우</li>
             </ol>
-            <p className="mt-0">(토스의 경우 해당 없음)</p>
+            <p>(토스의 경우 해당 없음)</p>
           </div>
         </div>
         <div className="flex flex-col gap-2.5">

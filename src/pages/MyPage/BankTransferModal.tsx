@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
 import XIcon from '../../assets/X.svg';
+import copyIcon from '../../assets/copy.svg';
 import Toast from '../../components/Toast';
 
 const ACCOUNT_NUMBER = '1001-4015-2657';
 
 type BankTransferModalProps = {
   amount: string;
+  billingName?: string;
   onClose: () => void;
 };
 
-function BankTransferModal({ amount, onClose }: BankTransferModalProps) {
+function BankTransferModal({ amount, billingName, onClose }: BankTransferModalProps) {
   const [showCopyToast, setShowCopyToast] = useState(false);
+  const [showNameCopyToast, setShowNameCopyToast] = useState(false);
 
   useEffect(() => {
     if (!showCopyToast) return;
@@ -18,10 +21,26 @@ function BankTransferModal({ amount, onClose }: BankTransferModalProps) {
     return () => window.clearTimeout(timerId);
   }, [showCopyToast]);
 
+  useEffect(() => {
+    if (!showNameCopyToast) return;
+    const timerId = window.setTimeout(() => setShowNameCopyToast(false), 2500);
+    return () => window.clearTimeout(timerId);
+  }, [showNameCopyToast]);
+
   const handleCopyAccount = async () => {
     try {
       await navigator.clipboard.writeText(ACCOUNT_NUMBER);
       setShowCopyToast(true);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleCopyBillingName = async () => {
+    if (!billingName) return;
+    try {
+      await navigator.clipboard.writeText(billingName);
+      setShowNameCopyToast(true);
     } catch (e) {
       console.error(e);
     }
@@ -59,6 +78,26 @@ function BankTransferModal({ amount, onClose }: BankTransferModalProps) {
             <span className="typo-header-3-b text-primary-600">금액 : {amount}원</span>
           </div>
 
+          {/* 입금자명 섹션 */}
+          {billingName && (
+            <div className="flex flex-col gap-5 bg-grey-200 rounded-[0.625rem] px-2.5 py-5 w-[18.75rem]">
+              <p className="pl-2.5 typo-button-text text-grey-900">
+                <span className="text-primary-600">입금자명</span>에 아래 코드를 입력해주세요
+              </p>
+              <div className="flex items-center justify-between h-[3.125rem] bg-grey-100 px-2.5 py-2 rounded-[0.625rem]">
+                <span className="typo-comment-1 text-grey-900">{billingName}</span>
+                <button
+                  type="button"
+                  onClick={handleCopyBillingName}
+                  className="flex items-center gap-1 bg-primary-100 px-3.5 py-2 rounded-[0.75rem]"
+                >
+                  <img src={copyIcon} alt="" className="w-[0.648rem] h-[0.72rem]" />
+                  <span className="typo-comment-2 text-primary-500">복사</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* 버튼 영역 */}
           <div className="flex flex-col gap-2.5">
             <button
@@ -79,6 +118,7 @@ function BankTransferModal({ amount, onClose }: BankTransferModalProps) {
         </div>
       </div>
       {showCopyToast && <Toast message="계좌번호 복사 완료" />}
+      {showNameCopyToast && <Toast message="복사되었습니다" />}
     </>
   );
 }

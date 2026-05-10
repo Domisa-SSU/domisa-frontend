@@ -258,7 +258,7 @@ function CookiePurchasePage() {
       {showCopyToast && <Toast message="복사되었습니다" />}
       {showWarningToast && <Toast message="입금자명을 확인해주세요" icon={forbiddenIcon} />}
       {showBankModal && (
-        <BankTransferModal amount={state.price} onClose={() => setShowBankModal(false)} />
+        <BankTransferModal amount={state.price} billingName={billingName} onClose={() => setShowBankModal(false)} />
       )}
       {(cookieModalState === 'pending' || (cookieModalState === 'success' && !isCookiesLoaded)) && (
         <TransferPendingModal />
