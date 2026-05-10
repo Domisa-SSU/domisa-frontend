@@ -3,9 +3,14 @@ import { useNavigate } from "react-router-dom";
 import domisaLogo from "../../assets/domisaLogo.png";
 import errorImg from "../../assets/errorImg.png";
 import RightArrow from "../../assets/right_arrow.svg?react";
+import { clearGlobalError } from "../../stores/globalErrorStore";
 
 function ErrorPage() {
   const navigate = useNavigate();
+  const handleGoHome = () => {
+    clearGlobalError();
+    navigate("/", { replace: true });
+  };
 
   return (
     <div className="flex min-h-screen flex-col overflow-hidden bg-[linear-gradient(111.45deg,#ffcde3_2.77%,#ffe8f2_95.22%)]">
@@ -13,7 +18,7 @@ function ErrorPage() {
         <div className="flex h-full items-center justify-center">
           <button
             type="button"
-            onClick={() => navigate("/", { replace: true })}
+            onClick={handleGoHome}
             aria-label="홈으로 이동"
             className="flex h-11 w-16 items-center justify-center"
           >
@@ -51,7 +56,7 @@ function ErrorPage() {
       <section className="px-5 pb-[3.125rem]">
         <button
           type="button"
-          onClick={() => navigate("/", { replace: true })}
+          onClick={handleGoHome}
           className="mx-auto flex h-[3.125rem] w-full max-w-[22.625rem] items-center justify-center gap-2.5 rounded-[0.875rem] bg-primary-500 px-2.5 py-2.5 typo-button-text-b text-grey-100"
         >
           <span>홈으로 돌아가기</span>

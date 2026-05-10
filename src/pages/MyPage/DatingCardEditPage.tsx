@@ -14,6 +14,7 @@ import { useDatingProfileQuery, useUpdateDatingProfileMutation } from '../../que
 import type { DatingProfileResponse, DatingProfileContactType } from '../../api/datingProfile';
 import { createProfileImageUploadUrl, uploadProfileImageToS3, completeProfileImageUpload } from '../../api/s3';
 import { isServerError } from '../../utils/apiError';
+import { reportGlobalErrorIfNeeded } from '../../stores/globalErrorStore';
 
 type ContactMethodType = 'INSTAGRAM' | 'KAKAO';
 
@@ -216,6 +217,11 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
       setIsEditing(false);
       setToast({ message: '수정 완료되었습니다' });
     } catch (error) {
+      if (reportGlobalErrorIfNeeded(error)) {
+        setIsUploading(false);
+        return;
+      }
+
       if (isServerError(error)) {
         setIsUploading(false);
         setServerError(true);

@@ -2,10 +2,16 @@ import { Outlet } from "react-router-dom";
 import ErrorPage from "./pages/ErrorPage/ErrorPage";
 import { SignupFlowProvider } from "./pages/SignupPage/SignupFlowContext";
 import { useAuthMeQuery } from "./queries/auth";
+import { useHasGlobalError } from "./stores/globalErrorStore";
 import "./App.css";
 
 function App() {
+  const hasGlobalError = useHasGlobalError();
   const { isError, isPending } = useAuthMeQuery();
+
+  if (hasGlobalError) {
+    return <ErrorPage />;
+  }
 
   if (isPending) {
     return (

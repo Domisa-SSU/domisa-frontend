@@ -115,18 +115,18 @@ function HomePage() {
         };
 
   useEffect(() => {
-    if (!authMe) {
-      setActiveNotificationQueue([]);
-    }
-  }, [authMe]);
+    const nextQueue =
+      authMe && activeNotifications
+        ? buildActiveNotificationQueue(activeNotifications)
+        : [];
+    const frameId = window.requestAnimationFrame(() => {
+      setActiveNotificationQueue(nextQueue);
+    });
 
-  useEffect(() => {
-    if (!activeNotifications) {
-      return;
-    }
-
-    setActiveNotificationQueue(buildActiveNotificationQueue(activeNotifications));
-  }, [activeNotifications]);
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [activeNotifications, authMe]);
 
   const handleDatingClick = () => {
     const flowOrigin = {

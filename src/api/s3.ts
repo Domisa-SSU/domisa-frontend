@@ -1,4 +1,5 @@
 import { apiClient } from "./client";
+import { ApiRequestError } from "../utils/apiError";
 
 type CreateProfileImageUploadUrlRequest = {
   contentType: string;
@@ -63,16 +64,26 @@ export const uploadProfileImageToS3 = async ({
   presignedUrl: string;
   file: File;
 }) => {
-  const response = await fetch(presignedUrl, {
-    method: "PUT",
-    headers: {
-      "Content-Type": file.type,
-    },
-    body: file,
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(presignedUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": file.type,
+      },
+      body: file,
+    });
+  } catch {
+    throw new ApiRequestError("Failed to upload profile image", {
+      isNetworkError: true,
+    });
+  }
 
   if (!response.ok) {
-    throw new Error("Failed to upload profile image");
+    throw new ApiRequestError("Failed to upload profile image", {
+      status: response.status,
+    });
   }
 };
 

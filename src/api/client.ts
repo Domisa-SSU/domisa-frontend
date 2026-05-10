@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { queryClient } from '../queries/queryClient';
+import { reportGlobalErrorIfNeeded } from '../stores/globalErrorStore';
 
 const authMeQueryKey = ['auth', 'me'] as const;
 
@@ -18,6 +19,8 @@ apiClient.interceptors.response.use(
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       queryClient.setQueryData(authMeQueryKey, null);
     }
+
+    reportGlobalErrorIfNeeded(error);
 
     return Promise.reject(error);
   },

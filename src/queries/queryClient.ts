@@ -1,3 +1,12 @@
-import { QueryClient } from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 
-export const queryClient = new QueryClient();
+import { reportGlobalErrorIfNeeded } from "../stores/globalErrorStore";
+
+export const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: reportGlobalErrorIfNeeded,
+  }),
+  mutationCache: new MutationCache({
+    onError: reportGlobalErrorIfNeeded,
+  }),
+});
