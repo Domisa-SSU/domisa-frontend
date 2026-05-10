@@ -8,6 +8,7 @@ import loginImg from '../LoginPage/asset/loginImg.png';
 import { getDatingMatches } from '../../api/datingHome';
 import type { DatingMatch } from '../../api/datingHome';
 import { isServerError } from '../../utils/apiError';
+import { reportGlobalErrorIfNeeded } from '../../stores/globalErrorStore';
 
 function ProfileCard({ match, onClick }: { match: DatingMatch; onClick: () => void }) {
   return (
@@ -36,6 +37,10 @@ function MutualMatchPage() {
     getDatingMatches()
       .then((res) => setMatches(res.matches))
       .catch((error) => {
+        if (reportGlobalErrorIfNeeded(error)) {
+          return;
+        }
+
         setError(error);
         setIsError(true);
       })

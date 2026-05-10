@@ -7,6 +7,7 @@ import loginImg from '../LoginPage/asset/loginImg.png';
 import { getSentLikes } from '../../api/datingHome';
 import type { DatingHomeCard } from '../../api/datingHome';
 import { isServerError } from '../../utils/apiError';
+import { reportGlobalErrorIfNeeded } from '../../stores/globalErrorStore';
 
 function ProfileCard({ item, onClick }: { item: DatingHomeCard; onClick: () => void }) {
   return (
@@ -31,6 +32,10 @@ function LikesSentPage() {
     getSentLikes()
       .then((res) => setMyTypes(res.myTypes))
       .catch((error) => {
+        if (reportGlobalErrorIfNeeded(error)) {
+          return;
+        }
+
         setError(error);
         setIsError(true);
       })

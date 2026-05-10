@@ -7,6 +7,7 @@ import loginImg from '../LoginPage/asset/loginImg.png';
 import { getReceivedLikes } from '../../api/datingHome';
 import type { DatingHomeCard } from '../../api/datingHome';
 import { isServerError } from '../../utils/apiError';
+import { reportGlobalErrorIfNeeded } from '../../stores/globalErrorStore';
 
 function ProfileCard({ fan, onClick }: { fan: DatingHomeCard; onClick: () => void }) {
   return (
@@ -31,6 +32,10 @@ function LikesReceivedPage() {
     getReceivedLikes()
       .then((res) => setMyFans(res.myFans))
       .catch((error) => {
+        if (reportGlobalErrorIfNeeded(error)) {
+          return;
+        }
+
         setError(error);
         setIsError(true);
       })

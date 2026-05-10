@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import domisaLogo from "../../assets/domisaLogo.png";
 import errorImg from "../../assets/errorImg.png";
@@ -7,10 +8,25 @@ import { clearGlobalError } from "../../stores/globalErrorStore";
 
 function ErrorPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const initialLocationKeyRef = useRef(location.key);
+
   const handleGoHome = () => {
     clearGlobalError();
     navigate("/", { replace: true });
   };
+
+  useEffect(() => {
+    return () => {
+      clearGlobalError();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (location.key !== initialLocationKeyRef.current) {
+      clearGlobalError();
+    }
+  }, [location.key]);
 
   return (
     <div className="flex min-h-screen flex-col overflow-hidden bg-[linear-gradient(111.45deg,#ffcde3_2.77%,#ffe8f2_95.22%)]">

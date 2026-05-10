@@ -21,6 +21,7 @@ import { useUserCookiesQuery } from '../../queries/users';
 import type { CookieProductCode } from '../../api/orders';
 import { getCookieOrderStatus } from '../../api/orders';
 import { isServerError } from '../../utils/apiError';
+import { reportGlobalErrorIfNeeded } from '../../stores/globalErrorStore';
 
 type CookiePurchaseLocationState = {
   count: number;
@@ -110,6 +111,10 @@ function CookiePurchasePage() {
           setCookieModalState('failure');
         }
       } catch (error) {
+        if (reportGlobalErrorIfNeeded(error)) {
+          return;
+        }
+
         if (isServerError(error)) {
           setServerError(true);
           return;
@@ -289,6 +294,10 @@ function CookiePurchasePage() {
                   order_amount: order.orderAmount,
                 });
               } catch (error) {
+                if (reportGlobalErrorIfNeeded(error)) {
+                  return;
+                }
+
                 if (isServerError(error)) {
                   setServerError(true);
                   return;

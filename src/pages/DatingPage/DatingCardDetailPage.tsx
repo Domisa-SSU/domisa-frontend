@@ -630,12 +630,14 @@ function DatingCardDetailPage() {
     queryKey: datingCardDetailQueryKey(cardId, detailViewType),
     queryFn: () => fetchDatingCardDetail(cardId, detailViewType),
     enabled: cardId.trim().length > 0,
+    retry: false,
   });
 
   const { data: userCookies } = useQuery({
     queryKey: userCookiesQueryKey,
     queryFn: getCookies,
     enabled: actionModal?.type === "paid-like-confirm",
+    retry: false,
   });
 
   useEffect(() => {
