@@ -42,20 +42,20 @@ const buildActiveNotificationQueue = (
 ): NotificationType[] => {
   const queue: NotificationType[] = [];
 
-  if (activeNotifications.match) {
-    queue.push("MATCH");
-  }
-
-  if (activeNotifications.like) {
-    queue.push("LIKE");
-  }
-
   if (activeNotifications.signup) {
     queue.push("SIGNUP");
   }
 
   for (let index = 0; index < activeNotifications.referralCount; index += 1) {
     queue.push("REFERRAL");
+  }
+
+  if (activeNotifications.like) {
+    queue.push("LIKE");
+  }
+
+  if (activeNotifications.match) {
+    queue.push("MATCH");
   }
 
   return queue;
