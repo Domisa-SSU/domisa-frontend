@@ -514,8 +514,13 @@ function DatingPreviewSection({
 
   useEffect(() => {
     if (cards.length === 0) {
-      setScrollFadeStatus({ left: false, right: false });
-      return;
+      const frameId = window.requestAnimationFrame(() => {
+        setScrollFadeStatus({ left: false, right: false });
+      });
+
+      return () => {
+        window.cancelAnimationFrame(frameId);
+      };
     }
 
     const scrollContainer = scrollContainerRef.current;

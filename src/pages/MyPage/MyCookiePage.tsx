@@ -1,7 +1,9 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import ErrorPage from "../ErrorPage/ErrorPage";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import ReferralSection from "../../components/ReferralSection";
 import { useUserCookiesQuery } from "../../queries/users";
+import { isServerError } from "../../utils/apiError";
 import {
   INSUFFICIENT_COOKIES_REASON,
   type CookiePageLocationState,
@@ -19,10 +21,14 @@ const COOKIE_PACKAGES: { count: number; price: string; productCode: CookieProduc
 function MyCookiePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { data: cookies } = useUserCookiesQuery();
+  const { data: cookies, error } = useUserCookiesQuery();
   const locationState = location.state as CookiePageLocationState | null;
   const isInsufficientCookiesEntry =
     locationState?.reason === INSUFFICIENT_COOKIES_REASON;
+
+  if (isServerError(error)) {
+    return <ErrorPage />;
+  }
 
   return (
     <div className="min-h-screen bg-grey-100">

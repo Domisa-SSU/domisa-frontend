@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ErrorPage from '../ErrorPage/ErrorPage';
 import HeaderTop from '../../components/HeaderTop';
 import headerArrow from '../../assets/headerArrow.svg';
 import heartIconOrange from '../../assets/heartIconOrange.svg';
 import loginImg from '../LoginPage/asset/loginImg.png';
 import { getDatingMatches } from '../../api/datingHome';
 import type { DatingMatch } from '../../api/datingHome';
+import { isServerError } from '../../utils/apiError';
+import { reportGlobalErrorIfNeeded } from '../../stores/globalErrorStore';
 
 function ProfileCard({ match, onClick }: { match: DatingMatch; onClick: () => void }) {
   return (
@@ -28,13 +31,25 @@ function MutualMatchPage() {
   const [matches, setMatches] = useState<DatingMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<unknown>(null);
 
   useEffect(() => {
     getDatingMatches()
       .then((res) => setMatches(res.matches))
-      .catch(() => setIsError(true))
+      .catch((error) => {
+        if (reportGlobalErrorIfNeeded(error)) {
+          return;
+        }
+
+        setError(error);
+        setIsError(true);
+      })
       .finally(() => setIsLoading(false));
   }, []);
+
+  if (isServerError(error)) {
+    return <ErrorPage />;
+  }
 
   const renderContent = () => {
     if (isLoading) {
