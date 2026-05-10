@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useState } from "react";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import {
   datingCardDetailQueryKey,
@@ -613,6 +613,7 @@ function DetailFooter({
 
 function DatingCardDetailPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { cardId = "" } = useParams<{ cardId: string }>();
   const [searchParams] = useSearchParams();
@@ -669,7 +670,7 @@ function DatingCardDetailPage() {
 
   const navigateToInsufficientCookiesPage = () => {
     navigate("/my/cookie", {
-      state: insufficientCookiesLocationState,
+      state: { ...insufficientCookiesLocationState, returnTo: location.pathname },
     });
   };
 

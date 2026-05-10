@@ -5,6 +5,8 @@ import BackConfirmModal from './BackConfirmModal';
 import TransferPendingModal from './TransferPendingModal';
 import CookieSuccessModal from './CookieSuccessModal';
 import CookieFailureModal from './CookieFailureModal';
+import AlreadyProcessedModal from './AlreadyProcessedModal';
+import CanceledModal from './CanceledModal';
 import { useBlocker, useLocation, useNavigate } from 'react-router-dom';
 import NotLoginHeader from '../../components/NotLoginHeader';
 import Button from '../../components/Button/Button';
@@ -14,6 +16,7 @@ import copyIcon from '../../assets/copy.svg';
 import forbiddenIcon from '../../assets/toastForbidden.svg';
 import checkIcon from '../../assets/check.svg';
 import { useCancelCookieOrderMutation, useCreateCookieOrderMutation } from '../../queries/orders';
+import { useUserCookiesQuery } from '../../queries/users';
 import type { CookieProductCode } from '../../api/orders';
 import { getCookieOrderStatus } from '../../api/orders';
 
@@ -21,9 +24,10 @@ type CookiePurchaseLocationState = {
   count: number;
   price: string;
   productCode: CookieProductCode;
+  returnTo?: string;
 };
 
-type CookieModalState = 'none' | 'pending' | 'success' | 'failure';
+type CookieModalState = 'none' | 'pending' | 'success' | 'failure' | 'already_processed' | 'canceled';
 
 const MAX_POLL_COUNT = 3; // 3초마다 호출. 최대 3번. (최대 9초 대기)
 
@@ -53,12 +57,17 @@ function CookiePurchasePage() {
   const [showWarningToast, setShowWarningToast] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
   const [cookieModalState, setCookieModalState] = useState<CookieModalState>('none');
-  const [earnedCookieCount, setEarnedCookieCount] = useState(0);
   const [pollTick, setPollTick] = useState(0);
+
+  const { data: cookiesData, isSuccess: isCookiesLoaded } = useUserCookiesQuery({ enabled: cookieModalState === 'success' });
   const pollCountRef = useRef(0);
 
   const blocker = useBlocker(
-    cookieModalState !== 'success' && cookieModalState !== 'failure' && !isOrderError
+    cookieModalState !== 'success' &&
+    cookieModalState !== 'failure' &&
+    cookieModalState !== 'already_processed' &&
+    cookieModalState !== 'canceled' &&
+    !isOrderError
   );
 
   useEffect(() => {
@@ -82,20 +91,17 @@ function CookiePurchasePage() {
           billingName: order.billingName,
           orderAmount: order.orderAmount,
         });
-        if (result.confirmed) {
-          if (result.cookieAmount === null) {
-            setCookieModalState('failure');
-            return;
-          }
-          setEarnedCookieCount(result.cookieAmount);
-          setCookieModalState('success');
-        } else if (result.status === 'PAYMENT_PENDING') {
+        if (result.status === 'PAID' || result.status === 'ALREADY_PROCESSED') {
+          setCookieModalState(result.status === 'PAID' ? 'success' : 'already_processed');
+        } else if (result.status === 'PENDING') {
           if (pollCountRef.current >= MAX_POLL_COUNT) {
             setCookieModalState('failure');
             return;
           }
           pollCountRef.current += 1;
           setPollTick((t) => t + 1);
+        } else if (result.status === 'CANCELED') {
+          setCookieModalState('canceled');
         } else {
           setCookieModalState('failure');
         }
@@ -164,7 +170,7 @@ function CookiePurchasePage() {
   };
 
   const handleNavigateToCookie = () => {
-    navigate('/my/cookie', { replace: true });
+    navigate(state.returnTo ?? '/my/cookie', { replace: true });
   };
 
   return (
@@ -241,18 +247,23 @@ function CookiePurchasePage() {
       {showBankModal && (
         <BankTransferModal amount={state.price} onClose={() => setShowBankModal(false)} />
       )}
-      {cookieModalState === 'pending' && <TransferPendingModal />}
-      {cookieModalState === 'success' && (
-        <CookieSuccessModal cookieCount={earnedCookieCount} onConfirm={handleNavigateToCookie} />
+      {(cookieModalState === 'pending' || (cookieModalState === 'success' && !isCookiesLoaded)) && (
+        <TransferPendingModal />
+      )}
+      {cookieModalState === 'success' && isCookiesLoaded && (
+        <CookieSuccessModal cookieCount={cookiesData.cookieCount} onConfirm={handleNavigateToCookie} />
       )}
       {cookieModalState === 'failure' && (
         <CookieFailureModal
-          onInquiry={() => {
-            /* TODO: 문의하기 페이지 연결 */
-          }}
           onBack={handleNavigateToCookie}
           onClose={() => setCookieModalState('none')}
         />
+      )}
+      {cookieModalState === 'already_processed' && (
+        <AlreadyProcessedModal onConfirm={handleNavigateToCookie} />
+      )}
+      {cookieModalState === 'canceled' && (
+        <CanceledModal onClose={() => setCookieModalState('none')} />
       )}
       {blocker.state === 'blocked' && (
         <BackConfirmModal

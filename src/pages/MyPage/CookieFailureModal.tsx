@@ -1,13 +1,14 @@
 import ArrowIcon from "../../assets/arrowIcon.svg?react";
 import XIcon from "../../assets/X.svg";
 
+const INQUIRY_URL = "https://open.kakao.com/o/sHQFocui";
+
 type CookieFailureModalProps = {
-  onInquiry: () => void;
   onBack: () => void;
   onClose: () => void;
 };
 
-function CookieFailureModal({ onInquiry, onBack, onClose }: CookieFailureModalProps) {
+function CookieFailureModal({ onBack, onClose }: CookieFailureModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="relative flex w-[calc(100%-2.5rem)] max-w-[21.25rem] flex-col items-center gap-[1.875rem] rounded-[0.875rem] bg-white pb-5 pt-10">
@@ -23,7 +24,7 @@ function CookieFailureModal({ onInquiry, onBack, onClose }: CookieFailureModalPr
 
         <div className="flex flex-col items-center gap-[0.9375rem]">
           <p className="typo-title-header-1-b text-warning text-center">쿠키 지급 실패</p>
-          <p className="typo-subtitle-header-2 text-grey-900 text-center">이런 경우에 실패할 수 있어요</p>
+          <p className="typo-button-text text-grey-900 text-center">이런 경우에 실패할 수 있어요</p>
           <div className="typo-input-text-m text-grey-700 text-center">
             <ol className="list-decimal text-left pl-[1.3125rem] space-y-0">
               <li>입금자명 혹은 금액을 잘못 입력한 경우</li>
@@ -33,13 +34,14 @@ function CookieFailureModal({ onInquiry, onBack, onClose }: CookieFailureModalPr
           </div>
         </div>
         <div className="flex flex-col gap-2.5">
-          <button
-            type="button"
-            onClick={onInquiry}
+          <a
+            href={INQUIRY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex h-[3.125rem] w-[18.75rem] items-center justify-center rounded-[0.875rem] bg-[#fff5c4] text-[#ff8250] typo-button-text-b"
           >
             문의하기
-          </button>
+          </a>
           <button
             type="button"
             onClick={onBack}

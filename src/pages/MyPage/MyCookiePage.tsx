@@ -64,7 +64,7 @@ function MyCookiePage() {
                     <span className="typo-comment-1 text-grey-900">쿠키 {count}개</span>
                   </div>
                   <button
-                    onClick={() => navigate("/my/cookie/purchase", { state: { count, price, productCode } })}
+                    onClick={() => navigate("/my/cookie/purchase", { state: { count, price, productCode, returnTo: locationState?.returnTo } })}
                     className="flex items-center justify-center h-8 w-20 rounded-[0.3125rem] typo-comment-2 text-grey-100"
                     style={{
                       background:
