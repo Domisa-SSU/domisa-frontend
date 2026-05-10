@@ -99,7 +99,7 @@ function EditProfileForm({ me }: EditProfileFormProps) {
   const [nickname, setNickname] = useState(me.nickname);
   const [isNicknameChecked, setIsNicknameChecked] = useState(true);
   const [nicknameErrorMessage, setNicknameErrorMessage] = useState('');
-  const [gender, setGender] = useState(me.gender ? '남성' : '여성');
+  const gender = me.gender ? '남성' : '여성';
   const [birthYear, setBirthYear] = useState(String(me.birthYear));
   const { mutateAsync: checkNicknameAvailability, isPending: isCheckingNickname } =
     useCheckNicknameMutation();
@@ -264,12 +264,12 @@ function EditProfileForm({ me }: EditProfileFormProps) {
                   <button
                     key={option}
                     type="button"
-                    onClick={() => setGender(option)}
+                    disabled
                     className={`flex h-10 flex-1 items-center justify-center rounded-[0.625rem] px-2.5 ${
                       isSelected
-                        ? 'bg-primary-500 typo-input-text text-grey-100'
-                        : 'bg-primary-100 typo-input-text-m text-grey-600'
-                    }`}
+                        ? 'bg-primary-500 typo-input-text text-grey-100 opacity-60'
+                        : 'bg-primary-100 typo-input-text-m text-grey-600 opacity-40'
+                    } cursor-not-allowed`}
                   >
                     {option}
                   </button>
