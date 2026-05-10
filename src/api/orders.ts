@@ -39,24 +39,20 @@ export const cancelCookieOrder = async (payload: CancelCookieOrderRequest): Prom
   await apiClient.post('/api/orders/cookies/cancel', payload);
 };
 
-type CookieOrderStatus = 'PAID' | 'PAYMENT_PENDING' | 'UNCONFIRMED';
+export type CookieOrderStatus = 'PENDING' | 'PAID' | 'ALREADY_PROCESSED' | 'CANCELED';
 
 export type CookieOrderStatusResponse = {
-  confirmed: boolean;
   status: CookieOrderStatus;
   cookieAmount: number | null;
-  message?: string;
 };
 
 const parseCookieOrderStatusResponse = (value: unknown): CookieOrderStatusResponse | null => {
   if (!value || typeof value !== 'object') return null;
   const r = value as Record<string, unknown>;
-  if (typeof r.confirmed !== 'boolean' || typeof r.status !== 'string') return null;
+  if (typeof r.status !== 'string') return null;
   return {
-    confirmed: r.confirmed,
     status: r.status as CookieOrderStatus,
     cookieAmount: typeof r.cookie_amount === 'number' ? r.cookie_amount : null,
-    message: typeof r.message === 'string' ? r.message : undefined,
   };
 };
 

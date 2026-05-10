@@ -13,11 +13,12 @@ export const useUserMeQuery = () =>
     staleTime: Infinity,
   });
 
-export const useUserCookiesQuery = () =>
+export const useUserCookiesQuery = (options?: { enabled?: boolean }) =>
   useQuery({
     queryKey: userCookiesQueryKey,
     queryFn: getCookies,
     staleTime: 0,
+    enabled: options?.enabled,
   });
 
 export const useUpdateMeMutation = () => {

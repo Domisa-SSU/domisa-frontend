@@ -54,13 +54,9 @@ function BankTransferModal({ amount, onClose }: BankTransferModalProps) {
               <span className="typo-subtitle-header-2 text-grey-900">
                 케이뱅크 {ACCOUNT_NUMBER}
               </span>
-              <span className="typo-input-text-m text-grey-700">
-                예금주 : 도미사(DOMISA)
-              </span>
+              <span className="typo-input-text-m text-grey-700">예금주 : 오영록</span>
             </div>
-            <span className="typo-header-3-b text-primary-600">
-              금액 : {amount}원
-            </span>
+            <span className="typo-header-3-b text-primary-600">금액 : {amount}원</span>
           </div>
 
           {/* 버튼 영역 */}
