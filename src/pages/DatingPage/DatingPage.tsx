@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import {
   fetchDatingHome,
@@ -586,6 +586,7 @@ function DatingPreviewSection({
 
 function DatingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { data, isError, isPending } = useQuery({
     queryKey: datingHomeQueryKey,
@@ -613,7 +614,7 @@ function DatingPage() {
 
   const navigateToInsufficientCookiesPage = () => {
     navigate("/my/cookie", {
-      state: insufficientCookiesLocationState,
+      state: { ...insufficientCookiesLocationState, returnTo: location.pathname },
     });
   };
 

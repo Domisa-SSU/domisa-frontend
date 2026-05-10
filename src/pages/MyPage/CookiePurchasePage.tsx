@@ -24,6 +24,7 @@ type CookiePurchaseLocationState = {
   count: number;
   price: string;
   productCode: CookieProductCode;
+  returnTo?: string;
 };
 
 type CookieModalState = 'none' | 'pending' | 'success' | 'failure' | 'already_processed' | 'canceled';
@@ -169,7 +170,7 @@ function CookiePurchasePage() {
   };
 
   const handleNavigateToCookie = () => {
-    navigate('/my/cookie', { replace: true });
+    navigate(state.returnTo ?? '/my/cookie', { replace: true });
   };
 
   return (
