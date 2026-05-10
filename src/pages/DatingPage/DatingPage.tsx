@@ -447,14 +447,10 @@ function DatingPreviewCard({
     <button
       type="button"
       onClick={() => onViewDetail(card.id)}
-      className="h-[7.6875rem] w-[5.3125rem] shrink-0 rounded-[0.3125rem] border-[0.25rem] border-grey-100 bg-grey-100 p-[0.1875rem] shadow-[0_1px_5px_rgba(0,0,0,0.18)]"
+      className="h-[7.6875rem] w-[5.3125rem] shrink-0 rounded-[0.3125rem] text-left"
       aria-label="소개팅 카드 상세 보기"
     >
-      <img
-        src={card.profile ?? sumnailIcon}
-        alt=""
-        className="h-full w-full rounded-[0.25rem] object-cover"
-      />
+      <OpenDatingCard profile={card.profile} />
     </button>
   );
 }
