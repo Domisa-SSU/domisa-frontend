@@ -208,7 +208,7 @@ function HomePage() {
           <img src={logo} alt="" className="w-[13.4rem]" />
           <div className="flex items-center gap-0.5">
             <span className={`${themeClasses.text} typo-comment-1`}>
-              오늘 매칭된 커플
+              현재 매칭된 커플
             </span>
             <div className={`${themeClasses.coupleTextBackGround} px-[0.12rem] typo-comment-1-b py-[0.09rem] text-primary-500 rounded-[0.93rem]`}>
               {matchCount}

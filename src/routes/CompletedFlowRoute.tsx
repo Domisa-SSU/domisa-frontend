@@ -15,16 +15,30 @@ const fallbackPath = "/";
 const isSafeInternalPath = (value: unknown): value is string =>
   typeof value === "string" && value.startsWith("/") && !value.startsWith("//");
 
-const getOriginPath = (location: ReturnType<typeof useLocation>) => {
-  const from = (location.state as { from?: unknown } | null)?.from;
-
-  if (!isSafeInternalPath(from)) {
-    return fallbackPath;
+const getSafeRedirectPath = (
+  value: unknown,
+  currentPath: string,
+) => {
+  if (!isSafeInternalPath(value) || value === currentPath) {
+    return null;
   }
 
-  const currentPath = `${location.pathname}${location.search}${location.hash}`;
+  return value;
+};
 
-  return from === currentPath ? fallbackPath : from;
+const getOriginPath = (location: ReturnType<typeof useLocation>) => {
+  const currentPath = `${location.pathname}${location.search}${location.hash}`;
+  const returnTo = new URLSearchParams(location.search).get("returnTo");
+  const returnToPath = getSafeRedirectPath(returnTo, currentPath);
+
+  if (returnToPath) {
+    return returnToPath;
+  }
+
+  const from = (location.state as { from?: unknown } | null)?.from;
+  const fromPath = getSafeRedirectPath(from, currentPath);
+
+  return fromPath ?? fallbackPath;
 };
 
 function CompletedFlowRoute({ children, flow }: CompletedFlowRouteProps) {

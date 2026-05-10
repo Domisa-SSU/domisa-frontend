@@ -5,7 +5,6 @@ import BottomActionBar from "../../components/BottomActionBar";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import type { AnimalProfile } from "../../api/users";
 import { useRegisterUserMutation } from "../../queries/users";
-import { markReceiveIntroductionPendingAfterSignup } from "../../utils/receiveIntroductionPending";
 import { useSignupFlow } from "./useSignupFlow";
 import alphacaImg from "./asset/alphacaImg.png";
 import bearImg from "./asset/bearImg.png";
@@ -70,21 +69,6 @@ const getSafeReturnTo = (value: string | null) => {
     }
 
     return value;
-};
-
-const getIntroduceReturnLinkCode = (returnTo: string | null) => {
-    if (!returnTo) {
-        return null;
-    }
-
-    const pathname = new URL(returnTo, window.location.origin).pathname;
-    const [, path, linkCode] = pathname.split("/");
-
-    if (path !== "introduce" || !linkCode) {
-        return null;
-    }
-
-    return decodeURIComponent(linkCode);
 };
 
 function SignupCharacterSelectPage() {
@@ -171,11 +155,6 @@ function SignupCharacterSelectPage() {
             const isIntroduceFriendFlow =
                 searchParams.get("flow") === "introduce-friend";
             const returnTo = getSafeReturnTo(searchParams.get("returnTo"));
-            const introduceLinkCode = getIntroduceReturnLinkCode(returnTo);
-
-            if (introduceLinkCode) {
-                markReceiveIntroductionPendingAfterSignup(introduceLinkCode);
-            }
 
             resetSignupFlow();
             navigate(
