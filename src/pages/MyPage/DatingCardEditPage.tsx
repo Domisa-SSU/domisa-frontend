@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import ErrorPage from '../ErrorPage/ErrorPage';
 import NotLoginHeader from '../../components/NotLoginHeader';
 import Toast from '../../components/Toast';
 import { PhotoCropModal } from '../../components/PhotoCropModal';
@@ -12,6 +13,8 @@ import selectArrow from '../SignupPage/asset/selectArrow.svg';
 import { useDatingProfileQuery, useUpdateDatingProfileMutation } from '../../queries/datingProfile';
 import type { DatingProfileResponse, DatingProfileContactType } from '../../api/datingProfile';
 import { createProfileImageUploadUrl, uploadProfileImageToS3, completeProfileImageUpload } from '../../api/s3';
+import { isServerError } from '../../utils/apiError';
+import { reportGlobalErrorIfNeeded } from '../../stores/globalErrorStore';
 
 type ContactMethodType = 'INSTAGRAM' | 'KAKAO';
 
@@ -145,6 +148,7 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
   const objectUrlRef = useRef<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [serverError, setServerError] = useState(false);
   const [toast, setToast] = useState<{ message: string; icon?: string } | null>(null);
   const [showMbtiModal, setShowMbtiModal] = useState(false);
 
@@ -213,11 +217,26 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
       setIsEditing(false);
       setToast({ message: '수정 완료되었습니다' });
     } catch (error) {
+      if (reportGlobalErrorIfNeeded(error)) {
+        setIsUploading(false);
+        return;
+      }
+
+      if (isServerError(error)) {
+        setIsUploading(false);
+        setServerError(true);
+        return;
+      }
+
       console.error(error);
       setIsUploading(false);
       setToast({ message: '수정에 실패했어요. 다시 시도해주세요.', icon: forbiddenIcon });
     }
   };
+
+  if (serverError) {
+    return <ErrorPage />;
+  }
 
   const handleMbtiModalClose = (newMbti: string) => {
     setDraft((prev) => ({ ...prev, mbti: newMbti.trim() }));
@@ -539,7 +558,11 @@ function DatingCardEditForm({ profile }: DatingCardEditFormProps) {
 }
 
 function DatingCardEditPage() {
-  const { data: profile, isLoading, isError } = useDatingProfileQuery();
+  const { data: profile, error, isLoading, isError } = useDatingProfileQuery();
+
+  if (isServerError(error)) {
+    return <ErrorPage />;
+  }
 
   if (isError) {
     return (

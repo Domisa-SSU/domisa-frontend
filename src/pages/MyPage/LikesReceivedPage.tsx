@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ErrorPage from '../ErrorPage/ErrorPage';
 import HeaderTop from '../../components/HeaderTop';
 import headerArrow from '../../assets/headerArrow.svg';
 import loginImg from '../LoginPage/asset/loginImg.png';
 import { getReceivedLikes } from '../../api/datingHome';
 import type { DatingHomeCard } from '../../api/datingHome';
+import { isServerError } from '../../utils/apiError';
+import { reportGlobalErrorIfNeeded } from '../../stores/globalErrorStore';
 
 function ProfileCard({ fan, onClick }: { fan: DatingHomeCard; onClick: () => void }) {
   return (
@@ -23,13 +26,25 @@ function LikesReceivedPage() {
   const [myFans, setMyFans] = useState<DatingHomeCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<unknown>(null);
 
   useEffect(() => {
     getReceivedLikes()
       .then((res) => setMyFans(res.myFans))
-      .catch(() => setIsError(true))
+      .catch((error) => {
+        if (reportGlobalErrorIfNeeded(error)) {
+          return;
+        }
+
+        setError(error);
+        setIsError(true);
+      })
       .finally(() => setIsLoading(false));
   }, []);
+
+  if (isServerError(error)) {
+    return <ErrorPage />;
+  }
 
   const renderContent = () => {
     if (isLoading) {

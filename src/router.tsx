@@ -23,6 +23,7 @@ import NotificationPage from "./pages/NotificationPage/NotificationPage";
 import RequireIntroducePage from "./pages/DatingPage/RequireIntroducePage";
 import CompletedFlowRoute from "./routes/CompletedFlowRoute";
 import DatingAccessGuard from "./routes/DatingAccessGuard";
+import DatingRegisterRoute from "./routes/DatingRegisterRoute";
 import RegisteredOnlyRoute from "./routes/RegisteredOnlyRoute";
 import ErrorPage from "./pages/ErrorPage/ErrorPage";
 
@@ -73,9 +74,9 @@ const router = createBrowserRouter([
       {
         path: "dating/register",
         element: (
-          <CompletedFlowRoute flow="datingRegister">
+          <DatingRegisterRoute>
             <DatingRegisterPage />
-          </CompletedFlowRoute>
+          </DatingRegisterRoute>
         ),
       },
       {

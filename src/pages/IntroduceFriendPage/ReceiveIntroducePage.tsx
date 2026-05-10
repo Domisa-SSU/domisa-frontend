@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
@@ -11,11 +11,7 @@ import type { AuthMeResponse } from "../../types/user";
 import Button from "../../components/Button/Button";
 import HeaderTop from "../../components/HeaderTop";
 import { authMeQueryKey, useAuthMeQuery } from "../../queries/auth";
-import {
-  clearReceiveIntroductionPending,
-  getReceiveIntroductionPending,
-  setReceiveIntroductionPending,
-} from "../../utils/receiveIntroductionPending";
+import { reportGlobalErrorIfNeeded } from "../../stores/globalErrorStore";
 import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
 
 type MessageModalProps = {
@@ -34,20 +30,67 @@ type AcceptSuccessType = "created" | "changed";
 const introductionQueryKey = (linkCode: string) =>
   ["introduction", "received", linkCode] as const;
 
-const isIntroductionAlreadyAcceptedError = (error: unknown) => {
+const getApiErrorData = (error: unknown) => {
   if (!isAxiosError(error)) {
-    return false;
+    return null;
   }
 
   const data = error.response?.data;
 
   if (!data || typeof data !== "object") {
+    return null;
+  }
+
+  return data as Record<string, unknown>;
+};
+
+const getApiErrorCode = (error: unknown) => {
+  const data = getApiErrorData(error);
+  const code = data?.code;
+
+  return typeof code === "string" ? code : null;
+};
+
+const getApiErrorMessage = (error: unknown) => {
+  const data = getApiErrorData(error);
+  const message = data?.message;
+
+  return typeof message === "string" ? message : null;
+};
+
+const isUnauthorizedIntroductionAcceptError = (error: unknown) => {
+  if (!isAxiosError(error)) {
     return false;
   }
 
-  return (
-    (data as Record<string, unknown>).code === "INTRODUCTION_ALREADY_ACCEPTED"
-  );
+  if (error.response?.status === 401) {
+    return true;
+  }
+
+  return getApiErrorCode(error) === "USER_NOT_FOUND";
+};
+
+const getIntroductionAcceptErrorDescription = (error: unknown) => {
+  const code = getApiErrorCode(error);
+
+  if (code === "INTRODUCTION_ALREADY_ACCEPTED") {
+    return "이미 수락된 소개서입니다.";
+  }
+
+  if (code === "INTRODUCTION_NOT_FOUND") {
+    return "소개서를 찾을 수 없습니다.";
+  }
+
+  if (
+    isAxiosError(error) &&
+    error.response?.status &&
+    error.response.status >= 400 &&
+    error.response.status < 500
+  ) {
+    return getApiErrorMessage(error) ?? "소개서를 수락할 수 없습니다.";
+  }
+
+  return null;
 };
 
 function ReceiveIntroduceHeader() {
@@ -122,10 +165,8 @@ function ReceiveIntroducePage() {
   const queryClient = useQueryClient();
   const { linkCode = "" } = useParams<{ linkCode: string }>();
   const { data: authMe } = useAuthMeQuery();
-  const pendingAutoAcceptRef = useRef(false);
   const [isReplaceConfirmOpen, setIsReplaceConfirmOpen] = useState(false);
   const [acceptSuccessType, setAcceptSuccessType] = useState<AcceptSuccessType | null>(null);
-  const [isSignupCompleteModalOpen, setIsSignupCompleteModalOpen] = useState(false);
   const [invalidIntroductionDescription, setInvalidIntroductionDescription] =
     useState("");
 
@@ -176,98 +217,37 @@ function ReceiveIntroducePage() {
     try {
       await acceptIntroduction(introduction.introductionId);
       await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
-      const pending = getReceiveIntroductionPending();
-
-      if (
-        pending?.linkCode === linkCode &&
-        pending.introductionId === introduction.introductionId
-      ) {
-        clearReceiveIntroductionPending();
-      }
 
       setIsReplaceConfirmOpen(false);
       setAcceptSuccessType(successType);
     } catch (error) {
-      if (isIntroductionAlreadyAcceptedError(error)) {
-        clearReceiveIntroductionPending();
+      if (reportGlobalErrorIfNeeded(error)) {
+        return;
+      }
+
+      if (isUnauthorizedIntroductionAcceptError(error)) {
+        const returnTo = `/introduce/${encodeURIComponent(linkCode)}`;
+
         setIsReplaceConfirmOpen(false);
-        setInvalidIntroductionDescription("이미 수락된 소개서입니다.");
+        queryClient.setQueryData(authMeQueryKey, null);
+        navigate(`/auth?returnTo=${encodeURIComponent(returnTo)}`, {
+          replace: true,
+        });
+        return;
+      }
+
+      const introductionAcceptErrorDescription =
+        getIntroductionAcceptErrorDescription(error);
+
+      if (introductionAcceptErrorDescription) {
+        setIsReplaceConfirmOpen(false);
+        setInvalidIntroductionDescription(introductionAcceptErrorDescription);
         return;
       }
 
       console.error(error);
     }
   };
-
-  useEffect(() => {
-    if (
-      !authMe ||
-      authMe.status.isRegistered !== true ||
-      !introduction ||
-      isAccepting ||
-      acceptSuccessType ||
-      isSignupCompleteModalOpen ||
-      pendingAutoAcceptRef.current
-    ) {
-      return;
-    }
-
-    const pending = getReceiveIntroductionPending();
-
-    if (!pending || pending.linkCode !== linkCode) {
-      return;
-    }
-
-    if (pending.introductionId !== introduction.introductionId) {
-      clearReceiveIntroductionPending();
-      return;
-    }
-
-    pendingAutoAcceptRef.current = true;
-
-    if (authMe.status.hasIntroduction) {
-      if (pending.shouldShowSignupCompleteModal) {
-        clearReceiveIntroductionPending();
-        setIsSignupCompleteModalOpen(true);
-        return;
-      }
-
-      setIsReplaceConfirmOpen(true);
-      return;
-    }
-
-    acceptIntroduction(pending.introductionId)
-      .then(async () => {
-        await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
-        clearReceiveIntroductionPending();
-
-        if (pending.shouldShowSignupCompleteModal) {
-          setIsSignupCompleteModalOpen(true);
-          return;
-        }
-
-        setAcceptSuccessType("created");
-      })
-      .catch((error) => {
-        if (isIntroductionAlreadyAcceptedError(error)) {
-          clearReceiveIntroductionPending();
-          setInvalidIntroductionDescription("이미 수락된 소개서입니다.");
-          return;
-        }
-
-        console.error(error);
-        pendingAutoAcceptRef.current = false;
-      });
-  }, [
-    acceptIntroduction,
-    acceptSuccessType,
-    authMe,
-    introduction,
-    isAccepting,
-    isSignupCompleteModalOpen,
-    linkCode,
-    queryClient,
-  ]);
 
   const handleAccept = async () => {
     if (!introduction || isAccepting) {
@@ -276,22 +256,12 @@ function ReceiveIntroducePage() {
 
     if (!authMe) {
       const returnTo = `/introduce/${encodeURIComponent(linkCode)}`;
-      setReceiveIntroductionPending({
-        linkCode,
-        introductionId: introduction.introductionId,
-        shouldShowSignupCompleteModal: false,
-      });
       navigate(`/auth?returnTo=${encodeURIComponent(returnTo)}`);
       return;
     }
 
     if (authMe.status.isRegistered !== true) {
       const returnTo = `/introduce/${encodeURIComponent(linkCode)}`;
-      setReceiveIntroductionPending({
-        linkCode,
-        introductionId: introduction.introductionId,
-        shouldShowSignupCompleteModal: false,
-      });
       navigate(`/auth/signup?returnTo=${encodeURIComponent(returnTo)}`);
       return;
     }
@@ -316,15 +286,6 @@ function ReceiveIntroducePage() {
   };
 
   const handleCancelReplace = () => {
-    const pending = getReceiveIntroductionPending();
-
-    if (
-      pending?.linkCode === linkCode &&
-      pending.introductionId === introduction?.introductionId
-    ) {
-      clearReceiveIntroductionPending();
-    }
-
     setIsReplaceConfirmOpen(false);
   };
 
@@ -444,20 +405,6 @@ function ReceiveIntroducePage() {
             {
               label: "소개팅 하러 가기",
               onClick: handleGoDating,
-              variant: "primary",
-            },
-          ]}
-        />
-      )}
-
-      {isSignupCompleteModalOpen && (
-        <MessageModal
-          title="회원가입이 완료됐어요"
-          description="친구 소개서가 반영됐어요"
-          actions={[
-            {
-              label: "홈으로",
-              onClick: () => navigate("/", { replace: true }),
               variant: "primary",
             },
           ]}

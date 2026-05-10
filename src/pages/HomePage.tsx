@@ -42,20 +42,20 @@ const buildActiveNotificationQueue = (
 ): NotificationType[] => {
   const queue: NotificationType[] = [];
 
-  if (activeNotifications.match) {
-    queue.push("MATCH");
-  }
-
-  if (activeNotifications.like) {
-    queue.push("LIKE");
-  }
-
   if (activeNotifications.signup) {
     queue.push("SIGNUP");
   }
 
   for (let index = 0; index < activeNotifications.referralCount; index += 1) {
     queue.push("REFERRAL");
+  }
+
+  if (activeNotifications.like) {
+    queue.push("LIKE");
+  }
+
+  if (activeNotifications.match) {
+    queue.push("MATCH");
   }
 
   return queue;
@@ -115,18 +115,18 @@ function HomePage() {
         };
 
   useEffect(() => {
-    if (!authMe) {
-      setActiveNotificationQueue([]);
-    }
-  }, [authMe]);
+    const nextQueue =
+      authMe && activeNotifications
+        ? buildActiveNotificationQueue(activeNotifications)
+        : [];
+    const frameId = window.requestAnimationFrame(() => {
+      setActiveNotificationQueue(nextQueue);
+    });
 
-  useEffect(() => {
-    if (!activeNotifications) {
-      return;
-    }
-
-    setActiveNotificationQueue(buildActiveNotificationQueue(activeNotifications));
-  }, [activeNotifications]);
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [activeNotifications, authMe]);
 
   const handleDatingClick = () => {
     const flowOrigin = {
@@ -208,7 +208,7 @@ function HomePage() {
           <img src={logo} alt="" className="w-[13.4rem]" />
           <div className="flex items-center gap-0.5">
             <span className={`${themeClasses.text} typo-comment-1`}>
-              오늘 매칭된 커플
+              현재 매칭된 커플
             </span>
             <div className={`${themeClasses.coupleTextBackGround} px-[0.12rem] typo-comment-1-b py-[0.09rem] text-primary-500 rounded-[0.93rem]`}>
               {matchCount}

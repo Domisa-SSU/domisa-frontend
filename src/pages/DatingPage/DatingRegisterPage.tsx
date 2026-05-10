@@ -30,6 +30,8 @@ import Button from '../../components/Button/Button';
 import { ButtonVariant } from '../../components/Button/ButtonEnums';
 import NotLoginHeader from '../../components/NotLoginHeader';
 import { authMeQueryKey } from '../../queries/auth';
+import { userMeQueryKey } from '../../queries/users';
+import { reportGlobalErrorIfNeeded } from '../../stores/globalErrorStore';
 import type { DatingRegisterContactMethod } from './DatingRegisterFlowState';
 import { DatingRegisterFlowProvider } from './DatingRegisterFlowContext';
 import smileIcon from './assets/smileIcon.svg';
@@ -751,9 +753,8 @@ function DatingRegisterNotificationPhoneStep() {
         notificationPhone: formData.isSmsOptedOut ? null : formData.notificationPhone,
       });
 
-      await queryClient.invalidateQueries({
-        queryKey: authMeQueryKey,
-      });
+      await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
+      await queryClient.invalidateQueries({ queryKey: userMeQueryKey });
 
       if (!createdProfile.status.hasIntroduction) {
         resetRegisterFlow();
@@ -764,6 +765,10 @@ function DatingRegisterNotificationPhoneStep() {
       setTotalUserCount(createdProfile.totalUserCount);
       setIsCompleteModalOpen(true);
     } catch (error) {
+      if (reportGlobalErrorIfNeeded(error)) {
+        return;
+      }
+
       console.error(error);
       setErrorMessage('프로필 등록에 실패했어요. 다시 시도해주세요.');
     } finally {

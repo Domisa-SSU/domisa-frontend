@@ -10,6 +10,7 @@ export const useUserMeQuery = () =>
   useQuery({
     queryKey: userMeQueryKey,
     queryFn: getMe,
+    retry: false,
     staleTime: Infinity,
   });
 
@@ -17,6 +18,7 @@ export const useUserCookiesQuery = (options?: { enabled?: boolean }) =>
   useQuery({
     queryKey: userCookiesQueryKey,
     queryFn: getCookies,
+    retry: false,
     staleTime: 0,
     enabled: options?.enabled,
   });
@@ -39,6 +41,7 @@ export const useRegisterUserMutation = () => {
     mutationFn: registerUser,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
+      await queryClient.invalidateQueries({ queryKey: userMeQueryKey });
     },
   });
 };

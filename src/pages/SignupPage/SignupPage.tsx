@@ -17,6 +17,24 @@ const fieldClassName =
 const selectClassName =
     "h-10 w-full appearance-none rounded-[0.625rem] bg-primary-100 px-[0.875rem] pr-9 typo-input-text-m focus:outline-none";
 
+const getSafeReturnTo = (value: string | null) => {
+    if (!value || !value.startsWith("/") || value.startsWith("//")) {
+        return null;
+    }
+
+    return value;
+};
+
+const getReceiveIntroduceReturnTo = (returnTo: string | null) => {
+    if (!returnTo) {
+        return null;
+    }
+
+    const pathname = new URL(returnTo, window.location.origin).pathname;
+
+    return pathname.startsWith("/introduce/") ? returnTo : null;
+};
+
 function SignupPage() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -43,6 +61,8 @@ function SignupPage() {
 
         return shouldShowToast;
     });
+    const returnTo = getSafeReturnTo(searchParams.get("returnTo"));
+    const receiveIntroduceReturnTo = getReceiveIntroduceReturnTo(returnTo);
 
     const isFormValid = useMemo(() => {
         return (
@@ -104,6 +124,15 @@ function SignupPage() {
         });
     };
 
+    const handleHeaderBack = () => {
+        if (receiveIntroduceReturnTo) {
+            navigate(receiveIntroduceReturnTo, { replace: true });
+            return;
+        }
+
+        navigate(-1);
+    };
+
     useEffect(() => {
         if (!showKakaoLoginToast) {
             return;
@@ -121,7 +150,7 @@ function SignupPage() {
     return (
         <div className="min-h-screen bg-grey-100">
             {showKakaoLoginToast ? <Toast message="카카오 로그인 완료!" /> : null}
-            <NotLoginHeader title="회원가입"></NotLoginHeader>
+            <NotLoginHeader title="회원가입" onBack={handleHeaderBack}></NotLoginHeader>
             <div className="px-5 pt-6 pb-[7.5625rem]">
                 <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-5">
                     <section className="flex flex-col gap-[0.875rem]">

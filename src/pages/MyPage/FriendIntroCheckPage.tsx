@@ -1,8 +1,10 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getMyIntroduction } from "../../api/introduction";
+import ErrorPage from "../ErrorPage/ErrorPage";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import inviteCreatedIcon from "../IntroduceFriendPage/assets/inviteCreatedIcon.svg";
+import { isServerError } from "../../utils/apiError";
 
 const myIntroductionQueryKey = ["introduction", "my"] as const;
 
@@ -28,6 +30,7 @@ function IntroductionCard({
 function FriendIntroCheckPage() {
   const {
     data: introduction,
+    error,
     isPending,
     isError,
   } = useQuery({
@@ -47,6 +50,10 @@ function FriendIntroCheckPage() {
         : [],
     [introduction],
   );
+
+  if (isServerError(error)) {
+    return <ErrorPage />;
+  }
 
   if (isPending) {
     return (

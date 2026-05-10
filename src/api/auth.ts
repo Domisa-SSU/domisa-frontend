@@ -37,6 +37,7 @@ const parseAuthMeResponse = (value: unknown): AuthMeResponse | null => {
 
     if (
         typeof response.publicId !== "string" ||
+        typeof response.cookies !== "number" ||
         !isBackendStatusDto(response.status)
     ) {
         return null;
@@ -44,6 +45,7 @@ const parseAuthMeResponse = (value: unknown): AuthMeResponse | null => {
 
     return {
         publicId: response.publicId,
+        cookies: response.cookies,
         status: normalizeUserStatus(response.status),
     };
 };
