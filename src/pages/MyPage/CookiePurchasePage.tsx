@@ -59,7 +59,7 @@ function CookiePurchasePage() {
   const [cookieModalState, setCookieModalState] = useState<CookieModalState>('none');
   const [pollTick, setPollTick] = useState(0);
 
-  const { data: cookiesData } = useUserCookiesQuery({ enabled: cookieModalState === 'success' });
+  const { data: cookiesData, isSuccess: isCookiesLoaded } = useUserCookiesQuery({ enabled: cookieModalState === 'success' });
   const pollCountRef = useRef(0);
 
   const blocker = useBlocker(
@@ -247,9 +247,11 @@ function CookiePurchasePage() {
       {showBankModal && (
         <BankTransferModal amount={state.price} onClose={() => setShowBankModal(false)} />
       )}
-      {cookieModalState === 'pending' && <TransferPendingModal />}
-      {cookieModalState === 'success' && (
-        <CookieSuccessModal cookieCount={cookiesData?.cookieCount ?? 0} onConfirm={handleNavigateToCookie} />
+      {(cookieModalState === 'pending' || (cookieModalState === 'success' && !isCookiesLoaded)) && (
+        <TransferPendingModal />
+      )}
+      {cookieModalState === 'success' && isCookiesLoaded && (
+        <CookieSuccessModal cookieCount={cookiesData.cookieCount} onConfirm={handleNavigateToCookie} />
       )}
       {cookieModalState === 'failure' && (
         <CookieFailureModal
