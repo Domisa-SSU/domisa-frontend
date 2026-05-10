@@ -3,11 +3,8 @@ import { Navigate, useLocation } from "react-router-dom";
 
 import { useAuthMeQuery } from "../queries/auth";
 
-type CompletedFlow = "signup";
-
-type CompletedFlowRouteProps = {
+type DatingRegisterRouteProps = {
   children: ReactNode;
-  flow: CompletedFlow;
 };
 
 const fallbackPath = "/";
@@ -26,8 +23,11 @@ const getSafeRedirectPath = (
   return value;
 };
 
+const getCurrentPath = (location: ReturnType<typeof useLocation>) =>
+  `${location.pathname}${location.search}${location.hash}`;
+
 const getOriginPath = (location: ReturnType<typeof useLocation>) => {
-  const currentPath = `${location.pathname}${location.search}${location.hash}`;
+  const currentPath = getCurrentPath(location);
   const returnTo = new URLSearchParams(location.search).get("returnTo");
   const returnToPath = getSafeRedirectPath(returnTo, currentPath);
 
@@ -41,16 +41,19 @@ const getOriginPath = (location: ReturnType<typeof useLocation>) => {
   return fromPath ?? fallbackPath;
 };
 
-function CompletedFlowRoute({ children, flow }: CompletedFlowRouteProps) {
+function DatingRegisterRoute({ children }: DatingRegisterRouteProps) {
   const location = useLocation();
   const { data: authMe, isPending } = useAuthMeQuery();
+  const currentPath = getCurrentPath(location);
+  const encodedReturnTo = encodeURIComponent(currentPath);
+  const flowOrigin = { from: currentPath };
 
   if (isPending) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-grey-100">
         <div
           role="status"
-          aria-label="사용자 정보 확인 중"
+          aria-label="소개팅 프로필 등록 권한 확인 중"
           className="h-10 w-10 animate-spin rounded-full border-[0.1875rem] border-primary-200 border-t-primary-500"
         />
       </div>
@@ -58,16 +61,30 @@ function CompletedFlowRoute({ children, flow }: CompletedFlowRouteProps) {
   }
 
   if (!authMe) {
-    return children;
+    return (
+      <Navigate
+        to={`/auth?returnTo=${encodedReturnTo}`}
+        replace
+        state={flowOrigin}
+      />
+    );
   }
 
-  const isCompleted = flow === "signup" && authMe.status.isRegistered === true;
+  if (authMe.status.isRegistered !== true) {
+    return (
+      <Navigate
+        to={`/auth/signup?returnTo=${encodedReturnTo}`}
+        replace
+        state={flowOrigin}
+      />
+    );
+  }
 
-  if (isCompleted) {
+  if (authMe.status.isProfileCompleted === true) {
     return <Navigate to={getOriginPath(location)} replace />;
   }
 
   return children;
 }
 
-export default CompletedFlowRoute;
+export default DatingRegisterRoute;
