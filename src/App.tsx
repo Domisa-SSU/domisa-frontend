@@ -1,10 +1,11 @@
 import { Outlet } from "react-router-dom";
+import ErrorPage from "./pages/ErrorPage/ErrorPage";
 import { SignupFlowProvider } from "./pages/SignupPage/SignupFlowContext";
 import { useAuthMeQuery } from "./queries/auth";
 import "./App.css";
 
 function App() {
-  const { isPending } = useAuthMeQuery();
+  const { isError, isPending } = useAuthMeQuery();
 
   if (isPending) {
     return (
@@ -16,6 +17,10 @@ function App() {
         />
       </div>
     );
+  }
+
+  if (isError) {
+    return <ErrorPage />;
   }
 
   return (

@@ -7,6 +7,20 @@ import type { AuthMeResponse } from "../types/user";
 export const authMeQueryKey = ["auth", "me"] as const;
 const unauthenticatedStatusCodes = new Set([401, 403]);
 
+const isUserNotFoundError = (error: unknown) => {
+  if (!isAxiosError(error) || error.response?.status !== 404) {
+    return false;
+  }
+
+  const data = error.response.data;
+
+  if (!data || typeof data !== "object") {
+    return false;
+  }
+
+  return (data as Record<string, unknown>).code === "USER_NOT_FOUND";
+};
+
 const getAuthMeOrNull = async (): Promise<AuthMeResponse | null> => {
   try {
     return await getAuthMe();
@@ -15,6 +29,16 @@ const getAuthMeOrNull = async (): Promise<AuthMeResponse | null> => {
       isAxiosError(error) &&
       unauthenticatedStatusCodes.has(error.response?.status ?? 0)
     ) {
+      return null;
+    }
+
+    if (isUserNotFoundError(error)) {
+      try {
+        await logout();
+      } catch {
+        // The session is already unusable; keep the app recoverable as logged out.
+      }
+
       return null;
     }
 
