@@ -19,6 +19,43 @@ import type { UserStatus } from "../../types/user";
 const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
 const INTRODUCE_FRIEND_FLOW = "introduce-friend";
 const canBypassKakaoLogin = import.meta.env.DEV;
+const SIGNUP_AGREEMENT_ITEMS = [
+    {
+        label: "[필수] 이용약관 동의",
+        path: "/terms/service",
+    },
+    {
+        label: "[필수] 개인정보 수집 및 이용동의",
+        path: "/terms/privacy",
+    },
+] as const;
+
+type SignupAgreementPath = (typeof SIGNUP_AGREEMENT_ITEMS)[number]["path"];
+type SignupAgreementState = Record<SignupAgreementPath, boolean>;
+
+const createEmptySignupAgreementState = (): SignupAgreementState => ({
+    "/terms/service": false,
+    "/terms/privacy": false,
+});
+
+const normalizeSignupAgreementState = (value: unknown): SignupAgreementState => {
+    const normalized = createEmptySignupAgreementState();
+
+    if (!value || typeof value !== "object") {
+        return normalized;
+    }
+
+    const source = value as Record<string, unknown>;
+
+    SIGNUP_AGREEMENT_ITEMS.forEach((item) => {
+        normalized[item.path] = source[item.path] === true;
+    });
+
+    return normalized;
+};
+
+const areSignupAgreementsChecked = (checkedAgreements: SignupAgreementState) =>
+    SIGNUP_AGREEMENT_ITEMS.every((item) => checkedAgreements[item.path]);
 
 const getSafeReturnTo = (value: string | null) => {
     if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -145,32 +182,29 @@ const getNextPathAfterLogin = (
 type PendingSignupTransition = {
     path: string;
     showKakaoLoginToast: boolean;
+    checkedAgreements: SignupAgreementState;
 };
 
 type KakaoLocationState = {
     pendingSignupPath?: unknown;
     showKakaoLoginToast?: unknown;
+    checkedAgreements?: unknown;
 } | null;
 
 type SignupTermsAgreementModalProps = {
+    checkedAgreements: SignupAgreementState;
     onAccept: () => void;
     onOpenTerms: (path: string) => void;
+    onToggleAgreement: (path: SignupAgreementPath) => void;
 };
 
 function SignupTermsAgreementModal({
+    checkedAgreements,
     onAccept,
     onOpenTerms,
+    onToggleAgreement,
 }: SignupTermsAgreementModalProps) {
-    const agreementItems = [
-        {
-            label: "[필수] 이용약관 동의",
-            path: "/terms/service",
-        },
-        {
-            label: "[필수] 개인정보 수집 및 이용동의",
-            path: "/terms/privacy",
-        },
-    ];
+    const isAllAgreed = areSignupAgreementsChecked(checkedAgreements);
 
     return (
         <div
@@ -198,38 +232,68 @@ function SignupTermsAgreementModal({
                     <p className="typo-input-text-m text-grey-700">
                         도미사럽 동의항목
                     </p>
-                    {agreementItems.map((item) => (
-                        <button
-                            key={item.path}
-                            type="button"
-                            onClick={() => onOpenTerms(item.path)}
-                            className="flex h-[1.875rem] w-full items-center justify-between"
-                        >
-                            <span className="flex items-center gap-2.5">
-                                <span
-                                    aria-hidden="true"
-                                    className="flex h-[1.875rem] w-[1.6875rem] items-center justify-center text-[1.375rem] font-semibold leading-none text-primary-500"
+                    {SIGNUP_AGREEMENT_ITEMS.map((item) => {
+                        const isChecked = checkedAgreements[item.path] === true;
+
+                        return (
+                            <div
+                                key={item.path}
+                                className="flex h-[1.875rem] w-full items-center justify-between"
+                            >
+                                <div className="flex min-w-0 items-center gap-2.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => onToggleAgreement(item.path)}
+                                        aria-pressed={isChecked}
+                                        aria-label={`${item.label} 체크`}
+                                        className="flex h-[1.875rem] w-[1.6875rem] shrink-0 items-center justify-center"
+                                    >
+                                        <span
+                                            aria-hidden="true"
+                                            className={`flex h-5 w-5 items-center justify-center rounded-[0.375rem] border-[1.8px] typo-comment-1-b ${
+                                                isChecked
+                                                    ? "border-primary-500 bg-primary-500 text-grey-100"
+                                                    : "border-grey-500 bg-grey-100 text-transparent"
+                                            }`}
+                                        >
+                                            ✓
+                                        </span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onOpenTerms(item.path)}
+                                        className="min-w-0 flex-1 text-left typo-button-text-b text-grey-700"
+                                    >
+                                        {item.label}
+                                    </button>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => onOpenTerms(item.path)}
+                                    aria-label={`${item.label} 보기`}
+                                    className="flex h-[1.875rem] w-8 shrink-0 items-center justify-end"
                                 >
-                                    ✓
-                                </span>
-                                <span className="typo-button-text-b text-grey-700">
-                                    {item.label}
-                                </span>
-                            </span>
-                            <img
-                                src={rightArrowIcon}
-                                alt=""
-                                aria-hidden="true"
-                                className="h-[0.875rem] w-2"
-                            />
-                        </button>
-                    ))}
+                                    <img
+                                        src={rightArrowIcon}
+                                        alt=""
+                                        aria-hidden="true"
+                                        className="h-[0.875rem] w-2"
+                                    />
+                                </button>
+                            </div>
+                        );
+                    })}
                 </div>
 
                 <button
                     type="button"
-                    onClick={onAccept}
-                    className="flex h-[3.125rem] w-full max-w-[20.125rem] items-center justify-center rounded-[0.875rem] bg-primary-500 px-2.5 typo-button-text-b text-grey-100"
+                    disabled={!isAllAgreed}
+                    onClick={isAllAgreed ? onAccept : undefined}
+                    className={`flex h-[3.125rem] w-full max-w-[20.125rem] items-center justify-center rounded-[0.875rem] px-2.5 typo-button-text-b ${
+                        isAllAgreed
+                            ? "bg-primary-500 text-grey-100"
+                            : "cursor-not-allowed bg-grey-400 text-grey-100"
+                    }`}
                 >
                     동의하고 시작하기
                 </button>
@@ -285,6 +349,9 @@ function Kakao() {
             ? {
                 path: pendingSignupPathFromLocationState,
                 showKakaoLoginToast: shouldShowKakaoLoginToastFromLocationState,
+                checkedAgreements: normalizeSignupAgreementState(
+                    locationState?.checkedAgreements,
+                ),
             }
             : null;
     const pendingSignupTransitionFromReturnTo =
@@ -297,6 +364,7 @@ function Kakao() {
             ? {
                 path: signupReturnTo,
                 showKakaoLoginToast: false,
+                checkedAgreements: createEmptySignupAgreementState(),
             }
             : null;
     const activePendingSignupTransition =
@@ -305,10 +373,15 @@ function Kakao() {
         pendingSignupTransitionFromReturnTo;
 
     const openSignupTermsModal = useCallback(
-        (signupPath: string, showKakaoLoginToast: boolean) => {
+        (
+            signupPath: string,
+            showKakaoLoginToast: boolean,
+            checkedAgreements = createEmptySignupAgreementState(),
+        ) => {
             const nextTransition = {
                 path: signupPath,
                 showKakaoLoginToast,
+                checkedAgreements,
             };
 
             setPendingSignupTransition(nextTransition);
@@ -317,6 +390,7 @@ function Kakao() {
                 state: {
                     pendingSignupPath: signupPath,
                     showKakaoLoginToast,
+                    checkedAgreements,
                 },
             });
         },
@@ -499,6 +573,10 @@ function Kakao() {
             return;
         }
 
+        if (!areSignupAgreementsChecked(activePendingSignupTransition.checkedAgreements)) {
+            return;
+        }
+
         if (activePendingSignupTransition.showKakaoLoginToast) {
             sessionStorage.setItem(KAKAO_LOGIN_TOAST_STORAGE_KEY, "true");
         }
@@ -521,6 +599,32 @@ function Kakao() {
                 fromAuthPath: currentAuthPath,
                 pendingSignupPath: activePendingSignupTransition.path,
                 showKakaoLoginToast: activePendingSignupTransition.showKakaoLoginToast,
+                checkedAgreements: activePendingSignupTransition.checkedAgreements,
+            },
+        });
+    };
+
+    const handleToggleSignupAgreement = (path: SignupAgreementPath) => {
+        if (!activePendingSignupTransition) {
+            return;
+        }
+
+        const checkedAgreements = {
+            ...activePendingSignupTransition.checkedAgreements,
+            [path]: !activePendingSignupTransition.checkedAgreements[path],
+        };
+        const nextTransition = {
+            ...activePendingSignupTransition,
+            checkedAgreements,
+        };
+
+        setPendingSignupTransition(nextTransition);
+        navigate(currentAuthPath, {
+            replace: true,
+            state: {
+                pendingSignupPath: nextTransition.path,
+                showKakaoLoginToast: nextTransition.showKakaoLoginToast,
+                checkedAgreements: nextTransition.checkedAgreements,
             },
         });
     };
@@ -644,8 +748,10 @@ function Kakao() {
             )}
             {activePendingSignupTransition ? (
                 <SignupTermsAgreementModal
+                    checkedAgreements={activePendingSignupTransition.checkedAgreements}
                     onAccept={handleAcceptSignupTerms}
                     onOpenTerms={handleOpenTerms}
+                    onToggleAgreement={handleToggleSignupAgreement}
                 />
             ) : null}
         </div>
