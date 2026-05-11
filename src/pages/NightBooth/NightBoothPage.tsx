@@ -24,55 +24,57 @@ function NightBoothPage() {
         style={{ backgroundImage: `url(${bgImg})` }}
       >
 
-      {/* 날짜 네비게이션 */}
-      <div className="flex items-center justify-center gap-12 py-4">
-        <button
-          type="button"
-          onClick={() => setDay((d) => Math.max(1, d - 1))}
-          disabled={day === 1}
-          aria-label="이전 날"
-          className="flex size-10 items-center justify-center disabled:opacity-30"
-        >
-          <img src={headerArrow} alt="" className="h-[1.0625rem] w-[0.875rem]" />
-        </button>
-        <span className="typo-title-header-1-b text-grey-900">{day}일차</span>
-        <button
-          type="button"
-          onClick={() => setDay((d) => Math.min(TOTAL_DAYS, d + 1))}
-          disabled={day === TOTAL_DAYS}
-          aria-label="다음 날"
-          className="flex size-10 items-center justify-center disabled:opacity-30"
-        >
-          <img
-            src={headerArrow}
-            alt=""
-            className="h-[1.0625rem] w-[0.875rem] rotate-180"
-          />
-        </button>
-      </div>
+      <div className="mx-auto w-full max-w-[22.6875rem]">
+        {/* 날짜 네비게이션 */}
+        <div className="flex items-center justify-center gap-12 py-4">
+          <button
+            type="button"
+            onClick={() => setDay((d) => Math.max(1, d - 1))}
+            disabled={day === 1}
+            aria-label="이전 날"
+            className="flex size-10 items-center justify-center disabled:opacity-30"
+          >
+            <img src={headerArrow} alt="" className="h-[1.0625rem] w-[0.875rem]" />
+          </button>
+          <span className="typo-title-header-1-b text-grey-900">{day}일차</span>
+          <button
+            type="button"
+            onClick={() => setDay((d) => Math.min(TOTAL_DAYS, d + 1))}
+            disabled={day === TOTAL_DAYS}
+            aria-label="다음 날"
+            className="flex size-10 items-center justify-center disabled:opacity-30"
+          >
+            <img
+              src={headerArrow}
+              alt=""
+              className="h-[1.0625rem] w-[0.875rem] rotate-180"
+            />
+          </button>
+        </div>
 
-      {/* 주점 목록 */}
-      <div className="flex flex-col gap-6 py-4 pb-10">
-        {booths.map((booth, index) => {
-          const positionClass = POSITION_CLASSES[index % POSITION_CLASSES.length];
-          return (
-            <button
-              key={booth.id}
-              type="button"
-              onClick={() => setSelectedBooth(booth)}
-              className={`flex flex-col items-center gap-2 ${positionClass}`}
-            >
-              <img
-                src={booth.image}
-                alt={booth.name}
-                className="size-[170px] object-cover"
-              />
-              <span className="typo-button-text-b text-grey-900 text-center">
-                {booth.name}
-              </span>
-            </button>
-          );
-        })}
+        {/* 주점 목록 */}
+        <div className="flex flex-col gap-6 py-4 pb-10">
+          {booths.map((booth, index) => {
+            const positionClass = POSITION_CLASSES[index % POSITION_CLASSES.length];
+            return (
+              <button
+                key={booth.id}
+                type="button"
+                onClick={() => setSelectedBooth(booth)}
+                className={`flex flex-col items-center gap-2 ${positionClass}`}
+              >
+                <img
+                  src={booth.image}
+                  alt={booth.name}
+                  className="size-[9.375rem] aspect-square object-cover"
+                />
+                <span className="typo-button-text-b text-grey-900 text-center">
+                  {booth.name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       </div>
