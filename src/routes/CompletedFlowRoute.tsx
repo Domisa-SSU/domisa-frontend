@@ -26,8 +26,11 @@ const getSafeRedirectPath = (
   return value;
 };
 
+const getCurrentPath = (location: ReturnType<typeof useLocation>) =>
+  `${location.pathname}${location.search}${location.hash}`;
+
 const getOriginPath = (location: ReturnType<typeof useLocation>) => {
-  const currentPath = `${location.pathname}${location.search}${location.hash}`;
+  const currentPath = getCurrentPath(location);
   const returnTo = new URLSearchParams(location.search).get("returnTo");
   const returnToPath = getSafeRedirectPath(returnTo, currentPath);
 
@@ -39,6 +42,21 @@ const getOriginPath = (location: ReturnType<typeof useLocation>) => {
   const fromPath = getSafeRedirectPath(from, currentPath);
 
   return fromPath ?? fallbackPath;
+};
+
+const hasAcceptedSignupTerms = (location: ReturnType<typeof useLocation>) => {
+  const state = location.state as { signupTermsAccepted?: unknown } | null;
+
+  return state?.signupTermsAccepted === true;
+};
+
+const createAuthPathForSignupTerms = (
+  location: ReturnType<typeof useLocation>,
+) => {
+  const currentPath = getCurrentPath(location);
+  const searchParams = new URLSearchParams({ returnTo: currentPath });
+
+  return `/auth?${searchParams.toString()}`;
 };
 
 function CompletedFlowRoute({ children, flow }: CompletedFlowRouteProps) {
@@ -57,14 +75,20 @@ function CompletedFlowRoute({ children, flow }: CompletedFlowRouteProps) {
     );
   }
 
-  if (!authMe) {
-    return children;
-  }
-
-  const isCompleted = flow === "signup" && authMe.status.isRegistered === true;
+  const isCompleted = flow === "signup" && authMe?.status.isRegistered === true;
 
   if (isCompleted) {
     return <Navigate to={getOriginPath(location)} replace />;
+  }
+
+  if (flow === "signup" && !hasAcceptedSignupTerms(location)) {
+    return (
+      <Navigate
+        to={createAuthPathForSignupTerms(location)}
+        replace
+        state={{ from: getCurrentPath(location) }}
+      />
+    );
   }
 
   return children;

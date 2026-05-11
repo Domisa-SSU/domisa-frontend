@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import friendSignUpImg from "../IntroduceFriendPage/assets/friendSignUpImg.png";
 import {
     INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY,
@@ -10,7 +10,8 @@ import {
 } from "../../constants/storageKeys";
 import loginImg from "./asset/loginImg.png";
 import NotLoginHeader from "../../components/NotLoginHeader";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import rightArrowIcon from "../../assets/right_arrow.svg";
 import kakaoIconImg from "./asset/kakaoLogo.svg";
 import { useAuthMeQuery, useKakaoLoginMutation } from "../../queries/auth";
 import type { UserStatus } from "../../types/user";
@@ -25,6 +26,16 @@ const getSafeReturnTo = (value: string | null) => {
     }
 
     return value;
+};
+
+const getSignupReturnTo = (value: string | null) => {
+    if (!value) {
+        return null;
+    }
+
+    const pathname = new URL(value, window.location.origin).pathname;
+
+    return pathname.startsWith("/auth/signup") ? value : null;
 };
 
 const createSignupPath = (isIntroduceFriendFlow: boolean, returnTo: string | null) => {
@@ -42,6 +53,11 @@ const createSignupPath = (isIntroduceFriendFlow: boolean, returnTo: string | nul
 
     return `/auth/signup${search ? `?${search}` : ""}`;
 };
+
+const createPendingSignupPath = (
+    isIntroduceFriendFlow: boolean,
+    returnTo: string | null,
+) => getSignupReturnTo(returnTo) ?? createSignupPath(isIntroduceFriendFlow, returnTo);
 
 const createAuthPath = (isIntroduceFriendFlow: boolean, returnTo: string | null) => {
     const params = new URLSearchParams();
@@ -116,7 +132,7 @@ const getNextPathAfterLogin = (
     returnTo: string | null,
 ) => {
     if (!status.isRegistered) {
-        return createSignupPath(isIntroduceFriendFlow, returnTo);
+        return createPendingSignupPath(isIntroduceFriendFlow, returnTo);
     }
 
     if (returnTo) {
@@ -126,8 +142,105 @@ const getNextPathAfterLogin = (
     return isIntroduceFriendFlow ? "/introduce-friend/generating" : "/";
 };
 
+type PendingSignupTransition = {
+    path: string;
+    showKakaoLoginToast: boolean;
+};
+
+type KakaoLocationState = {
+    pendingSignupPath?: unknown;
+    showKakaoLoginToast?: unknown;
+} | null;
+
+type SignupTermsAgreementModalProps = {
+    onAccept: () => void;
+    onOpenTerms: (path: string) => void;
+};
+
+function SignupTermsAgreementModal({
+    onAccept,
+    onOpenTerms,
+}: SignupTermsAgreementModalProps) {
+    const agreementItems = [
+        {
+            label: "[필수] 이용약관 동의",
+            path: "/terms/service",
+        },
+        {
+            label: "[필수] 개인정보 수집 및 이용동의",
+            path: "/terms/privacy",
+        },
+    ];
+
+    return (
+        <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="signup-terms-title"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-grey-900/70 px-5 pb-[1.875rem]"
+        >
+            <div className="flex w-full max-w-[22.625rem] flex-col items-center gap-6 rounded-[0.875rem] bg-grey-100 px-5 pt-[1.875rem] pb-5">
+                <div className="flex w-full max-w-[20.125rem] flex-col gap-2.5">
+                    <h2
+                        id="signup-terms-title"
+                        className="typo-title-header-1-b text-grey-900"
+                    >
+                        도미사럽 로그인을 위해
+                        <br />
+                        꼭 필요한 동의만 추렸어요
+                    </h2>
+                    <p className="typo-input-text-m text-warning-ac">
+                        *도미사럽은 대학(원) 재·휴학생만 이용 가능해요
+                    </p>
+                </div>
+
+                <div className="flex w-full max-w-[20.125rem] flex-col gap-2.5">
+                    <p className="typo-input-text-m text-grey-700">
+                        도미사럽 동의항목
+                    </p>
+                    {agreementItems.map((item) => (
+                        <button
+                            key={item.path}
+                            type="button"
+                            onClick={() => onOpenTerms(item.path)}
+                            className="flex h-[1.875rem] w-full items-center justify-between"
+                        >
+                            <span className="flex items-center gap-2.5">
+                                <span
+                                    aria-hidden="true"
+                                    className="flex h-[1.875rem] w-[1.6875rem] items-center justify-center text-[1.375rem] font-semibold leading-none text-primary-500"
+                                >
+                                    ✓
+                                </span>
+                                <span className="typo-button-text-b text-grey-700">
+                                    {item.label}
+                                </span>
+                            </span>
+                            <img
+                                src={rightArrowIcon}
+                                alt=""
+                                aria-hidden="true"
+                                className="h-[0.875rem] w-2"
+                            />
+                        </button>
+                    ))}
+                </div>
+
+                <button
+                    type="button"
+                    onClick={onAccept}
+                    className="flex h-[3.125rem] w-full max-w-[20.125rem] items-center justify-center rounded-[0.875rem] bg-primary-500 px-2.5 typo-button-text-b text-grey-100"
+                >
+                    동의하고 시작하기
+                </button>
+            </div>
+        </div>
+    );
+}
+
 function Kakao() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams] = useSearchParams();
     const { data: authMe } = useAuthMeQuery();
     const authorizationCode = searchParams.get("code");
@@ -144,6 +257,8 @@ function Kakao() {
         storedOAuthFlow === INTRODUCE_FRIEND_FLOW;
     const processedCodeRef = useRef<string | null>(null);
     const [errorMessage, setErrorMessage] = useState("");
+    const [pendingSignupTransition, setPendingSignupTransition] =
+        useState<PendingSignupTransition | null>(null);
     const {
         mutateAsync: loginWithKakao,
         isPending: isLoggingIn,
@@ -156,9 +271,67 @@ function Kakao() {
     const headerTitle = isIntroduceFriendFlow ? "친구 소개하기" : "로그인";
     const currentAuthPath = createAuthPath(isIntroduceFriendFlow, returnTo);
     const receiveIntroduceReturnTo = getReceiveIntroduceReturnTo(returnTo);
+    const locationState = location.state as KakaoLocationState;
+    const signupReturnTo = getSignupReturnTo(returnTo);
+    const pendingSignupPathFromLocationState =
+        typeof locationState?.pendingSignupPath === "string"
+            ? getSafeReturnTo(locationState.pendingSignupPath)
+            : null;
+    const shouldShowKakaoLoginToastFromLocationState =
+        locationState?.showKakaoLoginToast === true;
+    const canShowSignupTermsModal = authMe?.status.isRegistered !== true;
+    const pendingSignupTransitionFromLocationState =
+        canShowSignupTermsModal && pendingSignupPathFromLocationState
+            ? {
+                path: pendingSignupPathFromLocationState,
+                showKakaoLoginToast: shouldShowKakaoLoginToastFromLocationState,
+            }
+            : null;
+    const pendingSignupTransitionFromReturnTo =
+        canShowSignupTermsModal &&
+        !authorizationCode &&
+        !kakaoError &&
+        !kakaoErrorDescription &&
+        authMe &&
+        signupReturnTo
+            ? {
+                path: signupReturnTo,
+                showKakaoLoginToast: false,
+            }
+            : null;
+    const activePendingSignupTransition =
+        pendingSignupTransition ??
+        pendingSignupTransitionFromLocationState ??
+        pendingSignupTransitionFromReturnTo;
+
+    const openSignupTermsModal = useCallback(
+        (signupPath: string, showKakaoLoginToast: boolean) => {
+            const nextTransition = {
+                path: signupPath,
+                showKakaoLoginToast,
+            };
+
+            setPendingSignupTransition(nextTransition);
+            navigate(currentAuthPath, {
+                replace: true,
+                state: {
+                    pendingSignupPath: signupPath,
+                    showKakaoLoginToast,
+                },
+            });
+        },
+        [currentAuthPath, navigate, setPendingSignupTransition],
+    );
 
     useEffect(() => {
-        if (!isIntroduceFriendFlow || !authMe || authorizationCode || kakaoError || kakaoErrorDescription) {
+        if (
+            !isIntroduceFriendFlow ||
+            !authMe ||
+            authMe.status.isRegistered !== true ||
+            authorizationCode ||
+            kakaoError ||
+            kakaoErrorDescription
+        ) {
             return;
         }
 
@@ -234,7 +407,8 @@ function Kakao() {
                 }
 
                 if (nextPathAfterLogin.startsWith("/auth/signup")) {
-                    sessionStorage.setItem(KAKAO_LOGIN_TOAST_STORAGE_KEY, "true");
+                    openSignupTermsModal(nextPathAfterLogin, true);
+                    return;
                 }
 
                 navigate(nextPathAfterLogin, { replace: true });
@@ -255,6 +429,7 @@ function Kakao() {
         isIntroduceFriendFlow,
         loginWithKakao,
         navigate,
+        openSignupTermsModal,
         receiveIntroduceReturnTo,
         returnTo,
     ]);
@@ -313,7 +488,41 @@ function Kakao() {
     const handleSignupBypass = () => {
         clearKakaoOAuthContext();
         setErrorMessage("");
-        navigate(createSignupPath(isIntroduceFriendFlow, returnTo));
+        openSignupTermsModal(
+            createPendingSignupPath(isIntroduceFriendFlow, returnTo),
+            false,
+        );
+    };
+
+    const handleAcceptSignupTerms = () => {
+        if (!activePendingSignupTransition) {
+            return;
+        }
+
+        if (activePendingSignupTransition.showKakaoLoginToast) {
+            sessionStorage.setItem(KAKAO_LOGIN_TOAST_STORAGE_KEY, "true");
+        }
+
+        const nextSignupPath = activePendingSignupTransition.path;
+        setPendingSignupTransition(null);
+        navigate(nextSignupPath, {
+            replace: true,
+            state: { signupTermsAccepted: true },
+        });
+    };
+
+    const handleOpenTerms = (path: string) => {
+        if (!activePendingSignupTransition) {
+            return;
+        }
+
+        navigate(path, {
+            state: {
+                fromAuthPath: currentAuthPath,
+                pendingSignupPath: activePendingSignupTransition.path,
+                showKakaoLoginToast: activePendingSignupTransition.showKakaoLoginToast,
+            },
+        });
     };
 
     return (
@@ -433,6 +642,12 @@ function Kakao() {
                     </section>
                 </>
             )}
+            {activePendingSignupTransition ? (
+                <SignupTermsAgreementModal
+                    onAccept={handleAcceptSignupTerms}
+                    onOpenTerms={handleOpenTerms}
+                />
+            ) : null}
         </div>
     );
 }
