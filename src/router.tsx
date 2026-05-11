@@ -26,6 +26,7 @@ import DatingAccessGuard from "./routes/DatingAccessGuard";
 import DatingRegisterRoute from "./routes/DatingRegisterRoute";
 import RegisteredOnlyRoute from "./routes/RegisteredOnlyRoute";
 import ErrorPage from "./pages/ErrorPage/ErrorPage";
+import NightBoothPage from "./pages/NightBooth/NightBoothPage";
 
 const router = createBrowserRouter([
   {
@@ -54,6 +55,7 @@ const router = createBrowserRouter([
       { path: "introduce-friend/generating", element: <IntroduceFriendGeneratingPage /> },
       { path: "introduce/:linkCode", element: <ReceiveIntroducePage /> },
       { path: "error", element: <ErrorPage /> },
+      { path: "night-booth", element: <NightBoothPage /> },
       {
         path: "dating",
         element: (
