@@ -21,6 +21,7 @@ import DatingCardDetailPage from "./pages/DatingPage/DatingCardDetailPage";
 import DatingRegisterPage from "./pages/DatingPage/DatingRegisterPage";
 import NotificationPage from "./pages/NotificationPage/NotificationPage";
 import RequireIntroducePage from "./pages/DatingPage/RequireIntroducePage";
+import TermsPage from "./pages/TermsPage/TermsPage";
 import CompletedFlowRoute from "./routes/CompletedFlowRoute";
 import DatingAccessGuard from "./routes/DatingAccessGuard";
 import DatingRegisterRoute from "./routes/DatingRegisterRoute";
@@ -54,6 +55,8 @@ const router = createBrowserRouter([
       { path: "introduce-friend", element: <IntroduceFriendPage /> },
       { path: "introduce-friend/generating", element: <IntroduceFriendGeneratingPage /> },
       { path: "introduce/:linkCode", element: <ReceiveIntroducePage /> },
+      { path: "terms/service", element: <TermsPage type="service" /> },
+      { path: "terms/privacy", element: <TermsPage type="privacy" /> },
       { path: "error", element: <ErrorPage /> },
       { path: "night-booth", element: <NightBoothPage /> },
       {
