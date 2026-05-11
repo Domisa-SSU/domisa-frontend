@@ -11,16 +11,20 @@ type Booth = {
   image: string;
 };
 
-// 주점 추가 시 여기에만 항목을 추가하면 됩니다
-const BOOTHS: Booth[] = [
-  { id: "math", name: "수학과 학생회 주점", image: mathBoothImg },
-  { id: "japan", name: "일어일문 학생회 주점", image: japanBoothImg },
-];
+// 일차별 주점 추가 시 해당 일차 배열에 항목을 추가하면 됩니다
+const BOOTHS_BY_DAY: Record<number, Booth[]> = {
+  1: [
+    { id: "math", name: "수학과 학생회 주점", image: mathBoothImg },
+    { id: "japan", name: "일어일문 학생회 주점", image: japanBoothImg },
+  ],
+  2: [],
+  3: [],
+};
 
 // 부스 수평 배치 패턴 (인덱스 순 순환): 가운데 → 왼쪽 → 오른쪽
 const POSITION_CLASSES = ["mx-auto", "mr-auto pl-4", "ml-auto pr-4"] as const;
 
-const TOTAL_DAYS = 1;
+const TOTAL_DAYS = 3;
 
 function NightBoothPage() {
   const [day, setDay] = useState(1);
@@ -56,7 +60,7 @@ function NightBoothPage() {
 
       {/* 주점 목록 */}
       <div className="flex flex-col gap-6 py-4 pb-10">
-        {BOOTHS.map((booth, index) => {
+        {(BOOTHS_BY_DAY[day] ?? []).map((booth, index) => {
           const positionClass = POSITION_CLASSES[index % POSITION_CLASSES.length];
           return (
             <button
