@@ -30,8 +30,8 @@ const termsPageContent: Record<TermsPageType, TermsPageContent> = {
     body: <ServiceTermsContent />,
   },
   privacy: {
-    title: "개인정보 수집 및 이용동의",
-    heading: "도미사 개인정보처리방침",
+    title: "개인정보 수집 및 이용 동의",
+    heading: "도미사럽 서비스 개인정보 수집 및 이용 동의",
     body: <PrivacyTermsContent />,
   },
 };
@@ -98,7 +98,7 @@ function ServiceTermsContent() {
       <Chapter title="제1장 총칙">
         <Article title="제1조 (목적)">
           <Paragraph>
-            본 이용약관은 도미사 (이하 “회사”)에서 제공하는 데이팅 서비스
+            본 이용약관은 도미사 (이하 “회사”)에서 제공하는 도 서비스
             (이하 “서비스”)의 이용과 관련하여 적용되는 것으로 회사와 이용자에게
             적용됩니다. 본 약관은 서비스 이용에 관한 권리 및 의무와 책임사항,
             기타 필요한 사항을 규정하는 것을 목적으로 합니다.

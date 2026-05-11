@@ -21,11 +21,11 @@ const INTRODUCE_FRIEND_FLOW = "introduce-friend";
 const canBypassKakaoLogin = import.meta.env.DEV;
 const SIGNUP_AGREEMENT_ITEMS = [
     {
-        label: "[필수] 이용약관 동의",
+        label: "이용약관 동의",
         path: "/terms/service",
     },
     {
-        label: "[필수] 개인정보 수집 및 이용동의",
+        label: "개인정보 수집 및 이용 동의",
         path: "/terms/privacy",
     },
 ] as const;
@@ -219,9 +219,9 @@ function SignupTermsAgreementModal({
                         id="signup-terms-title"
                         className="typo-title-header-1-b text-grey-900"
                     >
-                        도미사럽 로그인을 위해
+                        도미사럽 이용을 위해
                         <br />
-                        꼭 필요한 동의만 추렸어요
+                        필수 약관에 동의해주세요
                     </h2>
                     <p className="typo-input-text-m text-warning-ac">
                         *도미사럽은 대학(원) 재·휴학생만 이용 가능해요
