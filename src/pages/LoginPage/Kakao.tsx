@@ -12,6 +12,7 @@ import loginImg from "./asset/loginImg.png";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import rightArrowIcon from "../../assets/right_arrow.svg";
+import XIcon from "../../assets/X.svg";
 import kakaoIconImg from "./asset/kakaoLogo.svg";
 import { useAuthMeQuery, useKakaoLoginMutation } from "../../queries/auth";
 import type { UserStatus } from "../../types/user";
@@ -194,6 +195,7 @@ type KakaoLocationState = {
 type SignupTermsAgreementModalProps = {
     checkedAgreements: SignupAgreementState;
     onAccept: () => void;
+    onClose: () => void;
     onOpenTerms: (path: string) => void;
     onToggleAgreement: (path: SignupAgreementPath) => void;
 };
@@ -201,6 +203,7 @@ type SignupTermsAgreementModalProps = {
 function SignupTermsAgreementModal({
     checkedAgreements,
     onAccept,
+    onClose,
     onOpenTerms,
     onToggleAgreement,
 }: SignupTermsAgreementModalProps) {
@@ -213,7 +216,15 @@ function SignupTermsAgreementModal({
             aria-labelledby="signup-terms-title"
             className="fixed inset-0 z-50 flex items-end justify-center bg-grey-900/70 px-5 pb-[1.875rem]"
         >
-            <div className="flex w-full max-w-[22.625rem] flex-col items-center gap-6 rounded-[0.875rem] bg-grey-100 px-5 pt-[1.875rem] pb-5">
+            <div className="relative flex w-full max-w-[22.625rem] flex-col items-center gap-6 rounded-[0.875rem] bg-grey-100 px-5 pt-[1.875rem] pb-5">
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="absolute right-2.5 top-5 flex p-2.5"
+                    aria-label="닫기"
+                >
+                    <img src={XIcon} alt="닫기" width={16} height={17} />
+                </button>
                 <div className="flex w-full max-w-[20.125rem] flex-col gap-2.5">
                     <h2
                         id="signup-terms-title"
@@ -337,6 +348,10 @@ function Kakao() {
     const receiveIntroduceReturnTo = getReceiveIntroduceReturnTo(returnTo);
     const locationState = location.state as KakaoLocationState;
     const signupReturnTo = getSignupReturnTo(returnTo);
+    const authPathAfterClosingSignupTerms = createAuthPath(
+        isIntroduceFriendFlow,
+        signupReturnTo ? null : returnTo,
+    );
     const pendingSignupPathFromLocationState =
         typeof locationState?.pendingSignupPath === "string"
             ? getSafeReturnTo(locationState.pendingSignupPath)
@@ -589,6 +604,11 @@ function Kakao() {
         });
     };
 
+    const handleCloseSignupTerms = () => {
+        setPendingSignupTransition(null);
+        navigate(authPathAfterClosingSignupTerms, { replace: true });
+    };
+
     const handleOpenTerms = (path: string) => {
         if (!activePendingSignupTransition) {
             return;
@@ -750,6 +770,7 @@ function Kakao() {
                 <SignupTermsAgreementModal
                     checkedAgreements={activePendingSignupTransition.checkedAgreements}
                     onAccept={handleAcceptSignupTerms}
+                    onClose={handleCloseSignupTerms}
                     onOpenTerms={handleOpenTerms}
                     onToggleAgreement={handleToggleSignupAgreement}
                 />
