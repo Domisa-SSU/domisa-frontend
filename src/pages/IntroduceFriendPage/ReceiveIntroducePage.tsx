@@ -12,6 +12,7 @@ import Button from "../../components/Button/Button";
 import HeaderTop from "../../components/HeaderTop";
 import { authMeQueryKey, useAuthMeQuery } from "../../queries/auth";
 import { reportGlobalErrorIfNeeded } from "../../stores/globalErrorStore";
+import backgroundIntroduce from "./assets/backgroundIntroduce.png";
 import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
 
 type MessageModalProps = {
@@ -201,7 +202,7 @@ function ReceiveIntroducePage() {
               content: introduction.q2,
             },
             {
-              title: "잘 맞을 것 같은 사람의 특징",
+              title: "친구와 있었던 가장 웃긴 에피소드",
               content: introduction.q3,
             },
           ]
@@ -325,10 +326,18 @@ function ReceiveIntroducePage() {
   }
 
   return (
-    <div className="min-h-screen bg-primary-100">
+    <div
+      className="min-h-screen bg-primary-100"
+      style={{
+        backgroundImage: `url(${backgroundIntroduce})`,
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "auto 100%",
+      }}
+    >
       <ReceiveIntroduceHeader />
 
-      <main className="px-5 pt-6 pb-[9.75rem]">
+      <main className="mx-auto w-full max-w-[25.1875rem] px-5 pt-6 pb-[9.75rem]">
         <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-[2.25rem]">
           <section className="flex flex-col gap-2.5">
             <div className="flex items-center gap-1">
