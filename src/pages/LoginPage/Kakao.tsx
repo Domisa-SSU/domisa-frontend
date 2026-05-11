@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import friendSignUpImg from "../IntroduceFriendPage/assets/friendSignUpImg.png";
 import {
     INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY,
@@ -10,7 +10,8 @@ import {
 } from "../../constants/storageKeys";
 import loginImg from "./asset/loginImg.png";
 import NotLoginHeader from "../../components/NotLoginHeader";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import rightArrowIcon from "../../assets/right_arrow.svg";
 import kakaoIconImg from "./asset/kakaoLogo.svg";
 import { useAuthMeQuery, useKakaoLoginMutation } from "../../queries/auth";
 import type { UserStatus } from "../../types/user";
@@ -18,6 +19,43 @@ import type { UserStatus } from "../../types/user";
 const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
 const INTRODUCE_FRIEND_FLOW = "introduce-friend";
 const canBypassKakaoLogin = import.meta.env.DEV;
+const SIGNUP_AGREEMENT_ITEMS = [
+    {
+        label: "이용약관 동의",
+        path: "/terms/service",
+    },
+    {
+        label: "개인정보 수집 및 이용 동의",
+        path: "/terms/privacy",
+    },
+] as const;
+
+type SignupAgreementPath = (typeof SIGNUP_AGREEMENT_ITEMS)[number]["path"];
+type SignupAgreementState = Record<SignupAgreementPath, boolean>;
+
+const createEmptySignupAgreementState = (): SignupAgreementState => ({
+    "/terms/service": false,
+    "/terms/privacy": false,
+});
+
+const normalizeSignupAgreementState = (value: unknown): SignupAgreementState => {
+    const normalized = createEmptySignupAgreementState();
+
+    if (!value || typeof value !== "object") {
+        return normalized;
+    }
+
+    const source = value as Record<string, unknown>;
+
+    SIGNUP_AGREEMENT_ITEMS.forEach((item) => {
+        normalized[item.path] = source[item.path] === true;
+    });
+
+    return normalized;
+};
+
+const areSignupAgreementsChecked = (checkedAgreements: SignupAgreementState) =>
+    SIGNUP_AGREEMENT_ITEMS.every((item) => checkedAgreements[item.path]);
 
 const getSafeReturnTo = (value: string | null) => {
     if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -25,6 +63,16 @@ const getSafeReturnTo = (value: string | null) => {
     }
 
     return value;
+};
+
+const getSignupReturnTo = (value: string | null) => {
+    if (!value) {
+        return null;
+    }
+
+    const pathname = new URL(value, window.location.origin).pathname;
+
+    return pathname.startsWith("/auth/signup") ? value : null;
 };
 
 const createSignupPath = (isIntroduceFriendFlow: boolean, returnTo: string | null) => {
@@ -42,6 +90,11 @@ const createSignupPath = (isIntroduceFriendFlow: boolean, returnTo: string | nul
 
     return `/auth/signup${search ? `?${search}` : ""}`;
 };
+
+const createPendingSignupPath = (
+    isIntroduceFriendFlow: boolean,
+    returnTo: string | null,
+) => getSignupReturnTo(returnTo) ?? createSignupPath(isIntroduceFriendFlow, returnTo);
 
 const createAuthPath = (isIntroduceFriendFlow: boolean, returnTo: string | null) => {
     const params = new URLSearchParams();
@@ -116,7 +169,7 @@ const getNextPathAfterLogin = (
     returnTo: string | null,
 ) => {
     if (!status.isRegistered) {
-        return createSignupPath(isIntroduceFriendFlow, returnTo);
+        return createPendingSignupPath(isIntroduceFriendFlow, returnTo);
     }
 
     if (returnTo) {
@@ -126,8 +179,132 @@ const getNextPathAfterLogin = (
     return isIntroduceFriendFlow ? "/introduce-friend/generating" : "/";
 };
 
+type PendingSignupTransition = {
+    path: string;
+    showKakaoLoginToast: boolean;
+    checkedAgreements: SignupAgreementState;
+};
+
+type KakaoLocationState = {
+    pendingSignupPath?: unknown;
+    showKakaoLoginToast?: unknown;
+    checkedAgreements?: unknown;
+} | null;
+
+type SignupTermsAgreementModalProps = {
+    checkedAgreements: SignupAgreementState;
+    onAccept: () => void;
+    onOpenTerms: (path: string) => void;
+    onToggleAgreement: (path: SignupAgreementPath) => void;
+};
+
+function SignupTermsAgreementModal({
+    checkedAgreements,
+    onAccept,
+    onOpenTerms,
+    onToggleAgreement,
+}: SignupTermsAgreementModalProps) {
+    const isAllAgreed = areSignupAgreementsChecked(checkedAgreements);
+
+    return (
+        <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="signup-terms-title"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-grey-900/70 px-5 pb-[1.875rem]"
+        >
+            <div className="flex w-full max-w-[22.625rem] flex-col items-center gap-6 rounded-[0.875rem] bg-grey-100 px-5 pt-[1.875rem] pb-5">
+                <div className="flex w-full max-w-[20.125rem] flex-col gap-2.5">
+                    <h2
+                        id="signup-terms-title"
+                        className="typo-title-header-1-b text-grey-900"
+                    >
+                        도미사럽 이용을 위해
+                        <br />
+                        필수 약관에 동의해주세요
+                    </h2>
+                    <p className="typo-input-text-m text-warning-ac">
+                        *도미사럽은 대학(원) 재·휴학생만 이용 가능해요
+                    </p>
+                </div>
+
+                <div className="flex w-full max-w-[20.125rem] flex-col gap-2.5">
+                    <p className="typo-input-text-m text-grey-700">
+                        도미사럽 동의항목
+                    </p>
+                    {SIGNUP_AGREEMENT_ITEMS.map((item) => {
+                        const isChecked = checkedAgreements[item.path] === true;
+
+                        return (
+                            <div
+                                key={item.path}
+                                className="flex h-[1.875rem] w-full items-center justify-between"
+                            >
+                                <div className="flex min-w-0 items-center gap-2.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => onToggleAgreement(item.path)}
+                                        aria-pressed={isChecked}
+                                        aria-label={`${item.label} 체크`}
+                                        className="flex h-[1.875rem] w-[1.6875rem] shrink-0 items-center justify-center"
+                                    >
+                                        <span
+                                            aria-hidden="true"
+                                            className={`flex h-5 w-5 items-center justify-center rounded-[0.375rem] border-[1.8px] typo-comment-1-b ${
+                                                isChecked
+                                                    ? "border-primary-500 bg-primary-500 text-grey-100"
+                                                    : "border-grey-500 bg-grey-100 text-transparent"
+                                            }`}
+                                        >
+                                            ✓
+                                        </span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onOpenTerms(item.path)}
+                                        className="min-w-0 flex-1 text-left typo-button-text-b text-grey-700"
+                                    >
+                                        {item.label}
+                                    </button>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => onOpenTerms(item.path)}
+                                    aria-label={`${item.label} 보기`}
+                                    className="flex h-[1.875rem] w-8 shrink-0 items-center justify-end"
+                                >
+                                    <img
+                                        src={rightArrowIcon}
+                                        alt=""
+                                        aria-hidden="true"
+                                        className="h-[0.875rem] w-2"
+                                    />
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                <button
+                    type="button"
+                    disabled={!isAllAgreed}
+                    onClick={isAllAgreed ? onAccept : undefined}
+                    className={`flex h-[3.125rem] w-full max-w-[20.125rem] items-center justify-center rounded-[0.875rem] px-2.5 typo-button-text-b ${
+                        isAllAgreed
+                            ? "bg-primary-500 text-grey-100"
+                            : "cursor-not-allowed bg-grey-400 text-grey-100"
+                    }`}
+                >
+                    동의하고 시작하기
+                </button>
+            </div>
+        </div>
+    );
+}
+
 function Kakao() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams] = useSearchParams();
     const { data: authMe } = useAuthMeQuery();
     const authorizationCode = searchParams.get("code");
@@ -144,6 +321,8 @@ function Kakao() {
         storedOAuthFlow === INTRODUCE_FRIEND_FLOW;
     const processedCodeRef = useRef<string | null>(null);
     const [errorMessage, setErrorMessage] = useState("");
+    const [pendingSignupTransition, setPendingSignupTransition] =
+        useState<PendingSignupTransition | null>(null);
     const {
         mutateAsync: loginWithKakao,
         isPending: isLoggingIn,
@@ -156,9 +335,77 @@ function Kakao() {
     const headerTitle = isIntroduceFriendFlow ? "친구 소개하기" : "로그인";
     const currentAuthPath = createAuthPath(isIntroduceFriendFlow, returnTo);
     const receiveIntroduceReturnTo = getReceiveIntroduceReturnTo(returnTo);
+    const locationState = location.state as KakaoLocationState;
+    const signupReturnTo = getSignupReturnTo(returnTo);
+    const pendingSignupPathFromLocationState =
+        typeof locationState?.pendingSignupPath === "string"
+            ? getSafeReturnTo(locationState.pendingSignupPath)
+            : null;
+    const shouldShowKakaoLoginToastFromLocationState =
+        locationState?.showKakaoLoginToast === true;
+    const canShowSignupTermsModal = authMe?.status.isRegistered !== true;
+    const pendingSignupTransitionFromLocationState =
+        canShowSignupTermsModal && pendingSignupPathFromLocationState
+            ? {
+                path: pendingSignupPathFromLocationState,
+                showKakaoLoginToast: shouldShowKakaoLoginToastFromLocationState,
+                checkedAgreements: normalizeSignupAgreementState(
+                    locationState?.checkedAgreements,
+                ),
+            }
+            : null;
+    const pendingSignupTransitionFromReturnTo =
+        canShowSignupTermsModal &&
+        !authorizationCode &&
+        !kakaoError &&
+        !kakaoErrorDescription &&
+        authMe &&
+        signupReturnTo
+            ? {
+                path: signupReturnTo,
+                showKakaoLoginToast: false,
+                checkedAgreements: createEmptySignupAgreementState(),
+            }
+            : null;
+    const activePendingSignupTransition =
+        pendingSignupTransition ??
+        pendingSignupTransitionFromLocationState ??
+        pendingSignupTransitionFromReturnTo;
+
+    const openSignupTermsModal = useCallback(
+        (
+            signupPath: string,
+            showKakaoLoginToast: boolean,
+            checkedAgreements = createEmptySignupAgreementState(),
+        ) => {
+            const nextTransition = {
+                path: signupPath,
+                showKakaoLoginToast,
+                checkedAgreements,
+            };
+
+            setPendingSignupTransition(nextTransition);
+            navigate(currentAuthPath, {
+                replace: true,
+                state: {
+                    pendingSignupPath: signupPath,
+                    showKakaoLoginToast,
+                    checkedAgreements,
+                },
+            });
+        },
+        [currentAuthPath, navigate, setPendingSignupTransition],
+    );
 
     useEffect(() => {
-        if (!isIntroduceFriendFlow || !authMe || authorizationCode || kakaoError || kakaoErrorDescription) {
+        if (
+            !isIntroduceFriendFlow ||
+            !authMe ||
+            authMe.status.isRegistered !== true ||
+            authorizationCode ||
+            kakaoError ||
+            kakaoErrorDescription
+        ) {
             return;
         }
 
@@ -234,7 +481,8 @@ function Kakao() {
                 }
 
                 if (nextPathAfterLogin.startsWith("/auth/signup")) {
-                    sessionStorage.setItem(KAKAO_LOGIN_TOAST_STORAGE_KEY, "true");
+                    openSignupTermsModal(nextPathAfterLogin, true);
+                    return;
                 }
 
                 navigate(nextPathAfterLogin, { replace: true });
@@ -255,6 +503,7 @@ function Kakao() {
         isIntroduceFriendFlow,
         loginWithKakao,
         navigate,
+        openSignupTermsModal,
         receiveIntroduceReturnTo,
         returnTo,
     ]);
@@ -313,7 +562,71 @@ function Kakao() {
     const handleSignupBypass = () => {
         clearKakaoOAuthContext();
         setErrorMessage("");
-        navigate(createSignupPath(isIntroduceFriendFlow, returnTo));
+        openSignupTermsModal(
+            createPendingSignupPath(isIntroduceFriendFlow, returnTo),
+            false,
+        );
+    };
+
+    const handleAcceptSignupTerms = () => {
+        if (!activePendingSignupTransition) {
+            return;
+        }
+
+        if (!areSignupAgreementsChecked(activePendingSignupTransition.checkedAgreements)) {
+            return;
+        }
+
+        if (activePendingSignupTransition.showKakaoLoginToast) {
+            sessionStorage.setItem(KAKAO_LOGIN_TOAST_STORAGE_KEY, "true");
+        }
+
+        const nextSignupPath = activePendingSignupTransition.path;
+        setPendingSignupTransition(null);
+        navigate(nextSignupPath, {
+            replace: true,
+            state: { signupTermsAccepted: true },
+        });
+    };
+
+    const handleOpenTerms = (path: string) => {
+        if (!activePendingSignupTransition) {
+            return;
+        }
+
+        navigate(path, {
+            state: {
+                fromAuthPath: currentAuthPath,
+                pendingSignupPath: activePendingSignupTransition.path,
+                showKakaoLoginToast: activePendingSignupTransition.showKakaoLoginToast,
+                checkedAgreements: activePendingSignupTransition.checkedAgreements,
+            },
+        });
+    };
+
+    const handleToggleSignupAgreement = (path: SignupAgreementPath) => {
+        if (!activePendingSignupTransition) {
+            return;
+        }
+
+        const checkedAgreements = {
+            ...activePendingSignupTransition.checkedAgreements,
+            [path]: !activePendingSignupTransition.checkedAgreements[path],
+        };
+        const nextTransition = {
+            ...activePendingSignupTransition,
+            checkedAgreements,
+        };
+
+        setPendingSignupTransition(nextTransition);
+        navigate(currentAuthPath, {
+            replace: true,
+            state: {
+                pendingSignupPath: nextTransition.path,
+                showKakaoLoginToast: nextTransition.showKakaoLoginToast,
+                checkedAgreements: nextTransition.checkedAgreements,
+            },
+        });
     };
 
     return (
@@ -433,6 +746,14 @@ function Kakao() {
                     </section>
                 </>
             )}
+            {activePendingSignupTransition ? (
+                <SignupTermsAgreementModal
+                    checkedAgreements={activePendingSignupTransition.checkedAgreements}
+                    onAccept={handleAcceptSignupTerms}
+                    onOpenTerms={handleOpenTerms}
+                    onToggleAgreement={handleToggleSignupAgreement}
+                />
+            ) : null}
         </div>
     );
 }
