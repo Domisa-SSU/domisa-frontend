@@ -43,7 +43,11 @@ function BoothDetailModal({ booth, onClose }: Props) {
                     key={i}
                     src={src}
                     alt={`${booth.name} 메뉴 이미지 ${i + 1}`}
-                    className="flex-1 min-w-0 aspect-[150/213] object-cover"
+                    className={`max-h-[15.625rem] w-auto ${
+                      booth.menuImages!.length === 1
+                        ? "max-w-full"
+                        : "max-w-[calc(50%-2.5px)]"
+                    }`}
                   />
                 ))}
               </div>
@@ -56,7 +60,7 @@ function BoothDetailModal({ booth, onClose }: Props) {
                 {booth.menuItems.map((item, i) => (
                   <div key={i} className="flex items-center justify-between gap-2">
                     <div className="flex flex-col gap-1 min-w-0">
-                      <p className="typo-button-text-b text-grey-900">
+                      <p className="typo-button-text-b text-grey-900 whitespace-pre-line">
                         {item.name}
                       </p>
                       {item.description && (
