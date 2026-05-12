@@ -744,14 +744,16 @@ function DatingRegisterNotificationPhoneStep() {
         notificationPhone: formData.isSmsOptedOut ? null : formData.notificationPhone,
       });
 
-      await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
-      await queryClient.invalidateQueries({ queryKey: userMeQueryKey });
-
       if (!createdProfile.status.hasIntroduction) {
         resetRegisterFlow();
         navigate('/dating/require-introduce', { replace: true });
+        queryClient.invalidateQueries({ queryKey: authMeQueryKey });
+        queryClient.invalidateQueries({ queryKey: userMeQueryKey });
         return;
       }
+
+      await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
+      await queryClient.invalidateQueries({ queryKey: userMeQueryKey });
 
       setTotalUserCount(createdProfile.totalUserCount);
       setIsCompleteModalOpen(true);
