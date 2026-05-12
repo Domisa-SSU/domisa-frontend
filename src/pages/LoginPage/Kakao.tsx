@@ -15,7 +15,12 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import rightArrowIcon from "../../assets/right_arrow.svg";
 import XIcon from "../../assets/X.svg";
 import kakaoIconImg from "./asset/kakaoLogo.svg";
+import {
+    isBlacklistedUserAxiosError,
+    isBlacklistedUserError,
+} from "../../api/auth";
 import { useAuthMeQuery, useKakaoLoginMutation } from "../../queries/auth";
+import { reportBlacklistedUser } from "../../stores/blacklistedUserStore";
 import type { UserStatus } from "../../types/user";
 
 const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
@@ -500,6 +505,17 @@ function Kakao() {
                 console.error(error);
                 clearKakaoOAuthContext();
                 processedCodeRef.current = null;
+
+                if (
+                    isBlacklistedUserError(error) ||
+                    isBlacklistedUserAxiosError(error)
+                ) {
+                    setErrorMessage("");
+                    reportBlacklistedUser();
+                    navigate("/", { replace: true });
+                    return;
+                }
+
                 setErrorMessage("카카오 로그인에 실패했어요. 다시 시도해주세요.");
                 navigate(currentAuthPath, { replace: true });
             });

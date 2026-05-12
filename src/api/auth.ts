@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import { apiClient } from "./client";
 import { isBackendStatusDto, normalizeUserStatus } from "./status";
 import type { AuthMeResponse, UserStatus } from "../types/user";
@@ -13,6 +14,36 @@ export type LoginWithKakaoResponse = {
 
 type LogoutResponse = {
     message: string;
+};
+
+export const BLACKLISTED_USER_MESSAGE = "서비스 이용이 제한된 사용자입니다.";
+
+export class BlacklistedUserError extends Error {
+    constructor(message = BLACKLISTED_USER_MESSAGE) {
+        super(message);
+        this.name = "BlacklistedUserError";
+    }
+}
+
+export const isBlacklistedUserResponse = (value: unknown) => {
+    if (!value || typeof value !== "object") {
+        return false;
+    }
+
+    const response = value as Record<string, unknown>;
+
+    return response.code === "BLACKLISTED_USER";
+};
+
+export const isBlacklistedUserError = (error: unknown) =>
+    error instanceof BlacklistedUserError;
+
+export const isBlacklistedUserAxiosError = (error: unknown) => {
+    if (!isAxiosError(error) || error.response?.status !== 403) {
+        return false;
+    }
+
+    return isBlacklistedUserResponse(error.response.data);
 };
 
 const isLoginRequiredResponse = (value: unknown) => {
@@ -83,6 +114,10 @@ const isLogoutResponse = (value: unknown): value is LogoutResponse => {
  */
 export const getAuthMe = async () => {
     const { data } = await apiClient.get<unknown>("/api/auth/me");
+    if (isBlacklistedUserResponse(data)) {
+        throw new BlacklistedUserError();
+    }
+
     if (isLoginRequiredResponse(data)) {
         return null;
     }
@@ -103,6 +138,11 @@ export const getAuthMe = async () => {
  */
 export const loginWithKakao = async (payload: LoginWithKakaoRequest) => {
     const { data } = await apiClient.post<unknown>("/api/auth/login", payload);
+
+    if (isBlacklistedUserResponse(data)) {
+        throw new BlacklistedUserError();
+    }
+
     const loginResponse = parseLoginWithKakaoResponse(data);
 
     if (!loginResponse) {
