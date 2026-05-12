@@ -242,7 +242,7 @@ function HomePage() {
               <img src={catImg} alt="" className="w-auto h-11.4" />
             </div>
           </button>
-          <button className={`w-44 h-37.5 flex flex-col justify-between items-center ${themeClasses.mapCard} rounded-xl py-5 shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.25)]`}>
+          <button onClick={() => navigate("/night-booth")} className={`w-44 h-37.5 flex flex-col justify-between items-center ${themeClasses.mapCard} rounded-xl py-5 shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.25)]`}>
             <div className="gap-1 flex flex-col">
               <span className="typo-title-header-1-b text-grey-100 mb-1">
                 주점지도

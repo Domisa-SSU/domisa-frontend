@@ -16,6 +16,7 @@ import {
 import { getCookies, type AnimalProfile } from "../../api/users";
 import { userCookiesQueryKey } from "../../queries/users";
 import { insufficientCookiesLocationState } from "../../constants/cookieNavigation";
+import { INTRODUCTION_QUESTIONS } from "../../constants/introductionQuestions";
 import { isInsufficientCookiesError } from "../../utils/apiError";
 import HeaderTop from "../../components/HeaderTop";
 import Toast from "../../components/Toast";
@@ -76,15 +77,15 @@ const getFriendIntroductionItems = (
   cardDetail: DatingCardDetailResponse,
 ): DatingCardDetailSectionItem[] => [
   {
-    title: "친구에 대한 간단한 소개",
+    title: INTRODUCTION_QUESTIONS.q1.title,
     content: cardDetail.q1,
   },
   {
-    title: "친구의 매력 포인트",
+    title: INTRODUCTION_QUESTIONS.q2.title,
     content: cardDetail.q2,
   },
   {
-    title: "친구와 있었던 가장 웃긴 에피소드",
+    title: INTRODUCTION_QUESTIONS.q3.title,
     content: cardDetail.q3 ?? createLockedPlaceholder(cardDetail.q3Length ?? 0),
     isLocked: cardDetail.q3 === null,
   },
