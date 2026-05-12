@@ -44,7 +44,7 @@ function BoothDetailModal({ booth, onClose }: Props) {
 
             {/* 메뉴/포스터 이미지 */}
             {booth.menuImages && booth.menuImages.length > 0 && (
-              <div className="flex gap-[5px] w-full">
+              <div className="flex justify-center gap-[5px] w-full">
                 {booth.menuImages.map((src, i) => (
                   <img
                     key={i}

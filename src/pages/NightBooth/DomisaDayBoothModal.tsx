@@ -1,3 +1,4 @@
+import domisaPosterImg from "../../assets/domisaPoster.png";
 import useDragToClose from "./useDragToClose";
 
 type Props = {
@@ -27,9 +28,9 @@ function DomisaDayBoothModal({ onClose }: Props) {
 
         {/* 스크롤 영역 */}
         <div className="flex-1 overflow-y-auto px-5">
-          <div className="flex flex-col gap-5 pb-5">
+          <div className="flex flex-col items-center gap-5 pb-5">
             {/* 제목 + 위치 */}
-            <div className="flex flex-col gap-2.5 w-full">
+            <div className="flex flex-col gap-2.5 w-full items-center text-center">
               <p className="typo-title-header-1 text-grey-900">
                 도미사 낮 부스
               </p>
@@ -38,16 +39,22 @@ function DomisaDayBoothModal({ onClose }: Props) {
               </p>
             </div>
 
+            {/* 포스터 */}
+            <img
+              src={domisaPosterImg}
+              alt="도미사 낮 부스 포스터"
+              className="w-[15.625rem] h-[15.625rem] object-cover"
+            />
+
             {/* 설명 */}
-            <p className="typo-button-text-b text-grey-900 whitespace-pre-line leading-[1.5]">
+            <p className="typo-button-text-b text-grey-900 text-center whitespace-pre-line leading-[1.5]">
               {"부스 방문 시 뽑기를 통해 "}
               <span className="text-[#ff3d7e]">귀여운 키링</span>
               {"과 \n도미사럽에서 사용 가능한 "}
               <span className="text-[#ff3d7e]">쿠키 2개</span>
               {"를 얻을 수 있어요 !\n"}
-              {"부스 와서 "}
               <span className="text-[#ff3d7e]">솔로개발자</span>
-              {" 응원해주세요 >.<"}
+              {"와 사진 찍으러 오세요 >.<"}
             </p>
           </div>
         </div>

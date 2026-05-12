@@ -103,7 +103,7 @@ function NightBoothPage() {
           {/* 소개 문구 */}
           <div className="flex flex-col items-center gap-[5px] pt-6 mb-4">
             <p className={`typo-subtitle-header-2 ${tc.subtitleColor} text-center`}>
-              도미사가 추천하는 지점들!
+              도미사가 추천하는 주점들!
             </p>
             <p className={`typo-comment-2 ${tc.descriptionColor} text-center`}>
               도미사에서 만난 인연들과 함께 방문해보세요
