@@ -198,45 +198,48 @@ function CookiePurchasePage() {
       <div className="px-5 pt-9 pb-[8.75rem]">
         <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-10">
           {/* 입금자명 섹션 */}
-          <div className="flex flex-col gap-5 bg-grey-200 rounded-[0.625rem] px-2.5 py-5">
-            <p className="pl-2.5 typo-button-text text-grey-900">
-              <span className="text-primary-600">입금자명</span>에 아래 코드를 입력해주세요
-            </p>
-            <div className="flex items-center justify-between h-[3.125rem] bg-grey-100 px-2.5 py-2 rounded-[0.625rem]">
-              <span className="typo-comment-1 text-grey-900">
-                {isOrderPending ? '불러오는 중...' : billingName}
-              </span>
+          <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-5 bg-grey-200 rounded-[0.625rem] px-2.5 py-5">
+              <p className="pl-2.5 typo-button-text text-grey-900">
+                <span className="text-primary-600">입금자명</span>에 아래 코드를 입력해주세요
+              </p>
+              <div className="flex items-center justify-between h-[3.125rem] bg-grey-100 px-2.5 py-2 rounded-[0.625rem]">
+                <span className="typo-comment-1 text-grey-900">
+                  {isOrderPending ? '불러오는 중...' : billingName}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  disabled={isOrderPending || !billingName}
+                  className="flex items-center gap-1 bg-primary-100 px-3.5 py-2 rounded-[0.75rem] disabled:opacity-40"
+                >
+                  <img src={copyIcon} alt="" className="w-[0.648rem] h-[0.72rem]" />
+                  <span className="typo-comment-2 text-primary-500">복사</span>
+                </button>
+              </div>
               <button
                 type="button"
-                onClick={handleCopy}
-                disabled={isOrderPending || !billingName}
-                className="flex items-center gap-1 bg-primary-100 px-3.5 py-2 rounded-[0.75rem] disabled:opacity-40"
+                aria-pressed={isNameConfirmed}
+                onClick={() => setIsNameConfirmed(!isNameConfirmed)}
+                className="flex items-center gap-2.5 pl-2.5"
               >
-                <img src={copyIcon} alt="" className="w-[0.648rem] h-[0.72rem]" />
-                <span className="typo-comment-2 text-primary-500">복사</span>
+                <span
+                  className={`flex h-[1.09375rem] w-[1.09375rem] items-center justify-center rounded-[0.3125rem] ${
+                    isNameConfirmed ? 'bg-primary-500' : 'bg-grey-400'
+                  }`}
+                >
+                  <img src={checkIcon} alt="" className="w-[0.7875rem] h-[0.65625rem]" />
+                </span>
+                <span
+                  className={`typo-button-text ${
+                    isNameConfirmed ? 'text-primary-600' : 'text-grey-600'
+                  }`}
+                >
+                  입금자명을 확인했어요
+                </span>
               </button>
             </div>
-            <button
-              type="button"
-              aria-pressed={isNameConfirmed}
-              onClick={() => setIsNameConfirmed(!isNameConfirmed)}
-              className="flex items-center gap-2.5 pl-2.5"
-            >
-              <span
-                className={`flex h-[1.09375rem] w-[1.09375rem] items-center justify-center rounded-[0.3125rem] ${
-                  isNameConfirmed ? 'bg-primary-500' : 'bg-grey-400'
-                }`}
-              >
-                <img src={checkIcon} alt="" className="w-[0.7875rem] h-[0.65625rem]" />
-              </span>
-              <span
-                className={`typo-button-text ${
-                  isNameConfirmed ? 'text-primary-600' : 'text-grey-600'
-                }`}
-              >
-                입금자명을 확인했어요
-              </span>
-            </button>
+            <p className="pl-2.5 text-center typo-button-text text-grey-700">예금주: 오영록</p>
           </div>
 
           {/* 결제 방법 */}

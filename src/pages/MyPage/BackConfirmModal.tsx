@@ -46,7 +46,7 @@ function BackConfirmModal({ onConfirm, onCancel, isConfirming }: BackConfirmModa
             disabled={isConfirming}
             className="flex flex-1 h-[3.125rem] items-center justify-center rounded-[0.875rem] bg-grey-400 typo-button-text-b text-grey-800 disabled:opacity-40"
           >
-            {isConfirming ? '처리 중...' : '나갈래요'}
+            {isConfirming ? '처리 중...' : '취소하고 나가기'}
           </button>
           <button
             type="button"
@@ -54,7 +54,7 @@ function BackConfirmModal({ onConfirm, onCancel, isConfirming }: BackConfirmModa
             disabled={isConfirming}
             className="flex flex-1 h-[3.125rem] items-center justify-center rounded-[0.875rem] bg-primary-500 typo-button-text-b text-grey-100 disabled:opacity-40"
           >
-            닫기
+            결제 계속하기
           </button>
         </div>
       </div>

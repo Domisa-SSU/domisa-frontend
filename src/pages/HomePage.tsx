@@ -256,6 +256,9 @@ function HomePage() {
             </span>
             <img src={arrowImg} alt="" className="w-3" />
           </button>
+          <p className={`typo-comment-2 ${theme === "day" ? "text-grey-900" : "text-grey-100"}`}>
+            도미사럽은 5/16(토) 오전 7시까지 운영됩니다.
+          </p>
         </div>
         <div className="absolute bottom-[6%] left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 whitespace-nowrap">
           <div
