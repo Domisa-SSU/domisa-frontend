@@ -21,6 +21,7 @@ import {
   useNotificationStatusQuery,
 } from "../queries/notifications";
 import { useDeleteMeMutation } from "../queries/users";
+import { useIsBlacklistedUser } from "../stores/blacklistedUserStore";
 import type {
   ActiveNotificationsResponse,
   NotificationType,
@@ -74,7 +75,8 @@ function HomePage() {
   >([]);
   const location = useLocation();
   const navigate = useNavigate();
-  const { data: authMe } = useAuthMeQuery();
+  const { data: authMe, isPending: isAuthMePending } = useAuthMeQuery();
+  const isBlacklistedUser = useIsBlacklistedUser();
   const { data: activeNotifications } = useActiveNotificationsQuery(
     Boolean(authMe),
   );
@@ -88,6 +90,7 @@ function HomePage() {
   const { data: matchCountData } = useQuery({
     queryKey: datingMatchCountQueryKey,
     queryFn: getDatingMatchCount,
+    enabled: !isAuthMePending && !isBlacklistedUser,
     retry: false,
   });
   const status = authMe?.status;
