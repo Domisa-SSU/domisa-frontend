@@ -620,25 +620,16 @@ function DatingRegisterPhotoStep() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className={`relative mx-auto flex aspect-[1086/591] w-full items-center justify-center overflow-hidden rounded-[0.625rem] bg-grey-300 ${
+              className={`relative mx-auto flex aspect-[71/109] w-full max-w-[13.3125rem] items-center justify-center overflow-hidden rounded-[0.625rem] bg-grey-300 ${
                 formData.photoPreviewUrl ? "" : "border-[1.8px] border-dashed border-grey-700"
               }`}
             >
               {formData.photoPreviewUrl ? (
-                <>
-                  <img
-                    src={formData.photoPreviewUrl}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 h-full w-full scale-[1.08] object-cover brightness-[0.88] saturate-[1.08] blur-[10px]"
-                  />
-                  <div className="absolute inset-0 bg-black/10" />
-                  <img
-                    src={formData.photoPreviewUrl}
-                    alt="선택한 프로필 사진"
-                    className="relative z-10 h-full w-auto max-w-full object-contain"
-                  />
-                </>
+                <img
+                  src={formData.photoPreviewUrl}
+                  alt="선택한 프로필 사진"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
               ) : (
                 <>
                   <img
