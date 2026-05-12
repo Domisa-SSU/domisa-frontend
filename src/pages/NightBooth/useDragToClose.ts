@@ -5,13 +5,23 @@ const CLOSE_THRESHOLD = 100;
 function useDragToClose(onClose: () => void) {
   const panelRef = useRef<HTMLDivElement>(null);
   const startYRef = useRef(0);
+  const isDraggingRef = useRef(false);
+
+  const snapBack = () => {
+    if (panelRef.current) {
+      panelRef.current.style.transition = 'transform 0.3s ease';
+      panelRef.current.style.transform = '';
+    }
+  };
 
   const onPointerDown = (e: React.PointerEvent) => {
+    isDraggingRef.current = true;
     startYRef.current = e.clientY;
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
+    if (!isDraggingRef.current) return;
     const delta = Math.max(0, e.clientY - startYRef.current);
     if (panelRef.current) {
       panelRef.current.style.transition = 'none';
@@ -20,6 +30,8 @@ function useDragToClose(onClose: () => void) {
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
     const delta = Math.max(0, e.clientY - startYRef.current);
     if (delta >= CLOSE_THRESHOLD) {
       if (panelRef.current) {
@@ -27,10 +39,15 @@ function useDragToClose(onClose: () => void) {
         panelRef.current.style.transform = 'translateY(100%)';
       }
       setTimeout(onClose, 300);
-    } else if (panelRef.current) {
-      panelRef.current.style.transition = 'transform 0.3s ease';
-      panelRef.current.style.transform = '';
+    } else {
+      snapBack();
     }
+  };
+
+  const onPointerCancel = () => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    snapBack();
   };
 
   return {
@@ -39,7 +56,7 @@ function useDragToClose(onClose: () => void) {
       onPointerDown,
       onPointerMove,
       onPointerUp,
-      onPointerCancel: onPointerUp,
+      onPointerCancel,
     },
   };
 }
