@@ -20,7 +20,6 @@ import {
   useActiveNotificationsQuery,
   useNotificationStatusQuery,
 } from "../queries/notifications";
-import { useDeleteMeMutation } from "../queries/users";
 import { useIsBlacklistedUser } from "../stores/blacklistedUserStore";
 import type {
   ActiveNotificationsResponse,
@@ -29,7 +28,6 @@ import type {
 
 const datingMatchCountQueryKey = ["dating", "count"] as const;
 const fallbackMatchCount = 21;
-const shouldShowDeleteMeButton = import.meta.env.DEV;
 
 type HomeTheme = "day" | "night";
 
@@ -69,7 +67,6 @@ const userNotificationModalTypes: readonly NotificationType[] = [
 
 function HomePage() {
   const [theme] = useState(getThemeByTime());
-  const [deleteMessage, setDeleteMessage] = useState("");
   const [activeNotificationQueue, setActiveNotificationQueue] = useState<
     NotificationType[]
   >([]);
@@ -83,10 +80,6 @@ function HomePage() {
   const { data: notificationStatus } = useNotificationStatusQuery(
     Boolean(authMe),
   );
-  const {
-    mutateAsync: deleteMe,
-    isPending: isDeletingMe,
-  } = useDeleteMeMutation();
   const { data: matchCountData } = useQuery({
     queryKey: datingMatchCountQueryKey,
     queryFn: getDatingMatchCount,
@@ -161,17 +154,6 @@ function HomePage() {
 
     navigate("/dating");
   };
-  const handleDeleteMe = async () => {
-    try {
-      setDeleteMessage("");
-      const response = await deleteMe();
-      setDeleteMessage(response.message);
-    } catch (error) {
-      console.error(error);
-      setDeleteMessage("회원탈퇴에 실패했어요.");
-    }
-  };
-
   const dismissActiveNotification = () => {
     setActiveNotificationQueue((queue) => queue.slice(1));
   };
@@ -213,7 +195,7 @@ function HomePage() {
             <span className={`${themeClasses.text} typo-comment-1`}>
               현재 매칭된 커플
             </span>
-            <div className={`${themeClasses.coupleTextBackGround} px-[0.12rem] typo-comment-1-b py-[0.09rem] text-primary-500 rounded-[0.93rem]`}>
+            <div className={`${themeClasses.coupleTextBackGround} inline-flex h-5 min-w-5 items-center justify-center rounded-[0.9375rem] px-[0.1875rem] typo-comment-1-b text-primary-600`}>
               {matchCount}
             </div>
             <span className={`${themeClasses.text} typo-comment-1`}>쌍!</span>
@@ -229,10 +211,10 @@ function HomePage() {
               <span
                 className={`typo-title-header-1-b ${themeClasses.buttonTextColor} mb-1`}
               >
-                소개팅
+                소개팅 하기
               </span>
               <span className={`${themeClasses.text} typo-comment-2`}>
-                이번 봄축제에서 CC 되기
+                이번 봄축제에 CC 되기
               </span>
             </div>
             <div className="flex items-center">
@@ -248,7 +230,7 @@ function HomePage() {
           <button onClick={() => navigate("/night-booth")} className={`w-44 h-37.5 flex flex-col justify-between items-center ${themeClasses.mapCard} rounded-xl py-5 shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.25)]`}>
             <div className="gap-1 flex flex-col">
               <span className="typo-title-header-1-b text-grey-100 mb-1">
-                주점지도
+                주점정보
               </span>
               <span className={`${themeClasses.text} typo-comment-2`}>
                 부스 방문하고 쿠키 받기
@@ -270,7 +252,7 @@ function HomePage() {
           shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.25)]"
           >
             <span className="text-grey-100 typo-button-text-b">
-              친구 소개하기
+              솔로인 내 친구 소개하기
             </span>
             <img src={arrowImg} alt="" className="w-3" />
           </button>
@@ -299,23 +281,6 @@ function HomePage() {
               개인정보처리방침
             </a>
           </div>
-          {shouldShowDeleteMeButton ? (
-            <>
-              <button
-                type="button"
-                onClick={handleDeleteMe}
-                disabled={isDeletingMe}
-                className={`typo-comment-2 underline underline-offset-4 disabled:opacity-60 ${
-                  theme == "day" ? "text-grey-700" : "text-grey-400"
-                }`}
-              >
-                {isDeletingMe ? "회원탈퇴 중" : "회원탈퇴"}
-              </button>
-              {deleteMessage ? (
-                <p className="typo-comment-2 text-primary-600">{deleteMessage}</p>
-              ) : null}
-            </>
-          ) : null}
         </div>
       </section>
       {currentActiveNotificationType ? (

@@ -342,7 +342,7 @@ function Kakao() {
     const nextPath = isIntroduceFriendFlow
         ? "/introduce-friend/generating"
         : "/auth/signup";
-    const headerTitle = isIntroduceFriendFlow ? "친구 소개하기" : "로그인";
+    const headerTitle = isIntroduceFriendFlow ? "솔로인 내 친구 소개하기" : "로그인";
     const currentAuthPath = createAuthPath(isIntroduceFriendFlow, returnTo);
     const receiveIntroduceReturnTo = getReceiveIntroduceReturnTo(returnTo);
     const locationState = location.state as KakaoLocationState;

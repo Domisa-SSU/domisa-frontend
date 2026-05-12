@@ -46,7 +46,7 @@ function IntroduceFriendPage() {
 
     return (
         <div className="min-h-screen bg-grey-100">
-            <NotLoginHeader title="친구 소개하기"></NotLoginHeader>
+            <NotLoginHeader title="솔로인 내 친구 소개하기"></NotLoginHeader>
             <div className="px-5 pt-[1.72rem] pb-[7.5625rem]">
                 <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-5">
                     {INTRODUCTION_QUESTION_IDS.map((questionId) => {
