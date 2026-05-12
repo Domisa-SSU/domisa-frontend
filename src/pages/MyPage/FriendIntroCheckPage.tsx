@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getMyIntroduction } from "../../api/introduction";
+import { INTRODUCTION_QUESTIONS } from "../../constants/introductionQuestions";
 import ErrorPage from "../ErrorPage/ErrorPage";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import inviteCreatedIcon from "../IntroduceFriendPage/assets/inviteCreatedIcon.svg";
@@ -43,9 +44,9 @@ function FriendIntroCheckPage() {
     () =>
       introduction
         ? [
-            { title: "친구에 대한 간단한 소개", content: introduction.q1 },
-            { title: "친구의 매력 포인트", content: introduction.q2 },
-            { title: "친구와 있었던 가장 웃긴 에피소드", content: introduction.q3 },
+            { title: INTRODUCTION_QUESTIONS.q1.title, content: introduction.q1 },
+            { title: INTRODUCTION_QUESTIONS.q2.title, content: introduction.q2 },
+            { title: INTRODUCTION_QUESTIONS.q3.title, content: introduction.q3 },
           ]
         : [],
     [introduction],

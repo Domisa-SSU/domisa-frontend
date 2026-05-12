@@ -7,6 +7,7 @@ import {
   acceptReceivedIntroduction,
   getReceivedIntroduction,
 } from "../../api/introduction";
+import { INTRODUCTION_QUESTIONS } from "../../constants/introductionQuestions";
 import type { AuthMeResponse } from "../../types/user";
 import Button from "../../components/Button/Button";
 import HeaderTop from "../../components/HeaderTop";
@@ -194,15 +195,15 @@ function ReceiveIntroducePage() {
       introduction
         ? [
             {
-              title: "친구에 대한 간단한 소개",
+              title: INTRODUCTION_QUESTIONS.q1.title,
               content: introduction.q1,
             },
             {
-              title: "친구의 매력 포인트",
+              title: INTRODUCTION_QUESTIONS.q2.title,
               content: introduction.q2,
             },
             {
-              title: "친구와 있었던 가장 웃긴 에피소드",
+              title: INTRODUCTION_QUESTIONS.q3.title,
               content: introduction.q3,
             },
           ]

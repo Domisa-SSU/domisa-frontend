@@ -1,3 +1,4 @@
+import { INTRODUCTION_QUESTIONS } from "../constants/introductionQuestions";
 import { apiClient } from "./client";
 
 export type ReceivedIntroduction = {
@@ -22,9 +23,9 @@ const DUMMY_INTRODUCTION_ID = 1;
 
 const dummyReceivedIntroduction: ReceivedIntroduction = {
   introductionId: DUMMY_INTRODUCTION_ID,
-  q1: "제 친구는 처음 보면 조금 조용하고 차분해 보이지만, 친해지면 하루 종일 옆에서 웃겨주는 사람입니다. 작은 약속도 잘 지키고 상대방 이야기를 진심으로 들어줘요. 누가 힘든 이야기를 꺼내면 바로 조언부터 하기보다 끝까지 들어주고, 필요한 순간에는 조용히 챙겨주는 타입입니다. 그래서 같이 있으면 괜히 긴장하지 않아도 되고, 별말 없이 같은 공간에 있어도 편안한 느낌이 들어요.",
-  q2: "가끔 이해할 수 없는 행동을 해요. 길을 걷다가 갑자기 춤을 추거나, 편의점 신상 과자를 전부 비교해보겠다고 진지하게 리뷰를 남기기도 합니다. 여행을 가면 계획표는 꼼꼼하게 짜놓고 막상 현장에서는 갑자기 다른 골목이 예쁘다며 새로운 길로 새기도 해요. 그런데 그런 엉뚱함이 부담스럽지 않고 주변 사람을 편하게 만들어줘요. 분위기가 어색해질 때 자연스럽게 웃음을 만들 줄 알고, 자기만 웃긴 게 아니라 같이 있는 사람까지 기분 좋게 만드는 힘이 있습니다.",
-  q3: "친구랑 한강에 갔는데 물고기가 먹고 싶다며 갑자기 낚시를 하겠다고 한 적이 있어요.\n낚싯대도 없어서 편의점에서 산 과자 봉지를 미끼처럼 들고 한참 서 있었고, 결국 물고기는 못 잡았지만 지나가던 사람들이 다 웃었습니다.\n그날 이후로 저희 사이에서는 배고프면 한강 가자는 말이 농담처럼 남아 있어요.",
+  q1: INTRODUCTION_QUESTIONS.q1.placeholder,
+  q2: INTRODUCTION_QUESTIONS.q2.placeholder,
+  q3: INTRODUCTION_QUESTIONS.q3.placeholder,
 };
 
 const isReceivedIntroduction = (
