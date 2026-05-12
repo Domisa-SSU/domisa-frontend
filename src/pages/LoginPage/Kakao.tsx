@@ -271,7 +271,7 @@ function SignupTermsAgreementModal({
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => onOpenTerms(item.path)}
+                                        onClick={() => onToggleAgreement(item.path)}
                                         className="min-w-0 flex-1 text-left typo-button-text-b text-grey-700"
                                     >
                                         {item.label}
