@@ -343,7 +343,8 @@ function ReceiveIntroducePage() {
           <section className="flex flex-col gap-2.5">
             <div className="flex items-center gap-1">
               <h1 className="typo-button-text text-grey-900">
-                친구 소개서가 도착했어요
+                친구가 써준{" "}
+                <span className="text-primary-600">내 소개서</span>가 도착했어요
               </h1>
               <img
                 src={inviteCreatedIcon}
@@ -352,19 +353,28 @@ function ReceiveIntroducePage() {
                 className="h-4 w-4"
               />
             </div>
-            <p className="typo-input-text-m text-grey-700">
-              친구가 작성한 소개서를 확인해보세요
+            <p className="typo-input-text-m text-grey-900">
+              친구가{" "}
+              <span className="typo-input-text text-primary-600">
+                나를 커플로 만들기 위해
+              </span>{" "}
+              소개서를 작성했어요 !
             </p>
           </section>
 
-          <div className="flex flex-col gap-5">
-            {cardItems.map((item) => (
-              <IntroductionCard
-                key={item.title}
-                title={item.title}
-                content={item.content}
-              />
-            ))}
+          <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-5">
+              {cardItems.map((item) => (
+                <IntroductionCard
+                  key={item.title}
+                  title={item.title}
+                  content={item.content}
+                />
+              ))}
+            </div>
+            <p className="typo-input-text-m text-grey-700">
+              *도미사럽은 숭실대 봄축제에 운영되는 소개팅 서비스에요
+            </p>
           </div>
         </div>
       </main>
@@ -375,7 +385,7 @@ function ReceiveIntroducePage() {
             이미 친구소개서가 있는 경우 친구소개서가 변경돼요!
           </p>
           <Button
-            label={isAccepting ? "수락 중..." : "수락"}
+            label={isAccepting ? "수락 중..." : "수락하고 소개팅하기"}
             disabled={isAccepting}
             onClick={handleAccept}
           />

@@ -95,6 +95,9 @@ function MyPage() {
             {/* 보유 쿠키 */}
             <div className="flex flex-col gap-3.5">
               <span className="typo-button-text text-grey-900">보유 쿠키</span>
+              <span className="typo-comment-2 text-grey-700">
+                호감을 보내거나 카드를 섞을 때 사용돼요
+              </span>
               <button
                 onClick={() => navigate('/my/cookie')}
                 className="relative flex items-center justify-center h-[3.125rem] px-2.5 bg-primary-100 rounded-[0.625rem] w-full"

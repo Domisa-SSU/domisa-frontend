@@ -1,4 +1,5 @@
 import type { Booth } from "./types";
+import useDragToClose from "./useDragToClose";
 
 type Props = {
   booth: Booth;
@@ -6,17 +7,23 @@ type Props = {
 };
 
 function BoothDetailModal({ booth, onClose }: Props) {
+  const { panelRef, dragHandleProps } = useDragToClose(onClose);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
       onClick={onClose}
     >
       <div
+        ref={panelRef}
         className="flex w-full max-w-[26.875rem] flex-col rounded-t-[14px] bg-grey-100 max-h-[85vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 드래그 핸들 — 스크롤 밖 고정 */}
-        <div className="flex shrink-0 justify-center pt-2.5 pb-5">
+        <div
+          className="flex shrink-0 justify-center pt-2.5 pb-5 cursor-grab active:cursor-grabbing touch-none"
+          {...dragHandleProps}
+        >
           <div className="h-[5px] w-[100px] rounded-full bg-grey-400" />
         </div>
 
@@ -43,7 +50,11 @@ function BoothDetailModal({ booth, onClose }: Props) {
                     key={i}
                     src={src}
                     alt={`${booth.name} 메뉴 이미지 ${i + 1}`}
-                    className="flex-1 min-w-0 aspect-[150/213] object-cover"
+                    className={`max-h-[15.625rem] w-auto ${
+                      booth.menuImages!.length === 1
+                        ? "max-w-full"
+                        : "max-w-[calc(50%-2.5px)]"
+                    }`}
                   />
                 ))}
               </div>
@@ -56,7 +67,7 @@ function BoothDetailModal({ booth, onClose }: Props) {
                 {booth.menuItems.map((item, i) => (
                   <div key={i} className="flex items-center justify-between gap-2">
                     <div className="flex flex-col gap-1 min-w-0">
-                      <p className="typo-button-text-b text-grey-900">
+                      <p className="typo-button-text-b text-grey-900 whitespace-pre-line">
                         {item.name}
                       </p>
                       {item.description && (

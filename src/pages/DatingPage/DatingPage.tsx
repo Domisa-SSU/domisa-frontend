@@ -295,6 +295,9 @@ function ShuffleConfirmModal({
           <p className="typo-input-text-m text-center text-grey-700">
             내 쿠키 : {cookieCount}개
           </p>
+          <p className="typo-input-text-m text-center text-warning">
+            이미 열람한 카드가 다시 나올 수 있어요
+          </p>
         </div>
 
         <button

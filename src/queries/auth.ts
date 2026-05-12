@@ -1,7 +1,14 @@
 import { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getAuthMe, loginWithKakao, logout } from "../api/auth";
+import {
+  getAuthMe,
+  isBlacklistedUserAxiosError,
+  isBlacklistedUserError,
+  loginWithKakao,
+  logout,
+} from "../api/auth";
+import { reportBlacklistedUser } from "../stores/blacklistedUserStore";
 import type { AuthMeResponse } from "../types/user";
 
 export const authMeQueryKey = ["auth", "me"] as const;
@@ -25,6 +32,11 @@ const getAuthMeOrNull = async (): Promise<AuthMeResponse | null> => {
   try {
     return await getAuthMe();
   } catch (error) {
+    if (isBlacklistedUserError(error) || isBlacklistedUserAxiosError(error)) {
+      reportBlacklistedUser();
+      return null;
+    }
+
     if (
       isAxiosError(error) &&
       unauthenticatedStatusCodes.has(error.response?.status ?? 0)

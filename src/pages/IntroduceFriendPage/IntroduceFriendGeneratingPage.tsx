@@ -146,7 +146,7 @@ function IntroduceFriendGeneratingPage() {
     if (isResultVisible) {
         return (
             <div className="relative min-h-screen bg-grey-100">
-                <NotLoginHeader title="친구 소개하기" />
+                <NotLoginHeader title="솔로인 내 친구 소개하기" />
 
                 <main className="absolute inset-0 flex items-center px-5">
                     <div className="mx-auto flex w-full max-w-[22.5625rem] -translate-y-[2.125rem] flex-col items-center gap-[3.125rem]">
@@ -212,7 +212,7 @@ function IntroduceFriendGeneratingPage() {
 
     return (
         <div className="min-h-screen bg-grey-100">
-            <NotLoginHeader title="친구 소개하기" />
+            <NotLoginHeader title="솔로인 내 친구 소개하기" />
 
             <main className="flex flex-col items-center px-5 pt-[6.5rem] pb-[13rem]">
                 <div className="flex flex-col items-center gap-[0.375rem] text-center">
