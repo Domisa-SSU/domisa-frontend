@@ -11,6 +11,8 @@ export type Booth = {
   gridLabel?: string;
   /** 주점 목록 페이지에 표시되는 대표 이미지 */
   image: string;
+  /** 비활성(해당 일차 아님) 상태에서 표시할 흑백 이미지 */
+  blackImage: string;
   /** 운영 일차 목록. 빈 배열이면 일차 미정 */
   days: number[];
   /** 일차별 위치 정보 (예: "1일차 - 신양관 앞") */

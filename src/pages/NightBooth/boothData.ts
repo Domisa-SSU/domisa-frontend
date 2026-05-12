@@ -1,9 +1,13 @@
 import japanBoothImg from '../../assets/japanBooth.png';
+import japanBoothBlackImg from '../../assets/japanBoothBlack.png';
 import mathBoothImg from '../../assets/mathBooth.png';
+import mathBoothBlackImg from '../../assets/mathBoothBlack.png';
 import japanPosterOne from '../../assets/japanPosterOne.png';
 import japanPosterTwo from '../../assets/japanPosterTwo.png';
 import industrialBoothImg from '../../assets/industrialBooth.png';
+import industrialBoothBlackImg from '../../assets/industrialBoothBlack.png';
 import administrationBoothImg from '../../assets/administrationBooth.png';
+import administrationBoothBlackImg from '../../assets/administrationBoothBlack.png';
 import type { Booth } from './types';
 
 export const TOTAL_DAYS = 3;
@@ -19,6 +23,7 @@ export const BOOTHS: Booth[] = [
     name: '산업정보시스템공학과 학생회 주점',
     gridLabel: '산업정보시스템공학과\n학생회 주점',
     image: industrialBoothImg,
+    blackImage: industrialBoothBlackImg,
     days: [2, 3],
     locations: ['2일차 - 위치 미정', '3일차 - 위치 미정'],
     menuItems: [],
@@ -27,6 +32,7 @@ export const BOOTHS: Booth[] = [
     id: 'japan',
     name: '일어일문 학생회 주점',
     image: japanBoothImg,
+    blackImage: japanBoothBlackImg,
     days: [1, 2],
     locations: ['1일차 - 신양관 앞', '2일차 - 조만식 나무 계단 앞 (웨스터민스터홀 앞)'],
     menuImages: [japanPosterOne, japanPosterTwo],
@@ -57,6 +63,7 @@ export const BOOTHS: Booth[] = [
     id: 'math',
     name: '수학과 학생회 주점',
     image: mathBoothImg,
+    blackImage: mathBoothBlackImg,
     days: [3],
     locations: ['3일차 - 위치 미정'],
     menuItems: [],
@@ -65,6 +72,7 @@ export const BOOTHS: Booth[] = [
     id: 'administration',
     name: '행정학부 학생회 주점',
     image: administrationBoothImg,
+    blackImage: administrationBoothBlackImg,
     days: [],
     locations: ['위치 미정'],
     menuItems: [],
