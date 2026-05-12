@@ -8,6 +8,7 @@ import {
     KAKAO_RETURN_TO_STORAGE_KEY,
     KAKAO_LOGIN_TOAST_STORAGE_KEY,
 } from "../../constants/storageKeys";
+import { hasCompleteIntroductionAnswers } from "../../constants/introductionQuestions";
 import loginImg from "./asset/loginImg.png";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -149,16 +150,9 @@ const hasValidIntroduceFriendDraft = () => {
     }
 
     try {
-        const draft = JSON.parse(savedDraft) as Record<string, unknown>;
+        const draft = JSON.parse(savedDraft);
 
-        return (
-            typeof draft.shortIntro === "string" &&
-            draft.shortIntro.trim().length > 0 &&
-            typeof draft.charmPoint === "string" &&
-            draft.charmPoint.trim().length > 0 &&
-            typeof draft.funnyEpisode === "string" &&
-            draft.funnyEpisode.trim().length > 0
-        );
+        return hasCompleteIntroductionAnswers(draft);
     } catch {
         return false;
     }

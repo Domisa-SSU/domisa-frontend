@@ -6,16 +6,16 @@ import RightArrow from "../../assets/right_arrow.svg?react";
 import {
     INTRODUCE_FRIEND_DRAFT_STORAGE_KEY,
 } from "../../constants/storageKeys";
+import {
+    hasCompleteIntroductionAnswers,
+    type IntroductionAnswers,
+} from "../../constants/introductionQuestions";
 import { createIntroductionLink } from "../../api/introduction";
 import copyIcon from "../SignupPage/asset/copyIcon.png";
 import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
 import requireIcon from "./assets/requireIcon.png";
 
-type IntroduceFriendDraft = {
-    shortIntro: string;
-    charmPoint: string;
-    funnyEpisode: string;
-};
+type IntroduceFriendDraft = IntroductionAnswers;
 
 let pendingIntroductionLinkRequest:
     | {
@@ -23,20 +23,6 @@ let pendingIntroductionLinkRequest:
         promise: Promise<string>;
     }
     | null = null;
-
-const isIntroduceFriendDraft = (value: unknown): value is IntroduceFriendDraft => {
-    if (!value || typeof value !== "object") {
-        return false;
-    }
-
-    const draft = value as Record<string, unknown>;
-
-    return (
-        typeof draft.shortIntro === "string" &&
-        typeof draft.charmPoint === "string" &&
-        typeof draft.funnyEpisode === "string"
-    );
-};
 
 const getIntroduceFriendDraft = () => {
     const savedDraft = sessionStorage.getItem(INTRODUCE_FRIEND_DRAFT_STORAGE_KEY);
@@ -48,7 +34,7 @@ const getIntroduceFriendDraft = () => {
     try {
         const draft = JSON.parse(savedDraft);
 
-        return isIntroduceFriendDraft(draft) ? draft : null;
+        return hasCompleteIntroductionAnswers(draft) ? draft : null;
     } catch {
         return null;
     }
@@ -61,11 +47,7 @@ const createInvitationUrl = (draft: IntroduceFriendDraft) => {
         return pendingIntroductionLinkRequest.promise;
     }
 
-    const promise = createIntroductionLink({
-        q1: draft.shortIntro,
-        q2: draft.charmPoint,
-        q3: draft.funnyEpisode,
-    })
+    const promise = createIntroductionLink(draft)
         .then((response) => {
             const linkCode = encodeURIComponent(response.linkCode);
 

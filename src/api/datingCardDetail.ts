@@ -1,5 +1,6 @@
 import { apiClient } from "./client";
 import type { AnimalProfile } from "./users";
+import { INTRODUCTION_QUESTIONS } from "../constants/introductionQuestions";
 import testImg from "../assets/testImg.png";
 
 export type DatingCardDetailContactType = "PHONE" | "KAKAO" | "INSTAGRAM";
@@ -76,10 +77,10 @@ const baseMockDatingCardDetail: DatingCardDetailResponse = {
   gender: false,
   animalProfile: "CAPYBARA",
   profile: testImg,
-  q1: "제 친구는 정말로.. 귀여워요!!",
-  q2: "가끔 이해할 수 없는 행동을 해요 길에서 갑자기 춤추기..",
-  q3: "물고기가 먹고 싶어서 한강에서 낚시를 한 적이 있어요\n회 떠먹었습니다..",
-  q3Length: 37,
+  q1: INTRODUCTION_QUESTIONS.q1.placeholder,
+  q2: INTRODUCTION_QUESTIONS.q2.placeholder,
+  q3: INTRODUCTION_QUESTIONS.q3.placeholder,
+  q3Length: INTRODUCTION_QUESTIONS.q3.placeholder.length,
   datingStyle: "다정하고 친구 같은 연애!",
   idealType: "곰같은 남자",
   idealTypeLength: 5,
@@ -112,7 +113,7 @@ const mockDatingCardDetails: Record<string, DatingCardDetailResponse> = {
     nickName: "받은호감",
     animalProfile: "BEAR",
     q3: null,
-    q3Length: 42,
+    q3Length: INTRODUCTION_QUESTIONS.q3.placeholder.length,
     idealType: null,
     idealTypeLength: 14,
     contact: null,
