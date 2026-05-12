@@ -1,82 +1,116 @@
 import { useState } from "react";
 import NotLoginHeader from "../../components/NotLoginHeader";
-import headerArrow from "../../assets/headerArrow.svg";
-import bgImg from "../../assets/homePageDayBackGround.jpg";
-import { BOOTHS_BY_DAY, TOTAL_DAYS } from "./boothData";
+import HeaderArrow from "../../assets/headerArrow.svg?react";
+import dayBgImg from "../../assets/homePageDayBackGround.jpg";
+import nightBgImg from "../../assets/homePageNightBackGround.jpg";
+import domisaBoothImg from "../../assets/domisaBooth.png";
+import { BOOTHS } from "./boothData";
 import BoothDetailModal from "./BoothDetailModal";
 import type { Booth } from "./types";
 
-// 부스 수평 배치 패턴 (인덱스 순 순환): 가운데 → 왼쪽 → 오른쪽
-const POSITION_CLASSES = ["mx-auto", "mr-auto pl-4", "ml-auto pr-4"] as const;
+type Theme = "day" | "night";
+
+const getThemeByTime = (): Theme => {
+  const hour = new Date().getHours();
+  return hour >= 6 && hour < 18 ? "day" : "night";
+};
+
+const themeClasses = {
+  day: {
+    bg: dayBgImg,
+    subtitleColor: "text-grey-900",
+    descriptionColor: "text-grey-700",
+    boothNameColor: "text-grey-900",
+    arrowColor: "text-primary-300",
+    domisaBorder: "border-primary-300",
+    domisaBg: "bg-grey-100",
+    domisaTitleColor: "text-primary-700",
+    domisaSubtitleColor: "text-primary-500",
+  },
+  night: {
+    bg: nightBgImg,
+    subtitleColor: "text-[#46e2f3]",
+    descriptionColor: "text-grey-600",
+    boothNameColor: "text-grey-100",
+    arrowColor: "text-grey-100",
+    domisaBorder: "border-grey-100",
+    domisaBg: "bg-grey-600",
+    domisaTitleColor: "text-grey-800",
+    domisaSubtitleColor: "text-grey-700",
+  },
+} as const;
 
 function NightBoothPage() {
-  const [day, setDay] = useState(1);
+  const [theme] = useState<Theme>(getThemeByTime);
   const [selectedBooth, setSelectedBooth] = useState<Booth | null>(null);
 
-  const booths = BOOTHS_BY_DAY[day] ?? [];
+  const tc = themeClasses[theme];
 
   return (
     <div className="min-h-screen bg-grey-100 flex flex-col">
-      <NotLoginHeader title="주점지도" />
+      <NotLoginHeader title="주점정보" />
 
       <div
         className="flex-1 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${bgImg})` }}
+        style={{ backgroundImage: `url(${tc.bg})` }}
       >
+        <div className="mx-auto w-full max-w-[25.125rem] px-4 pb-10">
 
-      <div className="mx-auto w-full max-w-[22.6875rem]">
-        {/* 날짜 네비게이션 */}
-        <div className="flex items-center justify-center gap-12 py-4">
-          <button
-            type="button"
-            onClick={() => setDay((d) => Math.max(1, d - 1))}
-            disabled={day === 1}
-            aria-label="이전 날"
-            className="flex size-10 items-center justify-center disabled:opacity-30"
-          >
-            <img src={headerArrow} alt="" className="h-[1.0625rem] w-[0.875rem]" />
-          </button>
-          <span className="typo-title-header-1-b text-grey-900">{day}일차</span>
-          <button
-            type="button"
-            onClick={() => setDay((d) => Math.min(TOTAL_DAYS, d + 1))}
-            disabled={day === TOTAL_DAYS}
-            aria-label="다음 날"
-            className="flex size-10 items-center justify-center disabled:opacity-30"
-          >
-            <img
-              src={headerArrow}
-              alt=""
-              className="h-[1.0625rem] w-[0.875rem] rotate-180"
-            />
-          </button>
-        </div>
+          {/* 소개 문구 */}
+          <div className="flex flex-col items-center gap-[5px] pt-6 mb-4">
+            <p className={`typo-subtitle-header-2 ${tc.subtitleColor} text-center`}>
+              도미사가 추천하는 지점들!
+            </p>
+            <p className={`typo-comment-2 ${tc.descriptionColor} text-center`}>
+              도미사에서 만난 인연들과 함께 방문해보세요
+            </p>
+          </div>
 
-        {/* 주점 목록 */}
-        <div className="flex flex-col gap-6 py-4 pb-10">
-          {booths.map((booth, index) => {
-            const positionClass = POSITION_CLASSES[index % POSITION_CLASSES.length];
-            return (
+          {/* 주점 2열 그리드 */}
+          <div className="grid grid-cols-2 gap-y-6">
+            {BOOTHS.map((booth) => (
               <button
                 key={booth.id}
                 type="button"
                 onClick={() => setSelectedBooth(booth)}
-                className={`flex flex-col items-center gap-2 ${positionClass}`}
+                className="flex flex-col items-center gap-2"
               >
                 <img
                   src={booth.image}
                   alt={booth.name}
                   className="size-[9.375rem] aspect-square object-cover"
                 />
-                <span className="typo-button-text-b text-grey-900 text-center">
-                  {booth.name}
+                <span className={`typo-button-text-b ${tc.boothNameColor} text-center whitespace-pre-line`}>
+                  {booth.gridLabel ?? booth.name}
                 </span>
               </button>
-            );
-          })}
-        </div>
-      </div>
+            ))}
+          </div>
 
+          {/* 도미사 낮 부스 */}
+          <button
+            type="button"
+            className={`mt-8 flex w-full items-center justify-between rounded-[1.875rem] border-[1.8px] ${tc.domisaBorder} ${tc.domisaBg} px-5 py-2.5`}
+          >
+            <div className="flex items-center gap-2.5">
+              <img
+                src={domisaBoothImg}
+                alt="도미사 낮 부스"
+                className="size-[4.375rem] object-cover"
+              />
+              <div className="flex flex-col gap-[5px] text-left">
+                <p className={`typo-subtitle-header-2 font-bold ${tc.domisaTitleColor}`}>
+                  도미사 낮 부스
+                </p>
+                <p className={`typo-input-text-m ${tc.domisaSubtitleColor}`}>
+                  방문 시 귀여운 키링과 쿠키 2개
+                </p>
+              </div>
+            </div>
+            <HeaderArrow className={`h-[1.375rem] w-[0.75rem] shrink-0 rotate-180 ${tc.arrowColor}`} />
+          </button>
+
+        </div>
       </div>
 
       {/* 주점 상세 모달 */}
