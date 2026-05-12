@@ -596,9 +596,9 @@ function DatingRegisterPhotoStep() {
           <section className="flex flex-col gap-5">
             <div className="flex flex-col gap-5">
               <h1 className="typo-title-header-1 text-grey-900">
-                마지막으로
+                나를 표현하는 사진을
                 <br />
-                나를 표현하는 사진을 올려주세요
+                올려주세요
               </h1>
               <div className="flex items-center gap-1">
                 <p className="typo-input-text-m text-grey-700">
@@ -785,11 +785,19 @@ function DatingRegisterNotificationPhoneStep() {
     <>
       <main className="px-5 pt-[1.625rem] pb-[8.125rem]">
         <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-[1.875rem]">
-          <h1 className="typo-title-header-1 text-grey-900">
-            새로운 호감이나 매칭이 이루어졌을 때
-            <br />
-            문자로 알려드릴게요
-          </h1>
+          <div className="flex flex-col gap-3.5">
+            <h1 className="typo-title-header-1 text-grey-900">
+              새로운 호감이나 매칭이 이루어졌을 때
+              <br />
+              문자로 알려드릴게요
+            </h1>
+            <div className="flex items-center gap-1">
+              <p className="typo-input-text-m text-grey-700">
+                매일 15시, 20시에 문자로 알려드려요
+              </p>
+              <img src={smileIcon} alt="" className="h-3.5 w-3.5" />
+            </div>
+          </div>
 
           <label className="flex flex-col gap-2.5">
             <span
