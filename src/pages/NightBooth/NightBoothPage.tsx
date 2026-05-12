@@ -6,6 +6,7 @@ import nightBgImg from "../../assets/homePageNightBackGround.jpg";
 import domisaBoothImg from "../../assets/domisaBooth.png";
 import { BOOTHS } from "./boothData";
 import BoothDetailModal from "./BoothDetailModal";
+import DomisaDayBoothModal from "./DomisaDayBoothModal";
 import type { Booth } from "./types";
 
 type Theme = "day" | "night";
@@ -68,6 +69,7 @@ function NightBoothPage() {
   const [theme] = useState<Theme>(getThemeByTime);
   const [currentDay, setCurrentDay] = useState<number>(getCurrentFestivalDay);
   const [selectedBooth, setSelectedBooth] = useState<Booth | null>(null);
+  const [showDomisaModal, setShowDomisaModal] = useState(false);
 
   // 다음 오전 7시(KST)에 일차 자동 전환
   useEffect(() => {
@@ -135,6 +137,7 @@ function NightBoothPage() {
           {/* 도미사 낮 부스 */}
           <button
             type="button"
+            onClick={() => setShowDomisaModal(true)}
             className={`mt-8 flex w-full items-center justify-between rounded-[1.875rem] border-[1.8px] ${tc.domisaBorder} ${tc.domisaBg} px-5 py-2.5`}
           >
             <div className="flex items-center gap-2.5">
@@ -164,6 +167,11 @@ function NightBoothPage() {
           booth={selectedBooth}
           onClose={() => setSelectedBooth(null)}
         />
+      )}
+
+      {/* 도미사 낮 부스 모달 */}
+      {showDomisaModal && (
+        <DomisaDayBoothModal onClose={() => setShowDomisaModal(false)} />
       )}
     </div>
   );
