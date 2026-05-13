@@ -30,11 +30,11 @@ export const BOOTHS: Booth[] = [
     locations: ['2~3일차 - 중문 앞 (형남홀 들어가는 입구쪽)'],
     menuImages: [industrialPosterImg],
     menuItems: [
-      { name: '마라탕의 정석', price: '13,000원' },
-      { name: '불닭대패의 정석', price: '17,500원' },
-      { name: '버갈ㅋㅋ_버터갈릭트래미', price: '24,500원' },
-      { name: '마약 옥수수전의 정석', price: '6,000원' },
-      { name: "Woo's 프렌치 토스트", price: '6,000원' },
+      { name: '마라탕의 정석' },
+      { name: '불닭대패의 정석' },
+      { name: '버갈ㅋㅋ_버터갈릭트래미' },
+      { name: '마약 옥수수전의 정석' },
+      { name: "Woo's 프렌치 토스트" },
     ],
   },
   {
