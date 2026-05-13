@@ -76,11 +76,13 @@ function BoothDetailModal({ booth, onClose }: Props) {
                         </p>
                       )}
                     </div>
-                    <div className="flex items-center justify-center rounded-[10px] bg-[#ebffff] px-2.5 py-[5px] shrink-0">
-                      <p className="typo-button-text text-[#00afbf] whitespace-nowrap">
-                        {item.price}
-                      </p>
-                    </div>
+                    {item.price && (
+                      <div className="flex items-center justify-center rounded-[10px] bg-[#ebffff] px-2.5 py-[5px] shrink-0">
+                        <p className="typo-button-text text-[#00afbf] whitespace-nowrap">
+                          {item.price}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ))}
 
