@@ -66,6 +66,41 @@ const PHOTO_CROP_ASPECT = 71 / 109;
 const PHOTO_CROP_OUTPUT_WIDTH = 710;
 const PHOTO_CROP_OUTPUT_HEIGHT = 1090;
 
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), max);
+
+const normalizeCropToAspect = (
+  cropAreaPixels: PixelCrop,
+  imageWidth: number,
+  imageHeight: number,
+): PixelCrop => {
+  const targetAspect = PHOTO_CROP_OUTPUT_WIDTH / PHOTO_CROP_OUTPUT_HEIGHT;
+  const cropAspect = cropAreaPixels.width / cropAreaPixels.height;
+
+  let width = cropAreaPixels.width;
+  let height = cropAreaPixels.height;
+
+  if (cropAspect > targetAspect) {
+    width = height * targetAspect;
+  } else if (cropAspect < targetAspect) {
+    height = width / targetAspect;
+  }
+
+  width = Math.min(width, imageWidth);
+  height = Math.min(height, imageHeight);
+
+  const centerX = cropAreaPixels.x + cropAreaPixels.width / 2;
+  const centerY = cropAreaPixels.y + cropAreaPixels.height / 2;
+
+  return {
+    ...cropAreaPixels,
+    x: clamp(centerX - width / 2, 0, imageWidth - width),
+    y: clamp(centerY - height / 2, 0, imageHeight - height),
+    width,
+    height,
+  };
+};
+
 const getCroppedImageFile = async ({
   imageElement,
   sourceFile,
@@ -87,13 +122,18 @@ const getCroppedImageFile = async ({
 
   const scaleX = imageElement.naturalWidth / imageElement.width;
   const scaleY = imageElement.naturalHeight / imageElement.height;
+  const normalizedCropAreaPixels = normalizeCropToAspect(
+    cropAreaPixels,
+    imageElement.width,
+    imageElement.height,
+  );
 
   context.drawImage(
     imageElement,
-    cropAreaPixels.x * scaleX,
-    cropAreaPixels.y * scaleY,
-    cropAreaPixels.width * scaleX,
-    cropAreaPixels.height * scaleY,
+    normalizedCropAreaPixels.x * scaleX,
+    normalizedCropAreaPixels.y * scaleY,
+    normalizedCropAreaPixels.width * scaleX,
+    normalizedCropAreaPixels.height * scaleY,
     0,
     0,
     PHOTO_CROP_OUTPUT_WIDTH,
@@ -459,13 +499,13 @@ function DatingRegisterPhotoCropModal({
             ruleOfThirds
             onChange={(_pixelCrop, percentCrop) => onCropChange(percentCrop)}
             onComplete={(pixelCrop) => onCropComplete(pixelCrop)}
-            className="max-h-[58vh] w-full max-w-full"
+            className="max-h-[58vh] max-w-full"
           >
             <img
               src={imageUrl}
               alt="크롭할 프로필 사진"
               onLoad={onImageLoad}
-              className="h-auto max-h-[58vh] w-full object-contain"
+              className="max-h-[58vh] max-w-full object-contain"
             />
           </ReactCrop>
         </div>
