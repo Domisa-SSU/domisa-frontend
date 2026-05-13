@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomActionBar from "../../components/BottomActionBar";
-import { INTRODUCE_FRIEND_DRAFT_STORAGE_KEY } from "../../constants/storageKeys";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import { useAuthMeQuery } from "../../queries/auth";
 import {
@@ -12,13 +11,20 @@ import {
     type IntroductionAnswers,
     type IntroductionQuestionId,
 } from "../../constants/introductionQuestions";
+import {
+    getIntroduceFriendDraft,
+    saveIntroduceFriendDraft,
+} from "../../utils/introduceFriendDraftStorage";
+
+const INTRODUCE_FRIEND_GENERATING_PATH = "/introduce-friend/generating";
 
 function IntroduceFriendPage() {
     const navigate = useNavigate();
     const { data: authMe } = useAuthMeQuery();
-    const [answers, setAnswers] = useState<IntroductionAnswers>({
+    const [answers, setAnswers] = useState<IntroductionAnswers>(() => ({
         ...EMPTY_INTRODUCTION_ANSWERS,
-    });
+        ...getIntroduceFriendDraft(),
+    }));
 
     const handleLimitedChange = (
         questionId: IntroductionQuestionId,
@@ -33,11 +39,23 @@ function IntroduceFriendPage() {
     };
 
     const handleNext = () => {
-        navigate(authMe ? "/introduce-friend/generating" : "/auth?flow=introduce-friend");
+        saveIntroduceFriendDraft(answers);
+
+        if (authMe) {
+            navigate(INTRODUCE_FRIEND_GENERATING_PATH);
+            return;
+        }
+
+        const params = new URLSearchParams({
+            flow: "introduce-friend",
+            returnTo: INTRODUCE_FRIEND_GENERATING_PATH,
+        });
+
+        navigate(`/auth?${params.toString()}`);
     };
 
     useEffect(() => {
-        sessionStorage.setItem(INTRODUCE_FRIEND_DRAFT_STORAGE_KEY, JSON.stringify(answers));
+        saveIntroduceFriendDraft(answers);
     }, [answers]);
 
     const isFormValid = useMemo(() => {

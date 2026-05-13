@@ -4,9 +4,6 @@ import NotLoginHeader from "../../components/NotLoginHeader";
 import Toast from "../../components/Toast";
 import RightArrow from "../../assets/right_arrow.svg?react";
 import {
-    INTRODUCE_FRIEND_DRAFT_STORAGE_KEY,
-} from "../../constants/storageKeys";
-import {
     hasCompleteIntroductionAnswers,
     type IntroductionAnswers,
 } from "../../constants/introductionQuestions";
@@ -14,6 +11,10 @@ import { createIntroductionLink } from "../../api/introduction";
 import copyIcon from "../SignupPage/asset/copyIcon.png";
 import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
 import requireIcon from "./assets/requireIcon.png";
+import {
+    clearIntroduceFriendDraft,
+    getIntroduceFriendDraft,
+} from "../../utils/introduceFriendDraftStorage";
 
 type IntroduceFriendDraft = IntroductionAnswers;
 
@@ -23,22 +24,6 @@ let pendingIntroductionLinkRequest:
         promise: Promise<string>;
     }
     | null = null;
-
-const getIntroduceFriendDraft = () => {
-    const savedDraft = sessionStorage.getItem(INTRODUCE_FRIEND_DRAFT_STORAGE_KEY);
-
-    if (!savedDraft) {
-        return null;
-    }
-
-    try {
-        const draft = JSON.parse(savedDraft);
-
-        return hasCompleteIntroductionAnswers(draft) ? draft : null;
-    } catch {
-        return null;
-    }
-};
 
 const createInvitationUrl = (draft: IntroduceFriendDraft) => {
     const draftKey = JSON.stringify(draft);
@@ -84,7 +69,7 @@ function IntroduceFriendGeneratingPage() {
         let isMounted = true;
         const draft = getIntroduceFriendDraft();
 
-        if (!draft) {
+        if (!hasCompleteIntroductionAnswers(draft)) {
             navigate("/error", { replace: true });
             return () => {
                 isMounted = false;
@@ -99,7 +84,7 @@ function IntroduceFriendGeneratingPage() {
                 if (isMounted) {
                     setInvitationUrl(nextInvitationUrl);
                     setIsResultVisible(true);
-                    sessionStorage.removeItem(INTRODUCE_FRIEND_DRAFT_STORAGE_KEY);
+                    clearIntroduceFriendDraft();
                 }
             })
             .catch((error) => {
