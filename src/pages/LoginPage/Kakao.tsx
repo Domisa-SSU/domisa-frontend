@@ -2,13 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import friendSignUpImg from "../IntroduceFriendPage/assets/friendSignUpImg.png";
 import {
     INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY,
-    INTRODUCE_FRIEND_DRAFT_STORAGE_KEY,
     KAKAO_OAUTH_FLOW_STORAGE_KEY,
     KAKAO_OAUTH_STATE_STORAGE_KEY,
     KAKAO_RETURN_TO_STORAGE_KEY,
     KAKAO_LOGIN_TOAST_STORAGE_KEY,
 } from "../../constants/storageKeys";
-import { hasCompleteIntroductionAnswers } from "../../constants/introductionQuestions";
 import loginImg from "./asset/loginImg.png";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -22,6 +20,7 @@ import {
 import { useAuthMeQuery, useKakaoLoginMutation } from "../../queries/auth";
 import { reportBlacklistedUser } from "../../stores/blacklistedUserStore";
 import type { UserStatus } from "../../types/user";
+import { hasValidIntroduceFriendDraft } from "../../utils/introduceFriendDraftStorage";
 
 const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
 const INTRODUCE_FRIEND_FLOW = "introduce-friend";
@@ -146,22 +145,6 @@ const clearKakaoOAuthContext = () => {
 };
 
 const getKakaoRedirectUri = () => `${window.location.origin}/auth`;
-
-const hasValidIntroduceFriendDraft = () => {
-    const savedDraft = sessionStorage.getItem(INTRODUCE_FRIEND_DRAFT_STORAGE_KEY);
-
-    if (!savedDraft) {
-        return false;
-    }
-
-    try {
-        const draft = JSON.parse(savedDraft);
-
-        return hasCompleteIntroductionAnswers(draft);
-    } catch {
-        return false;
-    }
-};
 
 const getNextPathAfterLogin = (
     status: UserStatus,

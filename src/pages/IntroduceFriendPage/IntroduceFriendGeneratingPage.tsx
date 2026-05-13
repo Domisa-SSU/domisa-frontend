@@ -4,16 +4,16 @@ import NotLoginHeader from "../../components/NotLoginHeader";
 import Toast from "../../components/Toast";
 import RightArrow from "../../assets/right_arrow.svg?react";
 import {
-    INTRODUCE_FRIEND_DRAFT_STORAGE_KEY,
-} from "../../constants/storageKeys";
-import {
     hasCompleteIntroductionAnswers,
     type IntroductionAnswers,
 } from "../../constants/introductionQuestions";
 import { createIntroductionLink } from "../../api/introduction";
-import copyIcon from "../SignupPage/asset/copyIcon.png";
 import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
 import requireIcon from "./assets/requireIcon.png";
+import {
+    clearIntroduceFriendDraft,
+    getIntroduceFriendDraft,
+} from "../../utils/introduceFriendDraftStorage";
 
 type IntroduceFriendDraft = IntroductionAnswers;
 
@@ -23,22 +23,6 @@ let pendingIntroductionLinkRequest:
         promise: Promise<string>;
     }
     | null = null;
-
-const getIntroduceFriendDraft = () => {
-    const savedDraft = sessionStorage.getItem(INTRODUCE_FRIEND_DRAFT_STORAGE_KEY);
-
-    if (!savedDraft) {
-        return null;
-    }
-
-    try {
-        const draft = JSON.parse(savedDraft);
-
-        return hasCompleteIntroductionAnswers(draft) ? draft : null;
-    } catch {
-        return null;
-    }
-};
 
 const createInvitationUrl = (draft: IntroduceFriendDraft) => {
     const draftKey = JSON.stringify(draft);
@@ -78,13 +62,13 @@ function IntroduceFriendGeneratingPage() {
     const navigate = useNavigate();
     const [isResultVisible, setIsResultVisible] = useState(false);
     const [invitationUrl, setInvitationUrl] = useState("");
-    const [showCopyToast, setShowCopyToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
 
     useEffect(() => {
         let isMounted = true;
         const draft = getIntroduceFriendDraft();
 
-        if (!draft) {
+        if (!hasCompleteIntroductionAnswers(draft)) {
             navigate("/error", { replace: true });
             return () => {
                 isMounted = false;
@@ -99,7 +83,7 @@ function IntroduceFriendGeneratingPage() {
                 if (isMounted) {
                     setInvitationUrl(nextInvitationUrl);
                     setIsResultVisible(true);
-                    sessionStorage.removeItem(INTRODUCE_FRIEND_DRAFT_STORAGE_KEY);
+                    clearIntroduceFriendDraft();
                 }
             })
             .catch((error) => {
@@ -115,18 +99,18 @@ function IntroduceFriendGeneratingPage() {
     }, [navigate]);
 
     useEffect(() => {
-        if (!showCopyToast) {
+        if (!toastMessage) {
             return;
         }
 
         const timeoutId = window.setTimeout(() => {
-            setShowCopyToast(false);
+            setToastMessage("");
         }, 2000);
 
         return () => window.clearTimeout(timeoutId);
-    }, [showCopyToast]);
+    }, [toastMessage]);
 
-    const handleCopy = async (value: string) => {
+    const copyInvitationUrl = async (value: string) => {
         try {
             await navigator.clipboard.writeText(value);
         } catch {
@@ -139,8 +123,31 @@ function IntroduceFriendGeneratingPage() {
             document.execCommand("copy");
             document.body.removeChild(textarea);
         }
+    };
 
-        setShowCopyToast(true);
+    const handleShare = async () => {
+        if (!invitationUrl) {
+            return;
+        }
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: "도미사 친구 소개서",
+                    text: "내 친구 소개서를 확인해줘",
+                    url: invitationUrl,
+                });
+                return;
+            } catch (error) {
+                if (error instanceof DOMException && error.name === "AbortError") {
+                    return;
+                }
+            }
+        }
+
+        await copyInvitationUrl(invitationUrl);
+
+        setToastMessage("공유를 지원하지 않아 링크를 복사했어요");
     };
 
     if (isResultVisible) {
@@ -163,7 +170,7 @@ function IntroduceFriendGeneratingPage() {
                                 />
                             </div>
                             <p className="typo-input-text text-primary-500">
-                                아래 링크를 복사하여 친구에게 공유해주세요
+                                링크를 친구에게 공유해주세요
                             </p>
                         </div>
 
@@ -176,17 +183,11 @@ function IntroduceFriendGeneratingPage() {
                                 </div>
                                 <button
                                     type="button"
-                                    onClick={() => handleCopy(invitationUrl)}
-                                    className="flex h-10 items-center justify-center gap-1.5 rounded-[0.625rem] bg-primary-100 px-2.5 py-2"
+                                    onClick={handleShare}
+                                    className="flex h-10 items-center justify-center rounded-[0.625rem] bg-primary-500 px-2.5 py-2"
                                 >
-                                    <img
-                                        src={copyIcon}
-                                        alt=""
-                                        aria-hidden="true"
-                                        className="h-3.5 w-[0.8125rem]"
-                                    />
-                                    <span className="typo-input-text text-primary-500">
-                                        복사하기
+                                    <span className="typo-input-text text-grey-100">
+                                        공유하기
                                     </span>
                                 </button>
                             </section>
@@ -205,7 +206,7 @@ function IntroduceFriendGeneratingPage() {
                     </button>
                 </section>
 
-                {showCopyToast && <Toast message="복사되었습니다" />}
+                {toastMessage && <Toast message={toastMessage} />}
             </div>
         );
     }
