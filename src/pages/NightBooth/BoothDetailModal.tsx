@@ -31,7 +31,7 @@ function BoothDetailModal({ booth, onClose }: Props) {
         <div className="flex-1 overflow-y-auto px-5">
           <div className="flex flex-col gap-5 items-center pb-5">
             {/* 주점명 + 위치 */}
-            <div className="flex flex-col gap-2.5 w-full">
+            <div className="flex flex-col gap-2.5 w-full items-center text-center">
               <p className="typo-title-header-1 text-grey-900 text-center">
                 {booth.name}
               </p>
