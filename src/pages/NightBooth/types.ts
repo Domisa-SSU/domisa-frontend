@@ -1,7 +1,7 @@
 export type MenuItem = {
   name: string;
   description?: string;
-  price: string;
+  price?: string;
 };
 
 export type Booth = {
