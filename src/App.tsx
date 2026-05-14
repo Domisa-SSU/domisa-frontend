@@ -42,6 +42,12 @@ function App() {
     }
   }, [isBlacklistedUser, location.pathname, navigate]);
 
+  useEffect(() => {
+    window.gtag?.("event", "page_view", {
+      page_path: location.pathname + location.search,
+    });
+  }, [location.pathname, location.search]);
+
   if (hasGlobalError) {
     return <ErrorPage />;
   }
