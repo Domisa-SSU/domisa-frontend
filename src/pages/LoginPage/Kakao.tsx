@@ -654,7 +654,7 @@ function Kakao() {
             </div>
             {isIntroduceFriendFlow ? (
                 <>
-                    <main className="flex min-h-0 flex-1 items-center justify-center px-5">
+                    <main className="flex min-h-0 flex-1 items-center justify-center px-5 pb-[10.5rem]">
                         <div className="flex w-full max-w-[22.625rem] flex-col items-center">
                             <p className="text-center typo-title-header-1 leading-[1.55] text-grey-900">
                             {"지금 로그인하고 친구에게 공유하면,"}
@@ -671,7 +671,7 @@ function Kakao() {
                             />
                         </div>
                     </main>
-                    <section className="shrink-0 px-5 pb-[2.94rem]">
+                    <section className="fixed inset-x-0 bottom-0 z-30 px-5 pb-[2.94rem]">
                         <div className="mx-auto flex w-full max-w-[22.625rem] flex-col items-center gap-[1.12rem]">
                             <button
                                 type="button"
@@ -714,7 +714,7 @@ function Kakao() {
                 </>
             ) : (
                 <>
-                    <main className="flex min-h-0 flex-1 items-center justify-center px-5">
+                    <main className="flex min-h-0 flex-1 items-center justify-center px-5 pb-[7.75rem]">
                         <div className="flex flex-col items-center">
                             <p className="whitespace-pre-line text-center typo-title-header-1 text-grey-900">
                                 {"3초만에 로그인하고\n캠퍼스에서 기다리고 있는\n내 인연을 만나보세요"}
@@ -726,7 +726,7 @@ function Kakao() {
                             />
                         </div>
                     </main>
-                    <section className="shrink-0 bg-primary-400 px-5 pt-[0.62rem] pb-[2.94rem]">
+                    <section className="fixed inset-x-0 bottom-0 z-30 bg-primary-400 px-5 pt-[0.62rem] pb-[2.94rem]">
                         <button
                             type="button"
                             onClick={handleKakaoLogin}
