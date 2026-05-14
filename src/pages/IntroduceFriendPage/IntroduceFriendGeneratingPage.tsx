@@ -153,7 +153,11 @@ function IntroduceFriendGeneratingPage() {
     if (isResultVisible) {
         return (
             <div className="relative min-h-screen bg-grey-100">
-                <NotLoginHeader title="솔로인 내 친구 소개하기" />
+                <NotLoginHeader
+                    title="솔로인 내 친구 소개하기"
+                    hideBackButton
+                    titleClassName="text-grey-700"
+                />
 
                 <main className="absolute inset-0 flex items-center px-5">
                     <div className="mx-auto flex w-full max-w-[22.5625rem] -translate-y-[2.125rem] flex-col items-center gap-[3.125rem]">
@@ -169,8 +173,8 @@ function IntroduceFriendGeneratingPage() {
                                     className="h-5 w-5"
                                 />
                             </div>
-                            <p className="typo-input-text text-primary-500">
-                                링크를 친구에게 공유해주세요
+                            <p className="typo-title-header-1-b text-primary-600">
+                                작성하신 소개서를 친구에게 보내주세요
                             </p>
                         </div>
 
@@ -184,11 +188,12 @@ function IntroduceFriendGeneratingPage() {
                                 <button
                                     type="button"
                                     onClick={handleShare}
-                                    className="flex h-10 items-center justify-center rounded-[0.625rem] bg-primary-500 px-2.5 py-2"
+                                    className="flex h-[3.125rem] items-center justify-center gap-1.5 rounded-[0.625rem] bg-primary-600 px-2.5 py-2"
                                 >
-                                    <span className="typo-input-text text-grey-100">
-                                        공유하기
+                                    <span className="typo-button-text text-grey-300">
+                                        솔로 친구에게 소개서 보내기
                                     </span>
+                                    <RightArrow className="h-3 w-[0.8125rem] text-grey-300" />
                                 </button>
                             </section>
                         </div>
@@ -199,10 +204,9 @@ function IntroduceFriendGeneratingPage() {
                     <button
                         type="button"
                         onClick={() => navigate("/")}
-                        className="mx-auto flex h-[3.125rem] w-full max-w-[22.625rem] items-center justify-center gap-2.5 rounded-[0.875rem] bg-primary-500 px-2.5 py-2.5 typo-button-text-b text-grey-100"
+                        className="mx-auto flex h-[3.125rem] w-full max-w-[22.625rem] items-center justify-center rounded-[0.875rem] bg-grey-400 px-2.5 py-2.5 typo-button-text-b text-grey-700"
                     >
                         <span>홈으로</span>
-                        <RightArrow className="h-3 w-[0.8125rem] text-grey-100" />
                     </button>
                 </section>
 
@@ -213,7 +217,11 @@ function IntroduceFriendGeneratingPage() {
 
     return (
         <div className="min-h-screen bg-grey-100">
-            <NotLoginHeader title="솔로인 내 친구 소개하기" />
+            <NotLoginHeader
+                title="솔로인 내 친구 소개하기"
+                hideBackButton
+                titleClassName="text-grey-700"
+            />
 
             <main className="flex flex-col items-center px-5 pt-[6.5rem] pb-[13rem]">
                 <div className="flex flex-col items-center gap-[0.375rem] text-center">
