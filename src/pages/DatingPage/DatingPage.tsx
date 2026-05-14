@@ -395,6 +395,10 @@ function MainCardSection({
     Math.min(heartCount - freeLikeRemaining, heartCount),
     0,
   );
+  const likeGuideText =
+    freeLikeRemaining <= 0
+      ? "쿠키 1개로 추가 호감을 보낼 수 있어요"
+      : `${profileNum}명 중 ${freeLikeRemaining}명에게 호감을 보낼 수 있어요`;
 
   return (
     <section className="flex flex-col items-center gap-[0.9375rem]">
@@ -403,7 +407,7 @@ function MainCardSection({
           소개팅카드를 눌러서 열어보세요
         </p>
         <p className="typo-button-text-b text-primary-600">
-          {profileNum}명 중 {freeLikeRemaining}명에게 호감을 보낼 수 있어요
+          {likeGuideText}
         </p>
       </div>
 
