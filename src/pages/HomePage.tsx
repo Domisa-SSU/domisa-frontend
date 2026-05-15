@@ -29,6 +29,10 @@ import type {
 const datingMatchCountQueryKey = ["dating", "count"] as const;
 const fallbackMatchCount = 21;
 const homeServiceNoticeStorageKey = "domisa-home-service-notice-seen";
+const homeMatchMilestoneNoticeStorageKey =
+  "domisa-home-match-milestone-notice-seen";
+
+type HomeOneTimeNoticeType = "service" | "matchMilestone";
 
 type HomeTheme = "day" | "night";
 
@@ -66,43 +70,96 @@ const userNotificationModalTypes: readonly NotificationType[] = [
   "MATCH",
 ];
 
-const hasSeenHomeServiceNotice = () => {
+const homeOneTimeNoticeStorageKeys: Record<HomeOneTimeNoticeType, string> = {
+  service: homeServiceNoticeStorageKey,
+  matchMilestone: homeMatchMilestoneNoticeStorageKey,
+};
+
+const homeOneTimeNoticeOrder: readonly HomeOneTimeNoticeType[] = [
+  "service",
+  "matchMilestone",
+];
+
+const hasSeenHomeOneTimeNotice = (type: HomeOneTimeNoticeType) => {
   try {
-    return sessionStorage.getItem(homeServiceNoticeStorageKey) === "true";
+    return localStorage.getItem(homeOneTimeNoticeStorageKeys[type]) === "true";
   } catch {
     return false;
   }
 };
 
-const storeHomeServiceNoticeSeen = () => {
+const storeHomeOneTimeNoticeSeen = (type: HomeOneTimeNoticeType) => {
   try {
-    sessionStorage.setItem(homeServiceNoticeStorageKey, "true");
+    localStorage.setItem(homeOneTimeNoticeStorageKeys[type], "true");
   } catch {
     // Ignore storage failures so the modal can still be dismissed in memory.
   }
 };
 
-function HomeServiceNoticeModal({ onConfirm }: { onConfirm: () => void }) {
+const getNextHomeOneTimeNotice = () =>
+  homeOneTimeNoticeOrder.find((type) => !hasSeenHomeOneTimeNotice(type)) ?? null;
+
+const getNextHomeOneTimeNoticeAfter = (currentType: HomeOneTimeNoticeType) => {
+  const currentIndex = homeOneTimeNoticeOrder.indexOf(currentType);
+  return (
+    homeOneTimeNoticeOrder
+      .slice(currentIndex + 1)
+      .find((type) => !hasSeenHomeOneTimeNotice(type)) ?? null
+  );
+};
+
+type HomeOneTimeNoticeModalProps = {
+  type: HomeOneTimeNoticeType;
+  onConfirm: () => void;
+};
+
+function HomeOneTimeNoticeModal({
+  type,
+  onConfirm,
+}: HomeOneTimeNoticeModalProps) {
+  const isMatchMilestoneNotice = type === "matchMilestone";
+  const titleId = `home-${type}-notice-title`;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div
         role="dialog"
         aria-modal="true"
-        aria-labelledby="home-service-notice-title"
+        aria-labelledby={titleId}
         className="flex min-h-[15.5625rem] w-[calc(100%-2.5rem)] max-w-[21.25rem] flex-col items-center justify-center gap-[1.875rem] rounded-[0.875rem] bg-grey-100 pb-5 pt-10"
       >
         <div className="flex flex-col items-center gap-[0.9375rem]">
-          <p className="typo-input-text-m text-center text-grey-700">공지</p>
-          <h2
-            id="home-service-notice-title"
-            className="typo-subtitle-header-2 text-center text-grey-900"
-          >
-            서비스가 곧 종료돼요
-          </h2>
-          <div className="text-center typo-button-text text-warning-ac">
-            <p>5/16(토) 오전 7시 이후</p>
-            <p>운영이 종료되어 이용이 불가능해요</p>
-          </div>
+          <p className="typo-input-text-m text-center text-grey-700">
+            {isMatchMilestoneNotice ? "알림" : "공지"}
+          </p>
+          {isMatchMilestoneNotice ? (
+            <>
+              <div
+                id={titleId}
+                className="typo-subtitle-header-2 text-center text-grey-900"
+              >
+                <p>숭실대 백커플 달성! 깜짝 선물</p>
+                <p>쿠키 2개 지급 완료</p>
+              </div>
+              <div className="flex items-start gap-1 text-center typo-button-text">
+                <p className="text-primary-600">축제 마지막을 불태우자</p>
+                <p className="text-warning-ac">❤️‍🔥</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2
+                id={titleId}
+                className="typo-subtitle-header-2 text-center text-grey-900"
+              >
+                서비스가 곧 종료돼요
+              </h2>
+              <div className="text-center typo-button-text text-warning-ac">
+                <p>5/16(토) 오전 7시 이후</p>
+                <p>운영이 종료되어 이용이 불가능해요</p>
+              </div>
+            </>
+          )}
         </div>
         <button
           type="button"
@@ -118,8 +175,8 @@ function HomeServiceNoticeModal({ onConfirm }: { onConfirm: () => void }) {
 
 function HomePage() {
   const [theme] = useState(getThemeByTime());
-  const [isServiceNoticeOpen, setIsServiceNoticeOpen] = useState(
-    () => !hasSeenHomeServiceNotice(),
+  const [currentHomeOneTimeNotice, setCurrentHomeOneTimeNotice] = useState(
+    getNextHomeOneTimeNotice,
   );
   const [activeNotificationQueue, setActiveNotificationQueue] = useState<
     NotificationType[]
@@ -224,9 +281,15 @@ function HomePage() {
     }
   };
 
-  const handleServiceNoticeConfirm = () => {
-    storeHomeServiceNoticeSeen();
-    setIsServiceNoticeOpen(false);
+  const handleHomeOneTimeNoticeConfirm = () => {
+    if (!currentHomeOneTimeNotice) {
+      return;
+    }
+
+    storeHomeOneTimeNoticeSeen(currentHomeOneTimeNotice);
+    setCurrentHomeOneTimeNotice(
+      getNextHomeOneTimeNoticeAfter(currentHomeOneTimeNotice),
+    );
   };
 
   return (
@@ -345,8 +408,11 @@ function HomePage() {
           </div>
         </div>
       </section>
-      {isServiceNoticeOpen ? (
-        <HomeServiceNoticeModal onConfirm={handleServiceNoticeConfirm} />
+      {currentHomeOneTimeNotice ? (
+        <HomeOneTimeNoticeModal
+          type={currentHomeOneTimeNotice}
+          onConfirm={handleHomeOneTimeNoticeConfirm}
+        />
       ) : currentActiveNotificationType ? (
         <AlarmModal
           type={currentActiveNotificationType}
