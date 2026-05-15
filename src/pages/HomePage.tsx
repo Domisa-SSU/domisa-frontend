@@ -28,6 +28,7 @@ import type {
 
 const datingMatchCountQueryKey = ["dating", "count"] as const;
 const fallbackMatchCount = 21;
+const homeServiceNoticeStorageKey = "domisa-home-service-notice-seen";
 
 type HomeTheme = "day" | "night";
 
@@ -65,8 +66,61 @@ const userNotificationModalTypes: readonly NotificationType[] = [
   "MATCH",
 ];
 
+const hasSeenHomeServiceNotice = () => {
+  try {
+    return sessionStorage.getItem(homeServiceNoticeStorageKey) === "true";
+  } catch {
+    return false;
+  }
+};
+
+const storeHomeServiceNoticeSeen = () => {
+  try {
+    sessionStorage.setItem(homeServiceNoticeStorageKey, "true");
+  } catch {
+    // Ignore storage failures so the modal can still be dismissed in memory.
+  }
+};
+
+function HomeServiceNoticeModal({ onConfirm }: { onConfirm: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="home-service-notice-title"
+        className="flex min-h-[15.5625rem] w-[calc(100%-2.5rem)] max-w-[21.25rem] flex-col items-center justify-center gap-[1.875rem] rounded-[0.875rem] bg-grey-100 pb-5 pt-10"
+      >
+        <div className="flex flex-col items-center gap-[0.9375rem]">
+          <p className="typo-input-text-m text-center text-grey-700">공지</p>
+          <h2
+            id="home-service-notice-title"
+            className="typo-subtitle-header-2 text-center text-grey-900"
+          >
+            서비스가 곧 종료돼요
+          </h2>
+          <div className="text-center typo-button-text text-warning-ac">
+            <p>5/16(토) 오전 7시 이후</p>
+            <p>운영이 종료되어 이용이 불가능해요</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onConfirm}
+          className="flex h-[3.125rem] w-[calc(100%-2.5rem)] max-w-[18.75rem] shrink-0 items-center justify-center rounded-[0.875rem] bg-grey-400 typo-button-text-b text-grey-800"
+        >
+          확인했어요
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function HomePage() {
   const [theme] = useState(getThemeByTime());
+  const [isServiceNoticeOpen, setIsServiceNoticeOpen] = useState(
+    () => !hasSeenHomeServiceNotice(),
+  );
   const [activeNotificationQueue, setActiveNotificationQueue] = useState<
     NotificationType[]
   >([]);
@@ -168,6 +222,11 @@ function HomePage() {
     if (userNotificationModalTypes.includes(currentActiveNotificationType)) {
       navigate("/notifications");
     }
+  };
+
+  const handleServiceNoticeConfirm = () => {
+    storeHomeServiceNoticeSeen();
+    setIsServiceNoticeOpen(false);
   };
 
   return (
@@ -286,7 +345,9 @@ function HomePage() {
           </div>
         </div>
       </section>
-      {currentActiveNotificationType ? (
+      {isServiceNoticeOpen ? (
+        <HomeServiceNoticeModal onConfirm={handleServiceNoticeConfirm} />
+      ) : currentActiveNotificationType ? (
         <AlarmModal
           type={currentActiveNotificationType}
           onClose={dismissActiveNotification}
