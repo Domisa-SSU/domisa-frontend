@@ -7,6 +7,7 @@ interface Window {
 
 interface ImportMetaEnv {
   readonly VITE_KAKAO_REST_API_KEY?: string;
+  readonly VITE_SERVICE_PAUSED?: string;
 }
 
 interface ImportMeta {
