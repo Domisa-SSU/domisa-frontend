@@ -68,7 +68,7 @@ const userNotificationModalTypes: readonly NotificationType[] = [
 
 const hasSeenHomeServiceNotice = () => {
   try {
-    return sessionStorage.getItem(homeServiceNoticeStorageKey) === "true";
+    return localStorage.getItem(homeServiceNoticeStorageKey) === "true";
   } catch {
     return false;
   }
@@ -76,7 +76,7 @@ const hasSeenHomeServiceNotice = () => {
 
 const storeHomeServiceNoticeSeen = () => {
   try {
-    sessionStorage.setItem(homeServiceNoticeStorageKey, "true");
+    localStorage.setItem(homeServiceNoticeStorageKey, "true");
   } catch {
     // Ignore storage failures so the modal can still be dismissed in memory.
   }
