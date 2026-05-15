@@ -28,8 +28,12 @@ import DatingRegisterRoute from "./routes/DatingRegisterRoute";
 import RegisteredOnlyRoute from "./routes/RegisteredOnlyRoute";
 import ErrorPage from "./pages/ErrorPage/ErrorPage";
 import NightBoothPage from "./pages/NightBooth/NightBoothPage";
+import PausePage from "./pages/PausePage/PausePage";
 
-const router = createBrowserRouter([
+const isServicePaused = import.meta.env.VITE_SERVICE_PAUSED === "true";
+
+const activeRoutes = [
+  { path: "/pause", element: <PausePage /> },
   {
     path: "/",
     element: <App />,
@@ -166,6 +170,10 @@ const router = createBrowserRouter([
       },
     ],
   },
-]);
+];
+
+const pausedRoutes = [{ path: "*", element: <PausePage /> }];
+
+const router = createBrowserRouter(isServicePaused ? pausedRoutes : activeRoutes);
 
 export default router;

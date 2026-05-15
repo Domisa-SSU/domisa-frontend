@@ -17,10 +17,9 @@ import catImg from '../../assets/catIcon.png';
 import flowerImg from '../../assets/flowerIcon.svg';
 import arrowIcon from '../../assets/arrowIcon.svg';
 import heartIconOrange from '../../assets/heartIconOrange.svg';
+import { CUSTOMER_SUPPORT_KAKAO_URL } from '../../constants/customerSupport';
 import { animalProfileImageMap } from '../../constants/animalProfile';
 import { isServerError } from '../../utils/apiError';
-
-const WITHDRAW_INQUIRY_URL = 'https://open.kakao.com/o/sHQFocui';
 
 function MyPage() {
   const navigate = useNavigate();
@@ -264,7 +263,7 @@ function MyPage() {
           onConfirm={async () => {
             // 실제 회원탈퇴 API 호출은 임시 비활성화하고 고객센터 문의로 연결한다.
             void deleteMe;
-            window.location.href = WITHDRAW_INQUIRY_URL;
+            window.location.href = CUSTOMER_SUPPORT_KAKAO_URL;
           }}
           onCancel={() => setShowWithdrawModal(false)}
           isLoading={isDeleting}
