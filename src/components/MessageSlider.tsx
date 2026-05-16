@@ -8,7 +8,7 @@ function MessageCard({ sliderIcon }: { sliderIcon: string }) {
   return (
     <div className="gap-0.5 flex items-center shrink-0">
       <div className="text-[#FFFB82] typo-comment-2 whitespace-nowrap">
-        도미사는 지금 축제중
+        도미사는 연장 운영중
       </div>
       <img src={sliderIcon} alt="" className="w-3" />
     </div>
