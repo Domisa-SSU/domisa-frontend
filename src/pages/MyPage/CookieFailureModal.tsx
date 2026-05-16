@@ -1,7 +1,6 @@
 import ArrowIcon from "../../assets/arrowIcon.svg?react";
 import XIcon from "../../assets/X.svg";
-
-const INQUIRY_URL = "https://open.kakao.com/o/sHQFocui";
+import { CUSTOMER_SUPPORT_KAKAO_URL } from '../../constants/customerSupport';
 
 type CookieFailureModalProps = {
   onBack: () => void;
@@ -35,7 +34,7 @@ function CookieFailureModal({ onBack, onClose }: CookieFailureModalProps) {
         </div>
         <div className="flex flex-col gap-2.5">
           <a
-            href={INQUIRY_URL}
+            href={CUSTOMER_SUPPORT_KAKAO_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="flex h-[3.125rem] w-[18.75rem] items-center justify-center rounded-[0.875rem] bg-[#fff5c4] text-[#ff8250] typo-button-text-b"
