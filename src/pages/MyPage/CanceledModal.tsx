@@ -1,6 +1,5 @@
 import XIcon from '../../assets/X.svg';
-
-const INQUIRY_URL = 'https://open.kakao.com/o/sHQFocui';
+import { CUSTOMER_SUPPORT_KAKAO_URL } from '../../constants/customerSupport';
 
 type CanceledModalProps = {
   onClose: () => void;
@@ -25,7 +24,7 @@ function CanceledModal({ onClose }: CanceledModalProps) {
           문의해주세요
         </p>
         <a
-          href={INQUIRY_URL}
+          href={CUSTOMER_SUPPORT_KAKAO_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="flex h-[3.125rem] w-[18.75rem] items-center justify-center rounded-[0.875rem] bg-[#fff5c4] typo-button-text-b text-[#ff8250]"
