@@ -28,10 +28,10 @@ import type {
 
 const datingMatchCountQueryKey = ["dating", "count"] as const;
 const fallbackMatchCount = 21;
-const homeMatchMilestoneNoticeStorageKey =
-  "domisa-home-match-milestone-notice-seen";
+const homeServiceClosingNoticeStorageKey =
+  "domisa-home-service-closing-notice-seen";
 
-type HomeOneTimeNoticeType = "matchMilestone";
+type HomeOneTimeNoticeType = "serviceClosing";
 
 type HomeTheme = "day" | "night";
 
@@ -70,11 +70,11 @@ const userNotificationModalTypes: readonly NotificationType[] = [
 ];
 
 const homeOneTimeNoticeStorageKeys: Record<HomeOneTimeNoticeType, string> = {
-  matchMilestone: homeMatchMilestoneNoticeStorageKey,
+  serviceClosing: homeServiceClosingNoticeStorageKey,
 };
 
 const homeOneTimeNoticeOrder: readonly HomeOneTimeNoticeType[] = [
-  "matchMilestone",
+  "serviceClosing",
 ];
 
 const hasSeenHomeOneTimeNotice = (type: HomeOneTimeNoticeType) => {
@@ -122,22 +122,21 @@ function HomeOneTimeNoticeModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="flex min-h-[15.5625rem] w-[calc(100%-2.5rem)] max-w-[21.25rem] flex-col items-center justify-center gap-[1.875rem] rounded-[0.875rem] bg-grey-100 pb-5 pt-10"
+        className="flex w-[calc(100%-2.5rem)] max-w-[21.25rem] flex-col items-center justify-center gap-[1.875rem] rounded-[0.875rem] bg-grey-100 pb-5 pt-10"
       >
         <div className="flex flex-col items-center gap-[0.9375rem]">
           <p className="typo-input-text-m text-center text-grey-700">
-            알림
+            공지
           </p>
           <div
             id={titleId}
             className="typo-subtitle-header-2 text-center text-grey-900"
           >
-            <p>숭실대 백커플 달성! 깜짝 선물</p>
-            <p>쿠키 2개 지급 완료</p>
+            서비스가 곧 종료돼요
           </div>
-          <div className="flex items-start gap-1 text-center typo-button-text">
-            <p className="text-primary-600">축제 마지막을 불태우자</p>
-            <p className="text-warning-ac">❤️‍🔥</p>
+          <div className="typo-button-text text-center text-warning-ac">
+            <p>5/17(일) 오전 0시 이후</p>
+            <p>운영이 종료되어 이용이 불가능해요</p>
           </div>
         </div>
         <button
