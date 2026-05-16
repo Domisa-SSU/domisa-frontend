@@ -28,11 +28,10 @@ import type {
 
 const datingMatchCountQueryKey = ["dating", "count"] as const;
 const fallbackMatchCount = 21;
-const homeServiceNoticeStorageKey = "domisa-home-service-notice-seen";
 const homeMatchMilestoneNoticeStorageKey =
   "domisa-home-match-milestone-notice-seen";
 
-type HomeOneTimeNoticeType = "service" | "matchMilestone";
+type HomeOneTimeNoticeType = "matchMilestone";
 
 type HomeTheme = "day" | "night";
 
@@ -71,12 +70,10 @@ const userNotificationModalTypes: readonly NotificationType[] = [
 ];
 
 const homeOneTimeNoticeStorageKeys: Record<HomeOneTimeNoticeType, string> = {
-  service: homeServiceNoticeStorageKey,
   matchMilestone: homeMatchMilestoneNoticeStorageKey,
 };
 
 const homeOneTimeNoticeOrder: readonly HomeOneTimeNoticeType[] = [
-  "service",
   "matchMilestone",
 ];
 
@@ -117,7 +114,6 @@ function HomeOneTimeNoticeModal({
   type,
   onConfirm,
 }: HomeOneTimeNoticeModalProps) {
-  const isMatchMilestoneNotice = type === "matchMilestone";
   const titleId = `home-${type}-notice-title`;
 
   return (
@@ -130,36 +126,19 @@ function HomeOneTimeNoticeModal({
       >
         <div className="flex flex-col items-center gap-[0.9375rem]">
           <p className="typo-input-text-m text-center text-grey-700">
-            {isMatchMilestoneNotice ? "알림" : "공지"}
+            알림
           </p>
-          {isMatchMilestoneNotice ? (
-            <>
-              <div
-                id={titleId}
-                className="typo-subtitle-header-2 text-center text-grey-900"
-              >
-                <p>숭실대 백커플 달성! 깜짝 선물</p>
-                <p>쿠키 2개 지급 완료</p>
-              </div>
-              <div className="flex items-start gap-1 text-center typo-button-text">
-                <p className="text-primary-600">축제 마지막을 불태우자</p>
-                <p className="text-warning-ac">❤️‍🔥</p>
-              </div>
-            </>
-          ) : (
-            <>
-              <h2
-                id={titleId}
-                className="typo-subtitle-header-2 text-center text-grey-900"
-              >
-                서비스가 곧 종료돼요
-              </h2>
-              <div className="text-center typo-button-text text-warning-ac">
-                <p>5/16(토) 오전 7시 이후</p>
-                <p>운영이 종료되어 이용이 불가능해요</p>
-              </div>
-            </>
-          )}
+          <div
+            id={titleId}
+            className="typo-subtitle-header-2 text-center text-grey-900"
+          >
+            <p>숭실대 백커플 달성! 깜짝 선물</p>
+            <p>쿠키 2개 지급 완료</p>
+          </div>
+          <div className="flex items-start gap-1 text-center typo-button-text">
+            <p className="text-primary-600">축제 마지막을 불태우자</p>
+            <p className="text-warning-ac">❤️‍🔥</p>
+          </div>
         </div>
         <button
           type="button"
@@ -379,7 +358,7 @@ function HomePage() {
             <img src={arrowImg} alt="" className="w-3" />
           </button>
           <p className={`typo-comment-2 ${theme === "day" ? "text-grey-900" : "text-grey-100"}`}>
-            도미사럽은 5/16(토) 오전 7시까지 운영됩니다.
+            도미사럽은 5월 17일(일) 00시 00분까지 운영합니다!
           </p>
         </div>
         <div className="absolute bottom-[6%] left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 whitespace-nowrap">
