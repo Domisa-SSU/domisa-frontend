@@ -2,8 +2,8 @@ import icon from "../assets/domisaHeartIcon.png"
 import existNotificationIcon from "../assets/existNotificationHeartIcon.png"
 import { useNavigate } from "react-router-dom";
 
-const festivalStart = { year: 2026, month: 5, day: 13 };
-const festivalEnd = { year: 2026, month: 5, day: 15 };
+const festivalStart = { year: 2026, month: 9, day: 15 };
+const festivalEnd = { year: 2026, month: 9, day: 16 };
 const millisecondsPerDay = 24 * 60 * 60 * 1000;
 
 type HomeTheme = "day" | "night";
