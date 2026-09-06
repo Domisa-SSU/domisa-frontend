@@ -28,7 +28,8 @@ export const INTRODUCTION_QUESTIONS: Record<
     maxLength: 35,
   },
   q3: {
-    title: "친구를 데려갈 사람에게 한마디",
+    // TODO: 문구 확정 후 재확인 (#234 디자인 시안 기준 임시 반영)
+    title: "친구의 이상형",
     placeholder:
       "한 번 데려가시면 반품 및 환불은 절대 불가합니다. 평생 책임져주세요! 떡볶이 킬러니 첫 데이트 메뉴는 떡볶이 추천",
     maxLength: 75,
