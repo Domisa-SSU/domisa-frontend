@@ -13,8 +13,8 @@ import Button from "../../components/Button/Button";
 import HeaderTop from "../../components/HeaderTop";
 import { authMeQueryKey, useAuthMeQuery } from "../../queries/auth";
 import { reportGlobalErrorIfNeeded } from "../../stores/globalErrorStore";
-import backgroundIntroduce from "./assets/backgroundIntroduce.png";
 import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
+import letterCorner from "./assets/letterCorner.svg";
 
 type MessageModalProps = {
   title: string;
@@ -143,20 +143,50 @@ function MessageModal({
   );
 }
 
-function IntroductionCard({
-  title,
-  content,
+function LetterCorner({ className }: { className: string }) {
+  return (
+    <img
+      src={letterCorner}
+      alt=""
+      aria-hidden="true"
+      className={`pointer-events-none absolute size-4 ${className}`}
+    />
+  );
+}
+
+function IntroductionLetter({
+  items,
 }: {
-  title: string;
-  content: string;
+  items: { title: string; content: string }[];
 }) {
   return (
-    <section className="rounded-[0.625rem] bg-grey-100 px-4 py-[1.125rem]">
-      <div className="flex flex-col gap-2.5">
-        <h2 className="typo-button-text text-grey-900">{title}</h2>
-        <p className="whitespace-pre-line typo-input-text text-primary-500">
-          {content}
-        </p>
+    <section className="relative overflow-hidden rounded-[0.125rem] bg-[#f2f0ea] px-10 pt-[2.1875rem] pb-10">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-[0.59375rem] inset-y-[0.53125rem] border-[1.2px] border-[#d0c2b5]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-[1.09375rem] inset-y-4 rounded-[2.0625rem] border-[1.2px] border-[#d0c2b5]"
+      />
+      <LetterCorner className="left-3 top-3" />
+      <LetterCorner className="right-3 top-3 rotate-90" />
+      <LetterCorner className="right-3 bottom-3 rotate-180" />
+      <LetterCorner className="left-3 bottom-3 -rotate-90" />
+
+      <h2 className="relative text-center typo-letter-title text-[#b04b3e]">
+        친구 소개서
+      </h2>
+
+      <div className="relative mt-[1.375rem] flex flex-col gap-5">
+        {items.map((item) => (
+          <div key={item.title} className="flex flex-col gap-2.5">
+            <p className="typo-letter-question text-grey-900/45">{item.title}</p>
+            <p className="whitespace-pre-line typo-letter-answer text-grey-900/80">
+              {item.content}
+            </p>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -327,19 +357,11 @@ function ReceiveIntroducePage() {
   }
 
   return (
-    <div
-      className="min-h-screen bg-primary-100"
-      style={{
-        backgroundImage: `url(${backgroundIntroduce})`,
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "auto 100%",
-      }}
-    >
+    <div className="min-h-screen bg-grey-100">
       <ReceiveIntroduceHeader />
 
       <main className="mx-auto w-full max-w-[25.1875rem] px-5 pt-6 pb-[9.75rem]">
-        <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-[2.25rem]">
+        <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-[1.125rem]">
           <section className="flex flex-col gap-2.5">
             <div className="flex items-center gap-1">
               <h1 className="typo-button-text text-grey-900">
@@ -353,27 +375,15 @@ function ReceiveIntroducePage() {
                 className="h-4 w-4"
               />
             </div>
-            <p className="typo-input-text-m text-grey-900">
-              친구가{" "}
-              <span className="typo-input-text text-primary-600">
-                나를 커플로 만들기 위해
-              </span>{" "}
-              소개서를 작성했어요 !
+            <p className="typo-input-text-m text-grey-700">
+              친구가 나를 커플로 만들기 위해 소개서를 작성했어요!
             </p>
           </section>
 
           <div className="flex flex-col gap-2.5">
-            <div className="flex flex-col gap-5">
-              {cardItems.map((item) => (
-                <IntroductionCard
-                  key={item.title}
-                  title={item.title}
-                  content={item.content}
-                />
-              ))}
-            </div>
-            <p className="typo-input-text-m text-grey-700">
-              *도미사럽은 숭실대 봄축제에 운영되는 소개팅 서비스에요
+            <IntroductionLetter items={cardItems} />
+            <p className="typo-input-text-m text-grey-600">
+              *도미사럽은 숭실대 가을 축제에 운영되는 소개팅 서비스예요
             </p>
           </div>
         </div>
@@ -385,7 +395,7 @@ function ReceiveIntroducePage() {
             이미 친구소개서가 있는 경우 친구소개서가 변경돼요!
           </p>
           <Button
-            label={isAccepting ? "수락 중..." : "수락하고 소개팅하기"}
+            label={isAccepting ? "수락 중..." : "수락"}
             disabled={isAccepting}
             onClick={handleAccept}
           />

@@ -1,5 +1,29 @@
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'GeuriunOmiriHandwriting';
+  src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/2607161334@griun-omiri-rg/griun-omiri-rg/Griun_OMIRI-Rg.woff2')
+    format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'LaundryGothic';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2403-2@1.0/TTLaundryGothicR.woff2')
+    format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'LaundryGothic';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2403-2@1.0/TTLaundryGothicB.woff2')
+    format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -13,6 +37,8 @@
     'Apple SD Gothic Neo',
     'Noto Sans KR',
     sans-serif;
+  --font-handwriting: 'GeuriunOmiriHandwriting', var(--font-pretendard);
+  --font-laundry-gothic: 'LaundryGothic', var(--font-pretendard);
 }
 
 body {
@@ -167,6 +193,33 @@ select.typo-input-text-r {
   font-style: normal;
   font-weight: 500;
   line-height: 1rem;
+}
+
+.typo-letter-title {
+  font-family: var(--font-laundry-gothic);
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 0.875rem;
+  letter-spacing: -0.02em;
+}
+
+.typo-letter-question {
+  font-family: var(--font-handwriting);
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.125rem;
+  letter-spacing: -0.02em;
+}
+
+.typo-letter-answer {
+  font-family: var(--font-handwriting);
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.5625rem;
+  letter-spacing: -0.02em;
 }
 
 .typo-comment-2 {
