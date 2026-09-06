@@ -286,20 +286,21 @@ function HomePage() {
             onClick={handleDatingClick}
             className="bg-home-dating-card relative flex h-[6.375rem] w-full items-center justify-between rounded-[1.875rem] px-[1.5625rem]"
           >
-            <span className="flex flex-col items-start gap-1.5 whitespace-nowrap">
+            <span className="flex shrink-0 flex-col items-start gap-1.5 whitespace-nowrap">
               <span className="typo-card-title text-[#ec1479]">소개팅 하기</span>
               <span className="typo-comment-1 leading-[0.875rem] text-[#fe77b0]">
                 이번 가을 축제에 CC 되기
               </span>
             </span>
-            <CardArrowIcon className="shrink-0 text-[#e7718f]" />
-            <span className="pointer-events-none absolute right-[4.375rem] top-[1.375rem] block h-[4.875rem] w-[6.625rem] overflow-hidden">
+            {/* 좁은 화면에서 글씨와 겹치지 않도록 flex 흐름에 두고 비율을 유지한 채 줄어들게 한다 */}
+            <span className="pointer-events-none relative mb-0.5 aspect-[106/78] w-[6.625rem] min-w-0 shrink self-end overflow-hidden">
               <img
                 src={dogCatCoupleImg}
                 alt=""
                 className="absolute left-[-2.05%] top-[-16.77%] h-[138.06%] w-[102.05%] max-w-none"
               />
             </span>
+            <CardArrowIcon className="shrink-0 text-[#e7718f]" />
             <span className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0_-4px_4px_0_rgba(255,144,195,0.8),inset_0_0_0_2px_#ffe9f1]" />
           </button>
 
@@ -308,22 +309,22 @@ function HomePage() {
             onClick={() => navigate("/introduce-friend")}
             className="bg-home-friend-card relative flex h-[6.375rem] w-full items-center justify-between rounded-[1.875rem] px-[1.5625rem]"
           >
-            <span className="flex flex-col items-start gap-1.5 whitespace-nowrap">
+            <span className="flex shrink-0 flex-col items-start gap-1.5 whitespace-nowrap">
               <span className="typo-card-title text-[#217bb3]">친구 소개하기</span>
               <span className="typo-comment-1 leading-[0.875rem] text-[#4cb3f2]">
                 친구가 가입하면 쿠키 2개 지급
               </span>
             </span>
-            <CardArrowIcon className="shrink-0 text-[#83b9d3]" />
-            <span className="pointer-events-none absolute right-[3.1875rem] top-[0.25rem] block h-24 w-[7.4375rem]">
-              <span className="absolute left-0 top-0 block h-24 w-[7.4375rem] overflow-hidden">
+            {/* 편지와 쿠키 위치를 그룹 기준 %로 잡아, 그룹이 줄어들면 함께 축소된다 */}
+            <span className="pointer-events-none relative mb-0.5 aspect-[119/96] w-[7.4375rem] min-w-0 shrink self-end">
+              <span className="absolute inset-0 block overflow-hidden">
                 <img
                   src={introduceLetterImg}
                   alt=""
                   className="absolute left-[-80.36%] top-[1.48%] h-[137.46%] w-[188.42%] max-w-none"
                 />
               </span>
-              <span className="absolute left-[4.1875rem] top-[2.8125rem] block h-[2.25rem] w-[2.125rem] overflow-hidden">
+              <span className="absolute left-[56.3%] top-[46.875%] block h-[37.5%] w-[28.57%] overflow-hidden">
                 <img
                   src={cookieOneImg}
                   alt=""
@@ -333,9 +334,10 @@ function HomePage() {
               <img
                 src={cookieTwoImg}
                 alt=""
-                className="absolute left-[5.25rem] top-[3.625rem] h-[2.0625rem] w-[1.9375rem] rotate-180"
+                className="absolute left-[70.59%] top-[60.42%] h-[34.375%] w-[26.05%] rotate-180"
               />
             </span>
+            <CardArrowIcon className="shrink-0 text-[#83b9d3]" />
             <span className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0_-4px_4px_0_rgba(91,184,224,0.8),inset_0_0_0_2px_#d3f1ff]" />
           </button>
         </div>
