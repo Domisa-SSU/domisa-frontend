@@ -3,13 +3,11 @@ import nightBgImg from "../assets/homePageNightBackGround.jpg";
 import Header from "../components/homePageHeader";
 import MessageSlider from "../components/MessageSlider";
 import logo from "../assets/domisaLogo.png";
-import dogImg from "../assets/dogIcon.png";
-import heartImg from "../assets/domisaHeartIcon.png";
-import catImg from "../assets/catIcon.png";
-import dayMapImg from "../assets/dayMapIcon.png";
-import nightMapImg from "../assets/nightMapIcon.png";
-import arrowImg from "../assets/arrowIcon.svg";
-import flowerIcon from "../assets/flowerIcon.svg";
+import dogCatCoupleImg from "../assets/dogCatCoupleIcon.png";
+import introduceLetterImg from "../assets/IntroduceLetterIcon.png";
+import cookieOneImg from "../assets/cookieIconOne.png";
+import cookieTwoImg from "../assets/cookieIconTwo.png";
+import CardArrowIcon from "../assets/cardArrowIcon.svg?react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -177,27 +175,8 @@ function HomePage() {
   });
   const status = authMe?.status;
   const matchCount = matchCountData?.matchCount ?? fallbackMatchCount;
-  const mapImg = theme === "day" ? dayMapImg : nightMapImg;
   const currentActiveNotificationType = activeNotificationQueue[0] ?? null;
-
-  const themeClasses =
-    theme == "day"
-      ? {
-          text: "text-grey-700",
-          dateCard: "bg-home-date-day",
-          mapCard: "bg-home-map-day",
-          buttonTextColor: "text-primary-700",
-          inviteCard: "bg-home-friend-day",
-          coupleTextBackGround: "bg-primary-200",
-        }
-      : {
-          text: "text-grey-500",
-          dateCard: "bg-home-date-night",
-          mapCard: "bg-home-map-night",
-          buttonTextColor: "text-grey-100",
-          inviteCard: "bg-home-friend-night",
-          coupleTextBackGround: "bg-grey-100",
-        };
+  const backgroundImg = theme === "day" ? dayBgImg : nightBgImg;
 
   useEffect(() => {
     const nextQueue =
@@ -272,100 +251,97 @@ function HomePage() {
 
   return (
     <div
-      className="flex min-h-screen w-full flex-col justify-between overflow-x-hidden bg-center bg-cover bg-no-repeat
-    "
+      className="flex min-h-screen w-full flex-col justify-between overflow-x-hidden bg-center bg-cover bg-no-repeat"
       style={{
-        backgroundImage: `url(${theme == `day` ? dayBgImg : nightBgImg})`,
-        backgroundColor: theme == "day" ? "#f5dce7" : "#123d41",
+        backgroundImage: `url(${backgroundImg})`,
+        backgroundColor: theme === "day" ? "#bfe3f7" : "#f7cfd6",
       }}
     >
       <MessageSlider></MessageSlider>
 
       <section className="relative flex flex-1 flex-col">
         <Header
-          dayText={themeClasses.text}
+          dayText="text-grey-700"
           isLoggedIn={Boolean(authMe)}
           theme={theme}
           unreadCount={notificationStatus?.unreadCount ?? 0}
         ></Header>
-        <div className="mb-5"></div>
-        <div className="flex flex-col items-center gap-4 mb-8">
-          <img src={logo} alt="" className="w-[13.4rem]" />
+
+        <div className="mt-[1.1875rem] flex flex-col items-center gap-4">
+          <img src={logo} alt="도미사럽" className="w-[14.1875rem]" />
           <div className="flex items-center gap-0.5">
-            <span className={`${themeClasses.text} typo-comment-1`}>
+            <span className="typo-comment-1 text-grey-900/50">
               현재 매칭된 커플
             </span>
-            <div className={`${themeClasses.coupleTextBackGround} inline-flex h-5 min-w-5 items-center justify-center rounded-[0.9375rem] px-[0.1875rem] typo-comment-1-b text-primary-600`}>
+            <div className="inline-flex h-5 min-w-5 items-center justify-center rounded-[0.9375rem] bg-[#fffcf0] px-[0.1875rem] typo-comment-1-b text-[#ad221e]">
               {matchCount}
             </div>
-            <span className={`${themeClasses.text} typo-comment-1`}>쌍!</span>
+            <span className="typo-comment-1 text-grey-900/50">쌍!</span>
           </div>
         </div>
-        <div className="flex justify-center gap-2.5 mb-12">
+
+        <div className="mt-[1.875rem] flex flex-col items-center gap-2.5 px-5">
           <button
             type="button"
             onClick={handleDatingClick}
-            className={`w-44 h-37.5 flex flex-col justify-between items-center ${themeClasses.dateCard} rounded-xl py-5 shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.25)]`}
+            className="bg-home-dating-card relative flex h-[6.375rem] w-full items-center justify-between rounded-[1.875rem] px-[1.5625rem]"
           >
-            <div className="gap-1 flex flex-col">
-              <span
-                className={`typo-title-header-1-b ${themeClasses.buttonTextColor} mb-1`}
-              >
-                소개팅 하기
+            <span className="flex flex-col items-start gap-1.5 whitespace-nowrap">
+              <span className="typo-card-title text-[#ec1479]">소개팅 하기</span>
+              <span className="typo-comment-1 leading-[0.875rem] text-[#fe77b0]">
+                이번 가을 축제에 CC 되기
               </span>
-              <span className={`${themeClasses.text} typo-comment-2`}>
-                이번 봄축제에 CC 되기
-              </span>
-            </div>
-            <div className="flex items-center">
-              <img src={dogImg} alt="" className="w-auto h-12" />
+            </span>
+            <CardArrowIcon className="shrink-0 text-[#e7718f]" />
+            <span className="pointer-events-none absolute right-[4.375rem] top-[1.375rem] block h-[4.875rem] w-[6.625rem] overflow-hidden">
               <img
-                src={heartImg}
+                src={dogCatCoupleImg}
                 alt=""
-                className="w-[1.61rem] h-[1.61rem] mr-1"
+                className="absolute left-[-2.05%] top-[-16.77%] h-[138.06%] w-[102.05%] max-w-none"
               />
-              <img src={catImg} alt="" className="w-auto h-11.4" />
-            </div>
-          </button>
-          <button onClick={() => navigate("/night-booth")} className={`w-44 h-37.5 flex flex-col justify-between items-center ${themeClasses.mapCard} rounded-xl py-5 shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.25)]`}>
-            <div className="gap-1 flex flex-col">
-              <span className="typo-title-header-1-b text-grey-100 mb-1">
-                주점정보
-              </span>
-              <span className={`${themeClasses.text} typo-comment-2`}>
-                부스 방문하고 쿠키 받기
-              </span>
-            </div>
-            <img src={mapImg} alt="" className="h-[3.25rem] w-auto" />
-          </button>
-        </div>
-        <div className="flex flex-col gap-2 items-center">
-          <div className="flex items-center justify-center gap-1">
-            <span className={`${theme == 'day' ? `text-grey-700` : `text-grey-600`} typo-comment-1`}>
-              친구가 가입하면 쿠키 2개 지급
             </span>
-            <img src={flowerIcon} alt="" className="h-3.5 w-3.5" />
-          </div>
+            <span className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0_-4px_4px_0_rgba(255,144,195,0.8),inset_0_0_0_2px_#ffe9f1]" />
+          </button>
+
           <button
+            type="button"
             onClick={() => navigate("/introduce-friend")}
-            className="w-90 h-12.5 flex justify-center items-center gap-[0.62rem] bg-home-friend-day border-[0.8px] border-white rounded-[1.25rem]
-          shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.25)]"
+            className="bg-home-friend-card relative flex h-[6.375rem] w-full items-center justify-between rounded-[1.875rem] px-[1.5625rem]"
           >
-            <span className="text-grey-100 typo-button-text-b">
-              솔로인 내 친구 소개하기
+            <span className="flex flex-col items-start gap-1.5 whitespace-nowrap">
+              <span className="typo-card-title text-[#217bb3]">친구 소개하기</span>
+              <span className="typo-comment-1 leading-[0.875rem] text-[#4cb3f2]">
+                친구가 가입하면 쿠키 2개 지급
+              </span>
             </span>
-            <img src={arrowImg} alt="" className="w-3" />
+            <CardArrowIcon className="shrink-0 text-[#83b9d3]" />
+            <span className="pointer-events-none absolute right-[3.1875rem] top-[0.25rem] block h-24 w-[7.4375rem]">
+              <span className="absolute left-0 top-0 block h-24 w-[7.4375rem] overflow-hidden">
+                <img
+                  src={introduceLetterImg}
+                  alt=""
+                  className="absolute left-[-80.36%] top-[1.48%] h-[137.46%] w-[188.42%] max-w-none"
+                />
+              </span>
+              <span className="absolute left-[4.1875rem] top-[2.8125rem] block h-[2.25rem] w-[2.125rem] overflow-hidden">
+                <img
+                  src={cookieOneImg}
+                  alt=""
+                  className="absolute left-[-12.82%] top-[-22.42%] h-[145.16%] w-[126.76%] max-w-none"
+                />
+              </span>
+              <img
+                src={cookieTwoImg}
+                alt=""
+                className="absolute left-[5.25rem] top-[3.625rem] h-[2.0625rem] w-[1.9375rem] rotate-180"
+              />
+            </span>
+            <span className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0_-4px_4px_0_rgba(91,184,224,0.8),inset_0_0_0_2px_#d3f1ff]" />
           </button>
-          <p className={`typo-comment-2 ${theme === "day" ? "text-grey-900" : "text-grey-100"}`}>
-            도미사럽은 5월 17일(일) 00시 00분까지 운영합니다!
-          </p>
         </div>
-        <div className="absolute bottom-[6%] left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 whitespace-nowrap">
-          <div
-            className={`flex items-center justify-center gap-1 typo-comment-2 ${
-              theme == "day" ? "text-grey-700" : "text-grey-400"
-            }`}
-          >
+
+        <div className="mt-auto flex flex-col items-center gap-2 pb-[6%] whitespace-nowrap">
+          <div className="flex items-center justify-center gap-1 typo-comment-2 text-grey-700">
             <a
               href="https://jungle-friend-b65.notion.site/35a755591c5c80abbde1c17845ec516f"
               target="_blank"

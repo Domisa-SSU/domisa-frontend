@@ -1,10 +1,27 @@
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'LaundryGothic';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2403-2@1.0/TTLaundryGothicR.woff2')
+    format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'LaundryGothic';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2403-2@1.0/TTLaundryGothicB.woff2')
+    format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
 * {
   box-sizing: border-box;
 }
 
 :root {
+  --font-laundry: 'LaundryGothic', var(--font-pretendard);
   --font-pretendard:
     'Pretendard',
     -apple-system,
@@ -51,6 +68,8 @@ body {
   --color-match-sd: #ffd084;
   --color-match-text: #ff8250;
   --color-match-ac: #ff4900;
+
+  --color-autumn-brown: #703a17;
 }
 
 .typo-title-header-1 {
@@ -169,6 +188,15 @@ select.typo-input-text-r {
   line-height: 1rem;
 }
 
+.typo-card-title {
+  font-family: var(--font-laundry);
+  font-size: 1.375rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.75rem;
+  letter-spacing: -0.0275rem;
+}
+
 .typo-comment-2 {
   font-family: var(--font-pretendard);
   font-size: 0.75rem;
@@ -177,28 +205,12 @@ select.typo-input-text-r {
   line-height: 0.875rem;
 }
 
-.bg-home-date-day {
-  background: linear-gradient(131deg, #ffcde3 2.77%, #ffe8f2 95.22%);
+.bg-home-dating-card {
+  background: linear-gradient(161.75deg, #ffe2f6 2.77%, #ffe0ed 61.45%);
 }
 
-.bg-home-date-night {
-  background: linear-gradient(131deg, #ff78ae 2.77%, #fe759c 95.22%);
-}
-
-.bg-home-map-day {
-  background: linear-gradient(132deg, #99e2eb 19.15%, #a4f5ff 94.63%);
-}
-
-.bg-home-map-night {
-  background: linear-gradient(132deg, #395558 19.15%, #24484c 94.63%);
-}
-
-.bg-home-friend-day {
-  background: linear-gradient(91deg, #ff85ae 5.94%, #ff85ae 95.33%);
-}
-
-.bg-home-friend-night {
-  background: linear-gradient(91deg, #ff4281 5.94%, #ff73a2 95.33%);
+.bg-home-friend-card {
+  background: linear-gradient(161.75deg, #caf1ff 2.77%, #bae9ff 61.45%);
 }
 
 @keyframes marquee {
