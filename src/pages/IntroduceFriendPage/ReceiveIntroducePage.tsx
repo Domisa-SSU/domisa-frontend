@@ -379,7 +379,7 @@ function ReceiveIntroducePage() {
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 bg-grey-100 px-5 pt-2.5 pb-[2.94rem]">
+      <div className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 bg-grey-100 px-5 pt-2.5 pb-[2.94rem]">
         <div className="mx-auto flex w-full max-w-[22.625rem] flex-col items-center gap-2.5">
           <p className="typo-input-text-m text-grey-700">
             이미 친구소개서가 있는 경우 친구소개서가 변경돼요!

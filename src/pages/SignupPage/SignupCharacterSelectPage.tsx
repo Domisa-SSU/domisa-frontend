@@ -172,7 +172,7 @@ function SignupCharacterSelectPage() {
 
     return (
         <div className="min-h-screen bg-grey-100">
-            <div className="fixed inset-x-0 top-0 z-40 bg-grey-100">
+            <div className="fixed top-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-40 bg-grey-100">
                 <NotLoginHeader title="회원가입"></NotLoginHeader>
             </div>
             <div className="px-5 pt-[9.5rem] pb-[9.5rem]">

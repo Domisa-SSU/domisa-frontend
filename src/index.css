@@ -33,7 +33,7 @@
 }
 
 body {
-  background-color: white;
+  background-color: #ebebeb;
   margin: 0;
   font-family: var(--font-pretendard);
   overflow-x: hidden;
@@ -204,6 +204,21 @@ select.typo-input-text-r {
   font-weight: 600;
   line-height: 0.875rem;
 }
+
+/* 폰에서는 기기 너비를 그대로 꽉 채운다. */
+.frame-max-w {
+  max-width: none;
+}
+
+/* 37.5rem(600px) 이상은 폰이 아닌 것이 확실하다.
+   (가장 넓은 폰이 440px, 안드로이드는 '화면 크기' 설정에 따라 384~480px)
+   데스크탑·태블릿에서는 시안 프레임 폭인 402px 로 묶어 콘텐츠 362px + 좌우 20px 여백을 맞춘다. */
+@media (min-width: 37.5rem) {
+  .frame-max-w {
+    max-width: 25.125rem;
+  }
+}
+
 
 .bg-home-dating-card {
   background: linear-gradient(161.75deg, #ffe2f6 2.77%, #ffe0ed 61.45%);
