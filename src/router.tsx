@@ -27,7 +27,6 @@ import DatingAccessGuard from "./routes/DatingAccessGuard";
 import DatingRegisterRoute from "./routes/DatingRegisterRoute";
 import RegisteredOnlyRoute from "./routes/RegisteredOnlyRoute";
 import ErrorPage from "./pages/ErrorPage/ErrorPage";
-import NightBoothPage from "./pages/NightBooth/NightBoothPage";
 import PausePage from "./pages/PausePage/PausePage";
 
 const isServicePaused = import.meta.env.VITE_SERVICE_PAUSED === "true";
@@ -62,7 +61,6 @@ const activeRoutes = [
       { path: "terms/service", element: <TermsPage type="service" /> },
       { path: "terms/privacy", element: <TermsPage type="privacy" /> },
       { path: "error", element: <ErrorPage /> },
-      { path: "night-booth", element: <NightBoothPage /> },
       {
         path: "dating",
         element: (
