@@ -58,6 +58,8 @@ export const useDeleteMeMutation = () => {
     mutationFn: deleteMe,
     onSuccess: () => {
       queryClient.setQueryData(authMeQueryKey, null);
+      queryClient.removeQueries({ queryKey: userMeQueryKey });
+      queryClient.removeQueries({ queryKey: userCookiesQueryKey });
     },
   });
 };
