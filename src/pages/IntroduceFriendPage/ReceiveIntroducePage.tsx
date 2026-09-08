@@ -8,7 +8,6 @@ import {
   getReceivedIntroduction,
 } from "../../api/introduction";
 import { INTRODUCTION_QUESTIONS } from "../../constants/introductionQuestions";
-import type { AuthMeResponse } from "../../types/user";
 import Button from "../../components/Button/Button";
 import HeaderTop from "../../components/HeaderTop";
 import { authMeQueryKey, useAuthMeQuery } from "../../queries/auth";
@@ -277,14 +276,7 @@ function ReceiveIntroducePage() {
   };
 
   const handleGoDating = () => {
-    const latestAuthMe =
-      queryClient.getQueryData<AuthMeResponse | null>(authMeQueryKey) ?? authMe;
-    const isProfileCompleted =
-      latestAuthMe?.status.isProfileCompleted === true;
-
-    navigate(isProfileCompleted ? "/dating" : "/dating/register", {
-      replace: true,
-    });
+    navigate("/dating", { replace: true });
   };
 
   const handleCancelReplace = () => {

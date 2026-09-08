@@ -3,8 +3,8 @@ import { Navigate, useLocation } from "react-router-dom";
 
 import { useAuthMeQuery } from "../queries/auth";
 
-const datingRegisterReturnParams = new URLSearchParams({
-  returnTo: "/dating/register",
+const datingReturnParams = new URLSearchParams({
+  returnTo: "/dating",
 }).toString();
 
 function DatingAccessGuard({ children }: { children: ReactNode }) {
@@ -27,7 +27,7 @@ function DatingAccessGuard({ children }: { children: ReactNode }) {
   }
 
   if (!authMe) {
-    return <Navigate to={`/auth?${datingRegisterReturnParams}`} replace state={flowOrigin} />;
+    return <Navigate to={`/auth?${datingReturnParams}`} replace state={flowOrigin} />;
   }
 
   const { status } = authMe;
@@ -35,15 +35,11 @@ function DatingAccessGuard({ children }: { children: ReactNode }) {
   if (status.isRegistered !== true) {
     return (
       <Navigate
-        to={`/auth/signup?${datingRegisterReturnParams}`}
+        to={`/auth/signup?${datingReturnParams}`}
         replace
         state={flowOrigin}
       />
     );
-  }
-
-  if (status.isProfileCompleted !== true) {
-    return <Navigate to="/dating/register" replace state={flowOrigin} />;
   }
 
   if (status.hasIntroduction !== true) {

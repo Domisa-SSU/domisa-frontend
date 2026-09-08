@@ -1,0 +1,80 @@
+const NICKNAME_ADJECTIVES = [
+  "행복",
+  "멋진",
+  "착한",
+  "맑은",
+  "푸른",
+  "빠른",
+  "용감",
+  "따뜻",
+  "달콤",
+  "포근",
+  "신난",
+  "힘찬",
+  "산뜻",
+  "깜찍",
+  "도도",
+  "순수",
+  "열정",
+  "당당",
+  "친절",
+  "단단",
+  "총명",
+  "튼튼",
+  "다정",
+  "포동",
+  "단정",
+  "영리",
+  "슬기",
+  "듬직",
+  "새콤",
+  "상큼",
+  "반짝",
+  "차분",
+  "순한",
+  "밝은",
+  "예쁜",
+];
+
+const NICKNAME_NOUNS = [
+  "도미",
+  "수달",
+  "사슴",
+  "토끼",
+  "여우",
+  "늑대",
+  "곰돌",
+  "햄찌",
+  "알파",
+  "댕댕",
+  "냥이",
+  "늘보",
+  "바라",
+  "사자",
+  "호랑",
+  "오리",
+  "쿼카",
+  "펭귄",
+  "팬더",
+  "치타",
+  "표범",
+  "하마",
+  "물개",
+  "비버",
+  "모찌",
+  "초코",
+  "쿠키",
+  "별이",
+  "달이",
+  "구름",
+];
+
+/**
+ * 4자 이내의 랜덤 목업 닉네임을 생성합니다.
+ */
+export const generateRandomNickname = (): string => {
+  const adjIndex = Math.floor(Math.random() * NICKNAME_ADJECTIVES.length);
+  const nounIndex = Math.floor(Math.random() * NICKNAME_NOUNS.length);
+  const nickname = `${NICKNAME_ADJECTIVES[adjIndex]}${NICKNAME_NOUNS[nounIndex]}`;
+  return nickname.slice(0, 4);
+};
