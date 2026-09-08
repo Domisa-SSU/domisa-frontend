@@ -15,12 +15,17 @@ export type AnimalProfile =
   | 'ALPACA'
   | 'FOX'
   | 'CAPYBARA';
+export type ContactType = 'INSTAGRAM' | 'KAKAO';
 
-type RegisterUserRequest = {
+export type RegisterUserRequest = {
   nickname: string;
   gender: boolean;
   birthYear: number;
   animalProfile: AnimalProfile;
+  mbti: string;
+  contactType: ContactType;
+  contact: string;
+  notificationPhone: string | null;
 };
 
 export type RegisterUserResponse = {
@@ -145,6 +150,11 @@ export type UserMeResponse = {
   birthYear: number;
   gender: boolean;
   animalProfile: AnimalProfile;
+  imageUrl?: string | null;
+  mbti?: string;
+  contactType?: ContactType;
+  contact?: string;
+  notificationPhone?: string | null;
   status: UserStatus;
 };
 
@@ -157,6 +167,10 @@ type UpdateMeRequest = {
   gender: boolean;
   birthYear: number;
   animalProfile: AnimalProfile;
+  mbti?: string;
+  contactType?: ContactType;
+  contact?: string;
+  notificationPhone?: string | null;
 };
 
 const parseUserMeResponse = (value: unknown): UserMeResponse | null => {
@@ -176,6 +190,11 @@ const parseUserMeResponse = (value: unknown): UserMeResponse | null => {
     birthYear: r.birthYear,
     gender: r.gender,
     animalProfile: r.animalProfile as AnimalProfile,
+    imageUrl: typeof r.imageUrl === 'string' ? r.imageUrl : null,
+    mbti: typeof r.mbti === 'string' ? r.mbti : undefined,
+    contactType: typeof r.contactType === 'string' ? (r.contactType as ContactType) : undefined,
+    contact: typeof r.contact === 'string' ? r.contact : undefined,
+    notificationPhone: typeof r.notificationPhone === 'string' ? r.notificationPhone : null,
     status: normalizeUserStatus(r.status),
   };
 };
