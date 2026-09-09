@@ -7,6 +7,7 @@ import {
   getUserCookies,
   shuffleDatingCards,
   type DatingHomeCard,
+  type DatingHomeResponse,
 } from "../../api/datingHome";
 import type { DatingCardDetailViewType } from "../../api/datingCardDetail";
 import HeaderTop from "../../components/HeaderTop";
@@ -26,10 +27,29 @@ import datingArrowIcon from "./assets/datingArrowIcon.svg";
 import bothIcon from "./assets/bothIcon.png";
 import cardBackImage from "./assets/cardBackImage.png";
 import sumnailIcon from "./assets/sumnailIcon.png";
+import timerPanelBackground from "./assets/timerPanelBackground.png";
+import timerPanelCharacterLeft from "./assets/timerPanelCharacterLeft.png";
+import timerPanelCharacterRight from "./assets/timerPanelCharacterRight.png";
+import timerPanelLeafLeft from "./assets/timerPanelLeafLeft.svg";
+import timerPanelLeafRight from "./assets/timerPanelLeafRight.svg";
 
 const datingHomeQueryKey = ["dating", "home"] as const;
 const refreshReloadStorageKey = "dating:last-refresh-reload-at";
 const maxFreeLikeCount = 3;
+
+const datingAccessPreviewData: DatingHomeResponse = {
+  refreshAvailableAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+  profileNum: 8,
+  freeLikeRemaining: 3,
+  cards: Array.from({ length: 8 }, (_, index) => ({
+    id: `access-preview-card-${index + 1}`,
+    publicId: `access-preview-card-${index + 1}`,
+    profile: null,
+  })),
+  receivedLikes: [],
+  sentLikes: [],
+  matches: [],
+};
 
 type DatingPreviewSectionVariant = "received" | "sent" | "matched";
 
@@ -51,15 +71,24 @@ const getDatingCardDetailPath = (
   return `/dating/cards/${encodeURIComponent(id)}?${searchParams.toString()}`;
 };
 
-const formatRemainingTime = (totalSeconds: number) => {
+const getTimerUnits = (totalSeconds: number) => {
   const safeSeconds = Math.max(totalSeconds, 0);
   const hours = Math.floor(safeSeconds / 3600);
   const minutes = Math.floor((safeSeconds % 3600) / 60);
   const seconds = safeSeconds % 60;
 
-  return [hours, minutes, seconds]
-    .map((unit) => String(unit).padStart(2, "0"))
-    .join(" : ");
+  return [hours, minutes, seconds].map((unit) =>
+    String(unit).padStart(2, "0"),
+  );
+};
+
+const getAdjacentTimerUnit = (value: string, limit: number) => {
+  const numberValue = Number(value);
+
+  return {
+    previous: String((numberValue - 1 + limit) % limit).padStart(2, "0"),
+    next: String((numberValue + 1) % limit).padStart(2, "0"),
+  };
 };
 
 const getScrollFadeStatus = (element: HTMLDivElement) => {
@@ -214,6 +243,66 @@ function DatingSubHeader() {
   );
 }
 
+function RollingTimerUnit({
+  value,
+  limit,
+  left,
+}: {
+  value: string;
+  limit: number;
+  left: string;
+}) {
+  const [displayedValue, setDisplayedValue] = useState(value);
+  const isRolling = value !== displayedValue;
+
+  useEffect(() => {
+    if (!isRolling) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setDisplayedValue(value);
+    }, 380);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isRolling, value]);
+
+  const { previous, next } = getAdjacentTimerUnit(
+    isRolling ? displayedValue : value,
+    limit,
+  );
+
+  return (
+    <div
+      style={{ left }}
+      className="absolute inset-y-0 w-[4.5rem] -translate-x-1/2 overflow-hidden [clip-path:inset(1.25rem_0_1.25rem)]"
+    >
+      {isRolling ? (
+        <>
+          <span className="timer-slot-roll-in absolute left-1/2 top-[2.25rem] text-[2.5rem] font-semibold leading-[2.75rem] text-grey-900">
+            {value}
+          </span>
+          <span className="timer-slot-roll-out absolute left-1/2 top-[4.60625rem] text-[2.5rem] font-semibold leading-[2.75rem] text-grey-900">
+            {displayedValue}
+          </span>
+        </>
+      ) : (
+        <>
+          <span className="absolute left-1/2 top-[2.25rem] -translate-x-1/2 text-[2.1875rem] font-semibold leading-10 text-grey-900/10">
+            {previous}
+          </span>
+          <span className="absolute left-1/2 top-[4.60625rem] -translate-x-1/2 text-[2.5rem] font-semibold leading-[2.75rem] text-grey-900">
+            {value}
+          </span>
+          <span className="absolute left-1/2 top-[7.4375rem] -translate-x-1/2 text-[2.1875rem] font-semibold leading-10 text-grey-900/10">
+            {next}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
 function TimerPanel({
   remainingSeconds,
   isShuffleLoading,
@@ -223,15 +312,68 @@ function TimerPanel({
   isShuffleLoading: boolean;
   onShuffleClick: () => void;
 }) {
+  const [hours, minutes, seconds] = getTimerUnits(remainingSeconds);
+  const timerUnits = [
+    { value: hours, limit: 100, left: "5.4375rem" },
+    { value: minutes, limit: 60, left: "10.875rem" },
+    { value: seconds, limit: 60, left: "16.21875rem" },
+  ];
+
   return (
     <section className="mx-auto flex w-full max-w-[22.625rem] flex-col gap-[0.9375rem]">
-      <div className="flex flex-col items-center gap-2.5 rounded-[0.625rem] bg-grey-100 py-2.5 text-center">
-        <p className="typo-input-text-m text-grey-700">
-          시간이 지나면 자동으로 카드가 사라져요
-        </p>
-        <p className="typo-title-header-1-b text-grey-900">
-          {formatRemainingTime(remainingSeconds)}
-        </p>
+      <div className="relative h-[10.3125rem] w-[22rem] max-w-full">
+        <div className="absolute inset-0 overflow-hidden rounded-[0.625rem] shadow-[0_0.25rem_0.75rem_rgba(206,206,206,0.45)]">
+          <img
+            src={timerPanelBackground}
+            alt=""
+            className="absolute -left-[2.19%] -top-[11.93%] h-[117.45%] w-[105.36%] max-w-none"
+          />
+        </div>
+
+        <img
+          src={timerPanelCharacterLeft}
+          alt=""
+          className="absolute -left-6 top-0 h-[4.6875rem] w-[4.6875rem] object-contain"
+        />
+
+        <div className="absolute left-1/2 top-[0.48125rem] flex -translate-x-1/2 items-center gap-[0.25rem] whitespace-nowrap">
+          <img
+            src={timerPanelLeafLeft}
+            alt=""
+            className="h-[0.75625rem] w-[0.89375rem]"
+          />
+          <span className="text-[0.9625rem] font-bold leading-[1.16875rem] text-primary-400">
+            다음 카드까지
+          </span>
+          <img
+            src={timerPanelLeafRight}
+            alt=""
+            className="h-[0.75625rem] w-[0.89375rem]"
+          />
+        </div>
+
+        <div className="absolute inset-0 overflow-hidden rounded-[0.625rem] text-center">
+          {timerUnits.map(({ value, limit, left }) => (
+            <RollingTimerUnit
+              key={left}
+              value={value}
+              limit={limit}
+              left={left}
+            />
+          ))}
+          <span className="absolute left-[8.175rem] top-[4.4rem] -translate-x-1/2 text-[2.75rem] font-bold leading-[2.75rem] text-primary-900">
+            :
+          </span>
+          <span className="absolute left-[13.60625rem] top-[4.4rem] -translate-x-1/2 text-[2.75rem] font-bold leading-[2.75rem] text-primary-900">
+            :
+          </span>
+        </div>
+
+        <img
+          src={timerPanelCharacterRight}
+          alt=""
+          className="absolute left-[19.1875rem] top-[6.3125rem] h-[3.8125rem] w-[4.375rem] object-contain"
+        />
       </div>
 
       <button
@@ -592,13 +734,14 @@ function DatingPreviewSection({
   );
 }
 
-function DatingPage() {
+function DatingPage({ preview = false }: { preview?: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
   const { data, isError, isPending } = useQuery({
     queryKey: datingHomeQueryKey,
     queryFn: fetchDatingHome,
+    enabled: !preview,
     retry: false,
     refetchOnWindowFocus: false,
   });
@@ -614,6 +757,7 @@ function DatingPage() {
     refreshAvailableAt: "",
     ids: new Set(),
   }));
+  const datingData = preview ? datingAccessPreviewData : data;
 
   const showToast = (message: string) => {
     setToastMessage("");
@@ -677,42 +821,43 @@ function DatingPage() {
     return () => window.clearTimeout(timeoutId);
   }, [toastMessage]);
 
-  const remainingSeconds = data
-    ? getRefreshRemainingSeconds(data.refreshAvailableAt, now)
+  const remainingSeconds = datingData
+    ? getRefreshRemainingSeconds(datingData.refreshAvailableAt, now)
     : 0;
 
   useEffect(() => {
     if (
+      !preview &&
       data &&
       shouldReloadForRefresh(remainingSeconds)
     ) {
       reloadForRefreshOnce(data.refreshAvailableAt);
     }
-  }, [data, remainingSeconds]);
+  }, [data, preview, remainingSeconds]);
 
   useEffect(() => {
-    if (!data) {
+    if (preview || !data) {
       return;
     }
 
     resetStaleStoredOpenedDatingCards(data.refreshAvailableAt);
-  }, [data]);
+  }, [data, preview]);
 
   const handleOpenCard = (id: string) => {
-    if (!data) {
+    if (preview || !datingData) {
       return;
     }
 
     setOpenedCardState((prevOpenedCardState) => {
       const nextOpenedCardIds =
-        prevOpenedCardState.refreshAvailableAt === data.refreshAvailableAt
+        prevOpenedCardState.refreshAvailableAt === datingData.refreshAvailableAt
           ? new Set(prevOpenedCardState.ids)
-          : getStoredOpenedCardIds(data.refreshAvailableAt);
+          : getStoredOpenedCardIds(datingData.refreshAvailableAt);
       nextOpenedCardIds.add(id);
-      writeStoredOpenedDatingCards(data.refreshAvailableAt, nextOpenedCardIds);
+      writeStoredOpenedDatingCards(datingData.refreshAvailableAt, nextOpenedCardIds);
 
       return {
-        refreshAvailableAt: data.refreshAvailableAt,
+        refreshAvailableAt: datingData.refreshAvailableAt,
         ids: nextOpenedCardIds,
       };
     });
@@ -722,11 +867,15 @@ function DatingPage() {
     id: string,
     viewType: DatingCardDetailViewType = "NORMAL",
   ) => {
+    if (preview) {
+      return;
+    }
+
     navigate(getDatingCardDetailPath(id, viewType));
   };
 
   const handleShuffleButtonClick = () => {
-    if (userCookiesMutation.isPending) {
+    if (preview || userCookiesMutation.isPending) {
       return;
     }
 
@@ -745,23 +894,27 @@ function DatingPage() {
   };
 
   const visibleCards = useMemo(
-    () => data?.cards.slice(0, 8) ?? [],
-    [data?.cards],
+    () => datingData?.cards.slice(0, 8) ?? [],
+    [datingData?.cards],
   );
   const openedCardIds = useMemo(
     () => {
-      if (!data) {
+      if (!datingData) {
         return new Set<string>();
       }
 
-      return openedCardState.refreshAvailableAt === data.refreshAvailableAt
+      if (preview) {
+        return new Set(datingAccessPreviewData.cards.map((card) => card.id));
+      }
+
+      return openedCardState.refreshAvailableAt === datingData.refreshAvailableAt
         ? openedCardState.ids
-        : getStoredOpenedCardIds(data.refreshAvailableAt);
+        : getStoredOpenedCardIds(datingData.refreshAvailableAt);
     },
-    [data, openedCardState],
+    [datingData, openedCardState, preview],
   );
 
-  if (isPending) {
+  if (!preview && isPending) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-grey-100">
         <div
@@ -773,7 +926,7 @@ function DatingPage() {
     );
   }
 
-  if (isError || !data) {
+  if (!preview && (isError || !data)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-grey-100 px-5 text-center">
         <p className="typo-button-text text-grey-700">
@@ -782,6 +935,8 @@ function DatingPage() {
       </div>
     );
   }
+
+  const renderedDatingData = datingData ?? datingAccessPreviewData;
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f9f9f9_0%,#ff88b0_61.8%,#ff73a2_100%)]">
@@ -803,29 +958,29 @@ function DatingPage() {
         <MainCardSection
           cards={visibleCards}
           openedCardIds={openedCardIds}
-          profileNum={data.profileNum}
-          freeLikeRemaining={data.freeLikeRemaining}
+          profileNum={renderedDatingData.profileNum}
+          freeLikeRemaining={renderedDatingData.freeLikeRemaining}
           onOpenCard={handleOpenCard}
           onViewCardDetail={handleViewCardDetail}
         />
         <div className="flex flex-col gap-[1.875rem] px-[0.4375rem]">
           <DatingPreviewSection
             title="받은 호감"
-            cards={data.receivedLikes}
+            cards={renderedDatingData.receivedLikes}
             variant="received"
             emptyMessage="아직 받은 호감이 없어요"
             onViewDetail={handleViewCardDetail}
           />
           <DatingPreviewSection
             title="보낸 호감"
-            cards={data.sentLikes}
+            cards={renderedDatingData.sentLikes}
             variant="sent"
             emptyMessage="아직 보낸 호감이 없어요"
             onViewDetail={handleViewCardDetail}
           />
           <DatingPreviewSection
             title="쌍방 매칭"
-            cards={data.matches}
+            cards={renderedDatingData.matches}
             variant="matched"
             emptyMessage="아직 매칭된 프로필이 없어요"
             onViewDetail={handleViewCardDetail}

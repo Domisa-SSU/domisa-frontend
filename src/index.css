@@ -22,6 +22,45 @@ body {
   overflow-x: hidden;
 }
 
+@keyframes timer-slot-roll-in {
+  from {
+    opacity: 0.1;
+    transform: translate(-50%, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 2.35625rem);
+  }
+}
+
+@keyframes timer-slot-roll-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  to {
+    opacity: 0.1;
+    transform: translate(-50%, 2.83125rem);
+  }
+}
+
+.timer-slot-roll-in,
+.timer-slot-roll-out {
+  animation-duration: 380ms;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.timer-slot-roll-in {
+  animation-name: timer-slot-roll-in;
+}
+
+.timer-slot-roll-out {
+  animation-name: timer-slot-roll-out;
+}
+
 @theme {
   --color-primary-100: #fff6f9;
   --color-primary-200: #ffcfdf;
