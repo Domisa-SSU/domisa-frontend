@@ -672,7 +672,7 @@ function Kakao() {
                             />
                         </div>
                     </main>
-                    <section className="fixed inset-x-0 bottom-0 z-30 px-5 pb-[2.94rem]">
+                    <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-30 px-5 pb-[2.94rem]">
                         <div className="mx-auto flex w-full max-w-[22.625rem] flex-col items-center gap-[1.12rem]">
                             <button
                                 type="button"
@@ -727,7 +727,7 @@ function Kakao() {
                             />
                         </div>
                     </main>
-                    <section className="fixed inset-x-0 bottom-0 z-30 bg-[#ffa6c4] px-5 pt-[0.62rem] pb-[2.94rem]">
+                    <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-30 bg-[#ffa6c4] px-5 pt-[0.62rem] pb-[2.94rem]">
                         <button
                             type="button"
                             onClick={handleKakaoLogin}

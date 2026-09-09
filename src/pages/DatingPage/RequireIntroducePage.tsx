@@ -85,7 +85,7 @@ function RequireIntroducePage() {
                 />
             </main>
 
-            <section className="fixed inset-x-0 bottom-0 bg-grey-100 px-5 pt-2.5 pb-[2.5rem]">
+            <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 bg-grey-100 px-5 pt-2.5 pb-[2.5rem]">
                 <div className="mx-auto flex w-full max-w-[22.625rem] flex-col items-center gap-2.5">
                     <div className="flex items-center justify-center gap-2.5">
                         <span className="typo-button-text text-primary-500">↓</span>

@@ -71,7 +71,7 @@ export function SignupStepContact() {
                 </div>
             </label>
 
-            <div className="fixed inset-x-0 bottom-0 z-20 bg-grey-100 px-5 pt-2.5 pb-[2.75rem]">
+            <div className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-20 bg-grey-100 px-5 pt-2.5 pb-[2.75rem]">
                 <div className="mx-auto w-full max-w-[22.625rem]">
                     <button
                         type="button"
