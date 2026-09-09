@@ -517,7 +517,7 @@ function DetailFooter({
 }) {
   if (isMatched) {
     return (
-      <div className="fixed inset-x-0 bottom-0 z-30 bg-grey-100 px-5 pb-[2.94rem] pt-2.5">
+      <div className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-30 bg-grey-100 px-5 pb-[2.94rem] pt-2.5">
         <div className="mx-auto flex w-full max-w-[22.625rem] flex-col items-center">
           <button
             type="button"
@@ -533,7 +533,7 @@ function DetailFooter({
 
   if (isReceivedLikePaid) {
     return (
-      <div className="fixed inset-x-0 bottom-0 z-30 bg-grey-100 px-5 pb-[2.94rem] pt-2.5">
+      <div className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-30 bg-grey-100 px-5 pb-[2.94rem] pt-2.5">
         <div className="mx-auto flex w-full max-w-[22.625rem] flex-col items-center">
           <button
             type="button"
@@ -553,7 +553,7 @@ function DetailFooter({
 
   if (hasSentLike) {
     return (
-      <div className="fixed inset-x-0 bottom-0 z-30 bg-grey-100 px-5 pb-[2.94rem] pt-2.5">
+      <div className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-30 bg-grey-100 px-5 pb-[2.94rem] pt-2.5">
         <div className="mx-auto flex w-full max-w-[22.625rem] flex-col items-center">
           <button
             type="button"
@@ -571,7 +571,7 @@ function DetailFooter({
 
   if (hasReceivedLike) {
     return (
-      <div className="fixed inset-x-0 bottom-0 z-30 bg-grey-100 px-5 pb-[2.94rem] pt-2.5">
+      <div className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-30 bg-grey-100 px-5 pb-[2.94rem] pt-2.5">
         <div className="mx-auto flex w-full max-w-[22.625rem] flex-col items-center gap-2.5">
           <p className="typo-button-text text-primary-500">
             상대방의 사진도 확인 가능해요!
@@ -592,7 +592,7 @@ function DetailFooter({
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 bg-grey-100 px-5 pb-[2.94rem] pt-2.5">
+    <div className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-30 bg-grey-100 px-5 pb-[2.94rem] pt-2.5">
       <div className="mx-auto flex w-full max-w-[22.625rem] flex-col items-center gap-2.5">
         <p className="typo-button-text-b text-primary-500">
           상대방이 내 소개팅 카드를 확인할 수 있어요
@@ -820,7 +820,7 @@ function DatingCardDetailPage() {
 
   return (
     <div className="min-h-screen bg-grey-100">
-      <header className="fixed inset-x-0 top-0 z-40 border-b-[0.8px] border-grey-500 bg-grey-100">
+      <header className="fixed top-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-40 border-b-[0.8px] border-grey-500 bg-grey-100">
         <HeaderTop
           showNotificationIcon
           rightLabel="내정보"

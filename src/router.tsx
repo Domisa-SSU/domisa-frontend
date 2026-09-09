@@ -1,11 +1,10 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import App from "./App";
 import HomePage from "./pages/HomePage";
 import IntroduceFriendGeneratingPage from "./pages/IntroduceFriendPage/IntroduceFriendGeneratingPage";
 import IntroduceFriendPage from "./pages/IntroduceFriendPage/IntroduceFriendPage";
 import ReceiveIntroducePage from "./pages/IntroduceFriendPage/ReceiveIntroducePage";
 import Kakao from "./pages/LoginPage/Kakao";
-import SignupCharacterSelectPage from "./pages/SignupPage/SignupCharacterSelectPage";
 import SignupPage from "./pages/SignupPage/SignupPage";
 import MyPage from "./pages/MyPage/MyPage";
 import MyCookiePage from "./pages/MyPage/MyCookiePage";
@@ -18,16 +17,13 @@ import MutualMatchPage from "./pages/MyPage/MutualMatchPage";
 import FriendIntroCheckPage from "./pages/MyPage/FriendIntroCheckPage";
 import DatingPage from "./pages/DatingPage/DatingPage";
 import DatingCardDetailPage from "./pages/DatingPage/DatingCardDetailPage";
-import DatingRegisterPage from "./pages/DatingPage/DatingRegisterPage";
 import NotificationPage from "./pages/NotificationPage/NotificationPage";
 import RequireIntroducePage from "./pages/DatingPage/RequireIntroducePage";
 import TermsPage from "./pages/TermsPage/TermsPage";
 import CompletedFlowRoute from "./routes/CompletedFlowRoute";
 import DatingAccessGuard from "./routes/DatingAccessGuard";
-import DatingRegisterRoute from "./routes/DatingRegisterRoute";
 import RegisteredOnlyRoute from "./routes/RegisteredOnlyRoute";
 import ErrorPage from "./pages/ErrorPage/ErrorPage";
-import NightBoothPage from "./pages/NightBooth/NightBoothPage";
 import PausePage from "./pages/PausePage/PausePage";
 
 const isServicePaused = import.meta.env.VITE_SERVICE_PAUSED === "true";
@@ -50,11 +46,7 @@ const activeRoutes = [
       },
       {
         path: "auth/signup/next",
-        element: (
-          <CompletedFlowRoute flow="signup">
-            <SignupCharacterSelectPage />
-          </CompletedFlowRoute>
-        ),
+        element: <Navigate to="/auth/signup" replace />,
       },
       { path: "introduce-friend", element: <IntroduceFriendPage /> },
       { path: "introduce-friend/generating", element: <IntroduceFriendGeneratingPage /> },
@@ -62,7 +54,6 @@ const activeRoutes = [
       { path: "terms/service", element: <TermsPage type="service" /> },
       { path: "terms/privacy", element: <TermsPage type="privacy" /> },
       { path: "error", element: <ErrorPage /> },
-      { path: "night-booth", element: <NightBoothPage /> },
       {
         path: "dating",
         element: (
@@ -82,11 +73,7 @@ const activeRoutes = [
       { path: "dating/require-introduce", element: <RequireIntroducePage /> },
       {
         path: "dating/register",
-        element: (
-          <DatingRegisterRoute>
-            <DatingRegisterPage />
-          </DatingRegisterRoute>
-        ),
+        element: <Navigate to="/dating" replace />,
       },
       {
         path: "my",

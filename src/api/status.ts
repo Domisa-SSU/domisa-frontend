@@ -16,16 +16,12 @@ export const isBackendStatusDto = (value: unknown): value is BackendStatusDto =>
 
   return (
     typeof status.isRegistered === "boolean" &&
-    typeof status.hasIntroduction === "boolean" &&
-    (
-      typeof status.isCardCompleted === "boolean" ||
-      typeof status.isProfileCompleted === "boolean"
-    )
+    typeof status.hasIntroduction === "boolean"
   );
 };
 
 export const normalizeUserStatus = (status: BackendStatusDto): UserStatus => ({
   isRegistered: status.isRegistered,
   hasIntroduction: status.hasIntroduction,
-  isProfileCompleted: status.isProfileCompleted ?? status.isCardCompleted ?? false,
+  isProfileCompleted: status.isProfileCompleted ?? status.isCardCompleted ?? status.isRegistered,
 });

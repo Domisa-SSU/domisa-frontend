@@ -785,7 +785,7 @@ function DatingPage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f9f9f9_0%,#ff88b0_61.8%,#ff73a2_100%)]">
-      <header className="fixed inset-x-0 top-0 z-40 bg-grey-100">
+      <header className="fixed top-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-40 bg-grey-100">
         <HeaderTop
           showNotificationIcon
           rightLabel="내정보"
