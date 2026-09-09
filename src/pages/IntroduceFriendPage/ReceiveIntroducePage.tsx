@@ -15,6 +15,8 @@ import { authMeQueryKey, useAuthMeQuery } from "../../queries/auth";
 import { reportGlobalErrorIfNeeded } from "../../stores/globalErrorStore";
 import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
 import letterCorner from "./assets/letterCorner.svg";
+import arrowIcon from "../../assets/arrowIcon.svg";
+import eyeIcon from "../SignupPage/asset/eyeIcon.svg";
 
 type MessageModalProps = {
   title: string;
@@ -22,12 +24,21 @@ type MessageModalProps = {
   actions: {
     label: string;
     onClick: () => void;
-    variant: "secondary" | "primary";
+    variant: "secondary" | "primary" | "primarySolid";
     disabled?: boolean;
   }[];
 };
 
 type AcceptSuccessType = "created" | "changed";
+
+const MODAL_ACTION_STYLES: Record<
+  MessageModalProps["actions"][number]["variant"],
+  string
+> = {
+  primary: "bg-gradient-to-b from-[#ff98b5] to-[#ff5a99] text-grey-100",
+  primarySolid: "bg-primary-500 text-grey-100",
+  secondary: "bg-grey-400 text-grey-800",
+};
 
 const introductionQueryKey = (linkCode: string) =>
   ["introduction", "received", linkCode] as const;
@@ -128,16 +139,45 @@ function MessageModal({
               type="button"
               onClick={action.onClick}
               disabled={action.disabled}
-              className={`flex h-[3.125rem] flex-1 items-center justify-center rounded-[0.875rem] p-2.5 typo-button-text-b disabled:cursor-wait disabled:opacity-80 ${
-                action.variant === "primary"
-                  ? "bg-gradient-to-b from-[#ff98b5] to-[#ff5a99] text-grey-100"
-                  : "bg-grey-400 text-grey-800"
-              }`}
+              className={`flex h-[3.125rem] flex-1 items-center justify-center rounded-[0.875rem] p-2.5 typo-button-text-b disabled:cursor-wait disabled:opacity-80 ${MODAL_ACTION_STYLES[action.variant]}`}
             >
               {action.label}
             </button>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function AcceptCreatedModal({ onConfirm }: { onConfirm: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
+      <div className="absolute inset-0 bg-grey-900/70" />
+      <div className="relative z-10 flex w-full max-w-[21.25rem] flex-col items-center gap-5 rounded-[0.875rem] bg-grey-100 px-5 pt-[1.875rem] pb-5 text-center">
+        {/* TODO: 수락 API가 totalUserCount를 내려주면 제목 아래에
+            "N명의 솔로가 기다리고 있어요 🌸" 줄을 추가한다 (#234) */}
+        <h2 className="typo-subtitle-header-2 text-grey-900">
+          소개서가 만들어졌어요!
+          <br />
+          바로 시작해볼까요?
+        </h2>
+        <button
+          type="button"
+          onClick={onConfirm}
+          className="flex h-[3.125rem] w-full max-w-[18.75rem] items-center justify-center rounded-[0.875rem] bg-primary-500 p-2.5"
+        >
+          <span className="flex items-center gap-1 typo-button-text-b text-grey-100">
+            솔로 둘러보기
+            <img
+              src={eyeIcon}
+              alt=""
+              aria-hidden="true"
+              className="h-[1.125rem] w-[1.125rem]"
+            />
+            <img src={arrowIcon} alt="" aria-hidden="true" className="h-3 w-3" />
+          </span>
+        </button>
       </div>
     </div>
   );
@@ -321,11 +361,6 @@ function ReceiveIntroducePage() {
     setIsReplaceConfirmOpen(false);
   };
 
-  const successModalTitle =
-    acceptSuccessType === "changed"
-      ? "소개서가 변경됐어요"
-      : "소개서가 만들어졌어요";
-
   if (!linkCode || isIntroductionError || invalidIntroductionDescription) {
     return (
       <div className="min-h-screen bg-grey-100">
@@ -416,16 +451,20 @@ function ReceiveIntroducePage() {
             {
               label: isAccepting ? "변경 중..." : "바꾸기",
               onClick: () => void submitAccept("changed"),
-              variant: "primary",
+              variant: "primarySolid",
               disabled: isAccepting,
             },
           ]}
         />
       )}
 
-      {acceptSuccessType && (
+      {acceptSuccessType === "created" && (
+        <AcceptCreatedModal onConfirm={handleGoDating} />
+      )}
+
+      {acceptSuccessType === "changed" && (
         <MessageModal
-          title={successModalTitle}
+          title="소개서가 변경됐어요"
           actions={[
             {
               label: "홈으로",
