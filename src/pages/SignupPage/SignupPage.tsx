@@ -1,21 +1,28 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import BottomActionBar from "../../components/BottomActionBar";
-import Toast from "../../components/Toast";
-import { KAKAO_LOGIN_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
+import { useEffect, useState } from "react";
+import { isAxiosError } from "axios";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+
+import {
+    completeProfileImageUpload,
+    createProfileImageUploadUrl,
+    uploadProfileImageToS3,
+} from "../../api/s3";
 import NotLoginHeader from "../../components/NotLoginHeader";
-import { useCheckNicknameMutation } from "../../queries/users";
+import Toast from "../../components/Toast";
+import { animalProfileByName } from "../../constants/animalProfile";
+import { KAKAO_LOGIN_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
+import { authMeQueryKey } from "../../queries/auth";
+import { useRegisterUserMutation, userMeQueryKey } from "../../queries/users";
+import { reportGlobalErrorIfNeeded } from "../../stores/globalErrorStore";
+
+import { SignupStepBasic } from "./components/SignupStepBasic";
+import { SignupStepAnimal } from "./components/SignupStepAnimal";
+import { SignupStepMbti } from "./components/SignupStepMbti";
+import { SignupStepPhoto } from "./components/SignupStepPhoto";
+import { SignupStepContact } from "./components/SignupStepContact";
+import { SignupStepNotification } from "./components/SignupStepNotification";
 import { useSignupFlow } from "./useSignupFlow";
-import forbiddenIcon from "./asset/forbiddenIcon.svg";
-import pinkCheckIcon from "./asset/pinkCheckIcon.svg";
-import selectArrow from "./asset/selectArrow.svg";
-
-const birthYears = Array.from({ length: 10 }, (_, index) => `${2007 - index}`);
-
-const fieldClassName =
-    "h-10 w-full rounded-[0.625rem] border-[1.2px] border-transparent bg-primary-100 px-[0.875rem] typo-input-text-m text-primary-500 placeholder:text-grey-600 focus:outline-none";
-const selectClassName =
-    "h-10 w-full appearance-none rounded-[0.625rem] bg-primary-100 px-[0.875rem] pr-9 typo-input-text-m focus:outline-none";
 
 const getSafeReturnTo = (value: string | null) => {
     if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -35,22 +42,35 @@ const getReceiveIntroduceReturnTo = (returnTo: string | null) => {
     return pathname.startsWith("/introduce/") ? returnTo : null;
 };
 
+const getRegisterErrorMessage = (error: unknown) => {
+    if (isAxiosError(error)) {
+        const message = (error.response?.data as { message?: unknown } | undefined)?.message;
+
+        if (typeof message === "string") {
+            return message;
+        }
+    }
+
+    return "회원가입에 실패했어요. 다시 시도해주세요.";
+};
+
 function SignupPage() {
-    const location = useLocation();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const { signupFormData, setSignupFormData } = useSignupFlow();
-    const [nickname, setNickname] = useState(signupFormData.nickname);
-    const [isNicknameChecked, setIsNicknameChecked] = useState(
-        signupFormData.nickname.trim().length > 0,
-    );
-    const [nicknameErrorMessage, setNicknameErrorMessage] = useState("");
-    const [gender, setGender] = useState(signupFormData.gender);
-    const [birthYear, setBirthYear] = useState(signupFormData.birthYear);
+    const queryClient = useQueryClient();
     const {
-        mutateAsync: checkNicknameAvailability,
-        isPending: isCheckingNickname,
-    } = useCheckNicknameMutation();
+        formData,
+        currentStep,
+        setCurrentStep,
+        goPrevStep,
+        resetSignupFlow,
+    } = useSignupFlow();
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitErrorMessage, setSubmitErrorMessage] = useState("");
+
+    const { mutateAsync: registerUser } = useRegisterUserMutation();
+
     const [showKakaoLoginToast, setShowKakaoLoginToast] = useState(() => {
         const shouldShowToast =
             sessionStorage.getItem(KAKAO_LOGIN_TOAST_STORAGE_KEY) === "true";
@@ -61,77 +81,9 @@ function SignupPage() {
 
         return shouldShowToast;
     });
+
     const returnTo = getSafeReturnTo(searchParams.get("returnTo"));
     const receiveIntroduceReturnTo = getReceiveIntroduceReturnTo(returnTo);
-
-    const isFormValid = useMemo(() => {
-        return (
-            nickname.trim().length > 0 &&
-            isNicknameChecked &&
-            gender.length > 0 &&
-            birthYear.length > 0
-        );
-    }, [
-        birthYear,
-        gender,
-        isNicknameChecked,
-        nickname,
-    ]);
-
-    const handleLimitedChange = (
-        value: string,
-        limit: number,
-        setter: (nextValue: string) => void,
-    ) => {
-        if (value.length <= limit) {
-            setter(value);
-        }
-    };
-
-    const handleCheckNickname = async () => {
-        const trimmedNickname = nickname.trim();
-
-        if (trimmedNickname.length === 0) {
-            setIsNicknameChecked(false);
-            setNicknameErrorMessage("닉네임을 입력해주세요");
-            return;
-        }
-
-        try {
-            const { isAvailable } = await checkNicknameAvailability(trimmedNickname);
-
-            setIsNicknameChecked(isAvailable);
-            setNicknameErrorMessage(
-                isAvailable ? "" : "이미 사용 중인 닉네임입니다",
-            );
-        } catch (error) {
-            console.error(error);
-            setIsNicknameChecked(false);
-            setNicknameErrorMessage("닉네임 확인에 실패했어요. 다시 시도해주세요");
-        }
-    };
-
-    const handleNext = () => {
-        setSignupFormData({
-            nickname,
-            gender,
-            birthYear,
-        });
-
-        const nextSearch = searchParams.toString();
-        navigate(`/auth/signup/next${nextSearch ? `?${nextSearch}` : ""}`, {
-            state: location.state,
-        });
-    };
-
-    const handleHeaderBack = () => {
-        if (receiveIntroduceReturnTo) {
-            navigate(receiveIntroduceReturnTo, { replace: true });
-            return;
-        }
-
-        navigate(-1);
-    };
 
     useEffect(() => {
         if (!showKakaoLoginToast) {
@@ -147,129 +99,124 @@ function SignupPage() {
         };
     }, [showKakaoLoginToast]);
 
+    const handleHeaderBack = () => {
+        if (currentStep > 1) {
+            goPrevStep();
+            return;
+        }
+
+        if (receiveIntroduceReturnTo) {
+            navigate(receiveIntroduceReturnTo, { replace: true });
+            return;
+        }
+
+        navigate(-1);
+    };
+
+    const handleCompleteSignup = async () => {
+        if (isSubmitting) return;
+
+        // Check required fields
+        if (!formData.photoFile) {
+            setSubmitErrorMessage("프로필 사진을 등록해주세요.");
+            setCurrentStep(4);
+            return;
+        }
+
+        setIsSubmitting(true);
+        setSubmitErrorMessage("");
+
+        try {
+            // 1. Upload photo to S3
+            const profileImageUpload = await createProfileImageUploadUrl({
+                contentType: formData.photoFile.type,
+                fileSize: formData.photoFile.size,
+            });
+
+            await uploadProfileImageToS3({
+                presignedUrl: profileImageUpload.presignedUrl,
+                file: formData.photoFile,
+            });
+
+            await completeProfileImageUpload({
+                uploadKey: profileImageUpload.objectKey,
+            });
+
+            // 2. Register user
+            const animalProfile = animalProfileByName[formData.selectedAnimal] || "OTTER";
+            const digitsOnly = formData.notificationPhone.replace(/[^0-9]/g, "");
+            const notificationPhone = formData.isSmsOptedOut || digitsOnly.length === 0 ? null : digitsOnly;
+
+            const response = await registerUser({
+                nickname: formData.nickname.trim(),
+                gender: formData.gender === "남성",
+                birthYear: Number(formData.birthYear),
+                animalProfile,
+                mbti: formData.mbti,
+                contactType: formData.contactType,
+                contact: formData.contact.trim(),
+                notificationPhone,
+            });
+
+            // 3. Clear draft and invalidate queries
+            resetSignupFlow();
+            await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
+            await queryClient.invalidateQueries({ queryKey: userMeQueryKey });
+
+            // 4. Navigate according to flow and status
+            const isIntroduceFriendFlow =
+                searchParams.get("flow") === "introduce-friend";
+
+            if (returnTo) {
+                navigate(returnTo, { replace: true });
+                return;
+            }
+
+            if (isIntroduceFriendFlow) {
+                navigate("/introduce-friend/generating", { replace: true });
+                return;
+            }
+
+            if (!response.status.hasIntroduction) {
+                navigate("/dating/require-introduce", { replace: true });
+                return;
+            }
+
+            navigate("/", { replace: true });
+        } catch (error) {
+            if (reportGlobalErrorIfNeeded(error)) {
+                return;
+            }
+            console.error(error);
+            setSubmitErrorMessage(getRegisterErrorMessage(error));
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-grey-100">
             {showKakaoLoginToast ? <Toast message="카카오 로그인 완료!" /> : null}
-            <NotLoginHeader title="회원가입" onBack={handleHeaderBack}></NotLoginHeader>
-            <div className="px-5 pt-6 pb-[7.5625rem]">
-                <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-5">
-                    <section className="flex flex-col gap-[0.875rem]">
-                        <div className="flex items-center gap-2.5">
-                            <h2 className="typo-comment-1 text-grey-900">닉네임</h2>
-                            <p className="typo-comment-2 text-primary-300">
-                                * 닉네임은 4자까지만 작성이 가능해요
-                            </p>
-                        </div>
-                        <div className="flex flex-col gap-[0.31rem]">
-                            <div className="relative">
-                                <input
-                                    value={nickname}
-                                    maxLength={4}
-                                    onChange={(event) => {
-                                        handleLimitedChange(event.target.value, 4, setNickname);
-                                        setIsNicknameChecked(false);
-                                        setNicknameErrorMessage("");
-                                    }}
-                                    className={`${fieldClassName} pr-[5.5rem] ${
-                                        nicknameErrorMessage
-                                            ? "border-[1.2px] border-warning"
-                                            : ""
-                                    }`}
-                                    placeholder="닉네임을 입력하세요"
-                                />
-                                <button
-                                    type="button"
-                                    disabled={isCheckingNickname}
-                                    onClick={handleCheckNickname}
-                                    className="absolute right-[0.31rem] top-1/2 flex -translate-y-1/2 items-center justify-center rounded-[0.625rem] border-[0.8px] border-primary-200 bg-grey-100 px-4 py-2"
-                                >
-                                    <span className="typo-comment-2 text-primary-300">
-                                        {isCheckingNickname ? "확인 중" : "확인"}
-                                    </span>
-                                </button>
-                            </div>
-                            <div className="min-h-[0.875rem]">
-                                {nicknameErrorMessage ? (
-                                    <div className="flex items-center gap-[0.125rem]">
-                                        <span className="typo-comment-2 text-warning">
-                                            {nicknameErrorMessage}
-                                        </span>
-                                        <img
-                                            src={forbiddenIcon}
-                                            alt=""
-                                            className="h-[0.6875rem] w-[0.6875rem]"
-                                        />
-                                    </div>
-                                ) : isNicknameChecked ? (
-                                    <div className="flex items-center gap-[0.125rem]">
-                                        <span className="typo-comment-2 text-primary-300">
-                                            사용 가능한 닉네임입니다
-                                        </span>
-                                        <img
-                                            src={pinkCheckIcon}
-                                            alt=""
-                                            className="h-[0.6875rem] w-[0.6875rem]"
-                                        />
-                                    </div>
-                                ) : null}
-                            </div>
-                        </div>
-                    </section>
-
-                    <section className="flex flex-col gap-[0.875rem]">
-                        <h2 className="typo-comment-1 text-grey-900">성별</h2>
-                        <div className="flex gap-[0.3125rem]">
-                            {["남성", "여성"].map((option) => {
-                                const isSelected = gender === option;
-
-                                return (
-                                    <button
-                                        key={option}
-                                        type="button"
-                                        onClick={() => setGender(option)}
-                                        className={`flex h-10 flex-1 items-center justify-center rounded-[0.625rem] px-2.5 typo-input-text-m ${
-                                            isSelected
-                                                ? "bg-primary-500 text-grey-100"
-                                                : "bg-primary-100 text-grey-600"
-                                        }`}
-                                    >
-                                        {option}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </section>
-
-                    <section className="flex flex-col gap-2.5">
-                        <h2 className="typo-comment-1 text-grey-900">출생 연도</h2>
-                        <div className="relative w-[10.875rem]">
-                            <select
-                                value={birthYear}
-                                onChange={(event) => setBirthYear(event.target.value)}
-                                className={`${selectClassName} typo-input-text ${
-                                    birthYear ? "text-primary-500" : "text-grey-600"
-                                }`}
-                            >
-                                <option value="">출생 연도</option>
-                                {birthYears.map((year) => (
-                                    <option key={year} value={year}>
-                                        {year}
-                                    </option>
-                                ))}
-                            </select>
-                            <span className="pointer-events-none absolute right-[0.875rem] top-1/2 -translate-y-1/2 text-grey-600">
-                                <img src={selectArrow} alt="" className="h-[0.3125rem] w-[0.625rem]" />
-                            </span>
-                        </div>
-                    </section>
-                </div>
+            <div className="sticky top-0 z-40 bg-grey-100">
+                <NotLoginHeader title="회원가입" onBack={handleHeaderBack} />
             </div>
 
-            <BottomActionBar
-                label="다음"
-                disabled={!isFormValid}
-                onClick={handleNext}
-            />
+            <main className="px-5 pt-6 pb-[7.5rem]">
+                <div className="mx-auto w-full max-w-[22.6875rem]">
+                    {currentStep === 1 && <SignupStepBasic />}
+                    {currentStep === 2 && <SignupStepAnimal />}
+                    {currentStep === 3 && <SignupStepMbti />}
+                    {currentStep === 4 && <SignupStepPhoto />}
+                    {currentStep === 5 && <SignupStepContact />}
+                    {currentStep === 6 && (
+                        <SignupStepNotification
+                            isSubmitting={isSubmitting}
+                            errorMessage={submitErrorMessage}
+                            onSubmit={handleCompleteSignup}
+                        />
+                    )}
+                </div>
+            </main>
         </div>
     );
 }

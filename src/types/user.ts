@@ -1,7 +1,7 @@
 export interface UserStatus {
     isRegistered: boolean;
     hasIntroduction: boolean;
-    isProfileCompleted: boolean;
+    isProfileCompleted?: boolean;
 }
 
 export interface AuthMeResponse {

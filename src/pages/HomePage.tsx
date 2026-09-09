@@ -210,11 +210,6 @@ function HomePage() {
       return;
     }
 
-    if (status?.isProfileCompleted !== true) {
-      navigate("/dating/register", { state: flowOrigin });
-      return;
-    }
-
     if (status?.hasIntroduction !== true) {
       navigate("/dating/require-introduce");
       return;

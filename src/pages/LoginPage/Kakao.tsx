@@ -7,7 +7,7 @@ import {
     KAKAO_RETURN_TO_STORAGE_KEY,
     KAKAO_LOGIN_TOAST_STORAGE_KEY,
 } from "../../constants/storageKeys";
-import loginImg from "./asset/loginImg.png";
+import loginHeartImg from "./asset/loginHeartImg.png";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import rightArrowIcon from "../../assets/right_arrow.svg";
@@ -321,11 +321,11 @@ function Kakao() {
         isPending: isLoggingIn,
     } = useKakaoLoginMutation();
 
-    const loginImage = isIntroduceFriendFlow ? friendSignUpImg : loginImg;
+    const loginImage = isIntroduceFriendFlow ? friendSignUpImg : loginHeartImg;
     const nextPath = isIntroduceFriendFlow
         ? "/introduce-friend/generating"
         : "/auth/signup";
-    const headerTitle = isIntroduceFriendFlow ? "솔로인 내 친구 소개하기" : "로그인";
+    const headerTitle = isIntroduceFriendFlow ? "솔로인 내 친구 소개하기" : "회원가입";
     const currentAuthPath = createAuthPath(isIntroduceFriendFlow, returnTo);
     const receiveIntroduceReturnTo = getReceiveIntroduceReturnTo(returnTo);
     const locationState = location.state as KakaoLocationState;
@@ -646,7 +646,8 @@ function Kakao() {
         <div
             className="flex min-h-screen flex-col overflow-hidden"
             style={{
-                background: "linear-gradient(180deg, #FFF 13.73%, #FF6C9D 83.58%)",
+                background:
+                    "linear-gradient(180deg, #FFFFFF 13.73%, #FFBEDA 69.48%, #FF94C1 83.58%)",
             }}
         >
             <div className="shrink-0">
@@ -716,17 +717,17 @@ function Kakao() {
                 <>
                     <main className="flex min-h-0 flex-1 items-center justify-center px-5 pb-[7.75rem]">
                         <div className="flex flex-col items-center">
-                            <p className="whitespace-pre-line text-center typo-title-header-1 text-grey-900">
-                                {"3초만에 로그인하고\n캠퍼스에서 기다리고 있는\n내 인연을 만나보세요"}
+                            <p className="whitespace-pre-line text-center text-[1.25rem] font-semibold leading-[1.75rem] text-grey-900">
+                                {"3초만에 회원가입 하고\n캠퍼스에서 기다리고 있는\n내 인연을 만나보세요"}
                             </p>
                             <img
                                 src={loginImage}
                                 alt=""
-                                className="h-[15.36rem] w-[15.36rem] object-cover"
+                                className="mt-2 h-[16.75rem] w-[16.75rem] object-contain"
                             />
                         </div>
                     </main>
-                    <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-30 bg-primary-400 px-5 pt-[0.62rem] pb-[2.94rem]">
+                    <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-30 bg-[#ffa6c4] px-5 pt-[0.62rem] pb-[2.94rem]">
                         <button
                             type="button"
                             onClick={handleKakaoLogin}
