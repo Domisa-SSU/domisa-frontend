@@ -10,7 +10,7 @@ import cookieTwoImg from "../assets/cookieIconTwo.png";
 import CardArrowIcon from "../assets/cardArrowIcon.svg?react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { getDatingMatchCount } from "../api/datingHome";
 import AlarmModal from "../components/AlarmModal";
 import { useAuthMeQuery } from "../queries/auth";
@@ -157,7 +157,6 @@ function HomePage() {
   const [activeNotificationQueue, setActiveNotificationQueue] = useState<
     NotificationType[]
   >([]);
-  const location = useLocation();
   const navigate = useNavigate();
   const { data: authMe, isPending: isAuthMePending } = useAuthMeQuery();
   const isBlacklistedUser = useIsBlacklistedUser();
@@ -173,7 +172,6 @@ function HomePage() {
     enabled: !isAuthMePending && !isBlacklistedUser,
     retry: false,
   });
-  const status = authMe?.status;
   const matchCount = matchCountData?.matchCount ?? fallbackMatchCount;
   const currentActiveNotificationType = activeNotificationQueue[0] ?? null;
   const backgroundImg = theme === "day" ? dayBgImg : nightBgImg;
@@ -193,28 +191,6 @@ function HomePage() {
   }, [activeNotifications, authMe]);
 
   const handleDatingClick = () => {
-    const flowOrigin = {
-      from: `${location.pathname}${location.search}${location.hash}`,
-    };
-    const searchParams = new URLSearchParams({
-      returnTo: "/dating/register",
-    });
-
-    if (!authMe) {
-      navigate(`/auth?${searchParams.toString()}`, { state: flowOrigin });
-      return;
-    }
-
-    if (status?.isRegistered === false) {
-      navigate(`/auth/signup?${searchParams.toString()}`, { state: flowOrigin });
-      return;
-    }
-
-    if (status?.hasIntroduction !== true) {
-      navigate("/dating/require-introduce");
-      return;
-    }
-
     navigate("/dating");
   };
   const dismissActiveNotification = () => {

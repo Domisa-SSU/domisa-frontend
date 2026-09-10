@@ -1,6 +1,8 @@
 import { type ReactNode } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
+import DatingAccessModal from "../components/DatingAccessModal";
+import DatingPage from "../pages/DatingPage/DatingPage";
 import { useAuthMeQuery } from "../queries/auth";
 
 const datingReturnParams = new URLSearchParams({
@@ -9,6 +11,7 @@ const datingReturnParams = new URLSearchParams({
 
 function DatingAccessGuard({ children }: { children: ReactNode }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { data: authMe, isPending } = useAuthMeQuery();
   const flowOrigin = {
     from: `${location.pathname}${location.search}${location.hash}`,
@@ -27,23 +30,51 @@ function DatingAccessGuard({ children }: { children: ReactNode }) {
   }
 
   if (!authMe) {
-    return <Navigate to={`/auth?${datingReturnParams}`} replace state={flowOrigin} />;
+    return (
+      <>
+        <DatingPage preview />
+        <DatingAccessModal
+          type="signup"
+          onProceed={() =>
+            navigate(`/auth?${datingReturnParams}`, {
+              replace: true,
+              state: flowOrigin,
+            })
+          }
+        />
+      </>
+    );
   }
 
   const { status } = authMe;
 
   if (status.isRegistered !== true) {
     return (
-      <Navigate
-        to={`/auth/signup?${datingReturnParams}`}
-        replace
-        state={flowOrigin}
-      />
+      <>
+        <DatingPage preview />
+        <DatingAccessModal
+          type="signup"
+          onProceed={() =>
+            navigate(`/auth/signup?${datingReturnParams}`, {
+              replace: true,
+              state: flowOrigin,
+            })
+          }
+        />
+      </>
     );
   }
 
   if (status.hasIntroduction !== true) {
-    return <Navigate to="/dating/require-introduce" replace />;
+    return (
+      <>
+        <DatingPage preview />
+        <DatingAccessModal
+          type="introduction"
+          onProceed={() => navigate("/dating/require-introduce", { replace: true })}
+        />
+      </>
+    );
   }
 
   return children;
