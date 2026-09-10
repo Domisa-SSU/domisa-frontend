@@ -39,8 +39,6 @@
     'Apple SD Gothic Neo',
     'Noto Sans KR',
     sans-serif;
-  --font-handwriting: 'GeuriunOmiriHandwriting', var(--font-pretendard);
-  --font-laundry-gothic: 'LaundryGothic', var(--font-pretendard);
 }
 
 body {
@@ -236,6 +234,33 @@ select.typo-input-text-r {
   font-style: normal;
   font-weight: 500;
   line-height: 1rem;
+}
+
+.typo-letter-title {
+  font-family: var(--font-laundry);
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 0.875rem;
+  letter-spacing: -0.02em;
+}
+
+.typo-letter-question {
+  font-family: var(--font-handwriting);
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.125rem;
+  letter-spacing: -0.02em;
+}
+
+.typo-letter-answer {
+  font-family: var(--font-handwriting);
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.5625rem;
+  letter-spacing: -0.02em;
 }
 
 .typo-card-title {

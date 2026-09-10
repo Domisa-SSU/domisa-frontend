@@ -5,9 +5,16 @@ type WithdrawConfirmModalProps = {
   onCancel: () => void;
   isLoading?: boolean;
   mode: 'delete' | 'inquiry';
+  errorMessage?: string;
 };
 
-function WithdrawConfirmModal({ onConfirm, onCancel, isLoading, mode }: WithdrawConfirmModalProps) {
+function WithdrawConfirmModal({
+  onConfirm,
+  onCancel,
+  isLoading,
+  mode,
+  errorMessage,
+}: WithdrawConfirmModalProps) {
   const isDeleteMode = mode === 'delete';
 
   return (
@@ -25,13 +32,20 @@ function WithdrawConfirmModal({ onConfirm, onCancel, isLoading, mode }: Withdraw
             {isDeleteMode ? '정말 탈퇴하시겠어요?' : '탈퇴는 도미사 고객센터로 문의해주세요'}
           </p>
           <div className="flex flex-col items-center gap-1">
-            <p className="typo-input-text-m text-warning-ac">탈퇴 시 내정보와 소개팅 카드,</p>
+            <p className="typo-input-text-m text-warning-ac">탈퇴 시 내 정보와 친구 소개서,</p>
             <p className="typo-input-text-m text-warning-ac flex items-center gap-1">
               주고받은 호감이 모두 사라져요
               <img src={cryIcon} alt="" className="w-3.5 h-3.5" />
             </p>
           </div>
         </div>
+
+        {/* 에러 메시지 */}
+        {errorMessage && (
+          <p className="typo-comment-2 text-center text-warning px-4 -mt-3">
+            {errorMessage}
+          </p>
+        )}
 
         {/* 버튼 영역 */}
         <div className="flex w-[18.75rem] gap-2.5">

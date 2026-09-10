@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { isAxiosError } from 'axios';
 import NotLoginHeader from '../../components/NotLoginHeader';
 import Toast from '../../components/Toast';
 import { EDIT_PROFILE_TOAST_STORAGE_KEY } from '../../constants/storageKeys';
@@ -274,6 +275,7 @@ function MyPage() {
             try {
               setWithdrawErrorMessage('');
               await deleteMe();
+              setShowWithdrawModal(false);
               navigate('/', { replace: true });
             } catch (error) {
               if (isServerError(error)) {
@@ -281,13 +283,46 @@ function MyPage() {
                 return;
               }
 
+              if (isAxiosError(error)) {
+                const status = error.response?.status;
+                const data = error.response?.data as
+                  | { code?: string; message?: string; error?: string }
+                  | undefined;
+
+                if (status === 401) {
+                  navigate('/auth', { replace: true });
+                  return;
+                }
+
+                if (status === 404) {
+                  navigate('/', { replace: true });
+                  return;
+                }
+
+                if (status === 502) {
+                  setWithdrawErrorMessage(
+                    data?.message || '페이액션 주문 매칭 제외에 실패했습니다. 고객센터로 문의해주세요.'
+                  );
+                  return;
+                }
+
+                if (data?.message) {
+                  setWithdrawErrorMessage(data.message);
+                  return;
+                }
+              }
+
               console.error(error);
-              setWithdrawErrorMessage('탈퇴에 실패했어요. 다시 시도해주세요.');
+              setWithdrawErrorMessage('회원탈퇴에 실패했어요. 다시 시도해주세요.');
             }
           }}
-          onCancel={() => setShowWithdrawModal(false)}
+          onCancel={() => {
+            setShowWithdrawModal(false);
+            setWithdrawErrorMessage('');
+          }}
           isLoading={isDeleting}
           mode={canDeleteAccount ? 'delete' : 'inquiry'}
+          errorMessage={withdrawErrorMessage}
         />
       )}
     </div>

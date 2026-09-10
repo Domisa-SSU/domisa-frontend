@@ -99,6 +99,12 @@ function SignupPage() {
         };
     }, [showKakaoLoginToast]);
 
+    useEffect(() => {
+        return () => {
+            resetSignupFlow();
+        };
+    }, [resetSignupFlow]);
+
     const handleHeaderBack = () => {
         if (currentStep > 1) {
             goPrevStep();
