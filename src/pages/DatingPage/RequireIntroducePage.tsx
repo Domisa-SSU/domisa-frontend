@@ -38,7 +38,6 @@ function RequireIntroducePage() {
             try {
                 await navigator.share({
                     title: "도미사 친구 소개서",
-                    text: "내 친구 소개서를 확인해줘",
                     url: introduceFriendUrl,
                 });
                 return;
@@ -129,4 +128,3 @@ function RequireIntroducePage() {
 }
 
 export default RequireIntroducePage;
-
