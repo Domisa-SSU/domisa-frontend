@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import Toast from "../../components/Toast";
-import RightArrow from "../../assets/right_arrow.svg?react";
 import {
     hasCompleteIntroductionAnswers,
     type IntroductionAnswers,
 } from "../../constants/introductionQuestions";
 import { createIntroductionLink } from "../../api/introduction";
 import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
+import introduceInvitationCreated from "./assets/introduceInvitationCreated.png";
+import inviteShareArrow from "./assets/inviteShareArrow.svg";
 import requireIcon from "./assets/requireIcon.png";
 import {
     clearIntroduceFriendDraft,
@@ -134,7 +135,6 @@ function IntroduceFriendGeneratingPage() {
             try {
                 await navigator.share({
                     title: "도미사 친구 소개서",
-                    text: "내 친구 소개서를 확인해줘",
                     url: invitationUrl,
                 });
                 return;
@@ -160,10 +160,10 @@ function IntroduceFriendGeneratingPage() {
                 />
 
                 <main className="absolute inset-0 flex items-center px-5">
-                    <div className="mx-auto flex w-full max-w-[22.5625rem] -translate-y-[2.125rem] flex-col items-center gap-[3.125rem]">
-                        <div className="flex w-full flex-col items-center gap-[0.375rem] text-center">
+                    <div className="mx-auto flex w-full max-w-[22.5625rem] -translate-y-[2.5625rem] flex-col items-center gap-[1.875rem]">
+                        <div className="flex w-full flex-col items-center gap-2.5 text-center">
                             <div className="flex items-center justify-center gap-1">
-                                <h1 className="typo-title-header-1 text-grey-900">
+                                <h1 className="typo-subtitle-header-2 text-grey-900">
                                     초대장이 만들어졌어요
                                 </h1>
                                 <img
@@ -178,35 +178,47 @@ function IntroduceFriendGeneratingPage() {
                             </p>
                         </div>
 
-                        <div className="flex w-full flex-col gap-[3.125rem]">
-                            <section className="flex flex-col gap-[0.875rem]">
-                                <div className="flex h-10 items-center overflow-hidden rounded-[0.625rem] bg-grey-300 px-2.5 py-2">
-                                    <p className="min-w-0 truncate typo-input-text-r text-grey-900">
-                                        {invitationUrl}
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={handleShare}
-                                    className="flex h-[3.125rem] items-center justify-center gap-1.5 rounded-[0.625rem] bg-primary-600 px-2.5 py-2"
-                                >
-                                    <span className="typo-button-text text-grey-300">
-                                        솔로 친구에게 소개서 보내기
-                                    </span>
-                                    <RightArrow className="h-3 w-[0.8125rem] text-grey-300" />
-                                </button>
-                            </section>
+                        <div className="relative h-[6.75rem] w-[10.8125rem] shrink-0 overflow-hidden">
+                            <img
+                                src={introduceInvitationCreated}
+                                alt=""
+                                aria-hidden="true"
+                                className="absolute left-0 top-[-22.97%] h-[145.46%] w-[100.3%] max-w-none"
+                            />
                         </div>
+
+                        <section className="flex w-full flex-col gap-[0.875rem]">
+                            <div className="flex h-[3.125rem] items-center overflow-hidden rounded-[0.875rem] bg-grey-300 px-2.5 py-2">
+                                <p className="min-w-0 truncate typo-input-text-r text-grey-900">
+                                    {invitationUrl}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleShare}
+                                className="flex h-[3.125rem] items-center justify-center gap-2 rounded-[0.875rem] bg-primary-600 px-2.5 py-2"
+                            >
+                                <span className="text-[1.125rem] font-semibold leading-[1.125rem] tracking-[-0.0225rem] text-grey-300">
+                                    솔로 친구에게 소개서 보내기
+                                </span>
+                                <img
+                                    src={inviteShareArrow}
+                                    alt=""
+                                    aria-hidden="true"
+                                    className="h-[0.8125rem] w-3 rotate-90"
+                                />
+                            </button>
+                        </section>
                     </div>
                 </main>
 
-                <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 bg-grey-100 px-5 pt-[0.62rem] pb-[2.94rem]">
+                <section className="fixed bottom-8 left-1/2 w-full frame-max-w -translate-x-1/2 text-center">
                     <button
                         type="button"
                         onClick={() => navigate("/")}
-                        className="mx-auto flex h-[3.125rem] w-full max-w-[22.625rem] items-center justify-center rounded-[0.875rem] bg-grey-400 px-2.5 py-2.5 typo-button-text-b text-grey-700"
+                        className="typo-button-text-b text-grey-700 underline underline-offset-0"
                     >
-                        <span>홈으로</span>
+                        홈으로 갈래요
                     </button>
                 </section>
 

@@ -4,9 +4,12 @@ type WithdrawConfirmModalProps = {
   onConfirm: () => void;
   onCancel: () => void;
   isLoading?: boolean;
+  mode: 'delete' | 'inquiry';
 };
 
-function WithdrawConfirmModal({ onConfirm, onCancel, isLoading }: WithdrawConfirmModalProps) {
+function WithdrawConfirmModal({ onConfirm, onCancel, isLoading, mode }: WithdrawConfirmModalProps) {
+  const isDeleteMode = mode === 'delete';
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
@@ -19,7 +22,7 @@ function WithdrawConfirmModal({ onConfirm, onCancel, isLoading }: WithdrawConfir
         {/* 내용 */}
         <div className="flex flex-col items-center gap-[0.9375rem]">
           <p className="typo-subtitle-header-2 text-grey-900">
-            탈퇴는 도미사 고객센터로 문의해주세요
+            {isDeleteMode ? '정말 탈퇴하시겠어요?' : '탈퇴는 도미사 고객센터로 문의해주세요'}
           </p>
           <div className="flex flex-col items-center gap-1">
             <p className="typo-input-text-m text-warning-ac">탈퇴 시 내정보와 소개팅 카드,</p>
@@ -38,7 +41,7 @@ function WithdrawConfirmModal({ onConfirm, onCancel, isLoading }: WithdrawConfir
             disabled={isLoading}
             className="flex flex-1 h-[3.125rem] items-center justify-center rounded-[0.875rem] bg-grey-400 typo-button-text-b text-grey-800 disabled:opacity-50"
           >
-            {isLoading ? '이동 중' : '문의하기'}
+            {isLoading ? (isDeleteMode ? '탈퇴 중' : '이동 중') : (isDeleteMode ? '탈퇴할래요' : '문의하기')}
           </button>
           <button
             type="button"

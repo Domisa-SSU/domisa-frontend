@@ -2,8 +2,7 @@
 
 @font-face {
   font-family: 'GeuriunOmiriHandwriting';
-  src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/2607161334@griun-omiri-rg/griun-omiri-rg/Griun_OMIRI-Rg.woff2')
-    format('woff2');
+  src: url('./assets/fonts/Griun_OMIRI-Rg.woff2') format('woff2');
   font-weight: 400;
   font-display: swap;
 }

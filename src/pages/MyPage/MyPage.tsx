@@ -23,11 +23,13 @@ import { isServerError } from '../../utils/apiError';
 
 function MyPage() {
   const navigate = useNavigate();
+  const canDeleteAccount = window.location.hostname === 'localhost';
   const { data: me, error: meError, isLoading: isMeLoading } = useUserMeQuery();
   const { data: cookies, error: cookiesError, isLoading: isCookiesLoading } = useUserCookiesQuery();
   const { mutateAsync: logout, isPending: isLoggingOut } = useLogoutMutation();
   const { mutateAsync: deleteMe, isPending: isDeleting } = useDeleteMeMutation();
   const [logoutErrorMessage, setLogoutErrorMessage] = useState('');
+  const [withdrawErrorMessage, setWithdrawErrorMessage] = useState('');
   const [serverError, setServerError] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showEditProfileToast, setShowEditProfileToast] = useState(() => {
@@ -255,18 +257,37 @@ function MyPage() {
           {logoutErrorMessage && (
             <p className="typo-comment-2 text-center text-warning">{logoutErrorMessage}</p>
           )}
+          {withdrawErrorMessage && (
+            <p className="typo-comment-2 text-center text-warning">{withdrawErrorMessage}</p>
+          )}
         </div>
       </div>
 
       {showWithdrawModal && (
         <WithdrawConfirmModal
           onConfirm={async () => {
-            // 실제 회원탈퇴 API 호출은 임시 비활성화하고 고객센터 문의로 연결한다.
-            void deleteMe;
-            window.location.href = CUSTOMER_SUPPORT_KAKAO_URL;
+            if (!canDeleteAccount) {
+              window.location.href = CUSTOMER_SUPPORT_KAKAO_URL;
+              return;
+            }
+
+            try {
+              setWithdrawErrorMessage('');
+              await deleteMe();
+              navigate('/', { replace: true });
+            } catch (error) {
+              if (isServerError(error)) {
+                setServerError(true);
+                return;
+              }
+
+              console.error(error);
+              setWithdrawErrorMessage('탈퇴에 실패했어요. 다시 시도해주세요.');
+            }
           }}
           onCancel={() => setShowWithdrawModal(false)}
           isLoading={isDeleting}
+          mode={canDeleteAccount ? 'delete' : 'inquiry'}
         />
       )}
     </div>
