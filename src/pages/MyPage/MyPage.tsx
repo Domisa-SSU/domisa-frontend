@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { isAxiosError } from 'axios';
 import NotLoginHeader from '../../components/NotLoginHeader';
 import Toast from '../../components/Toast';
 import { EDIT_PROFILE_TOAST_STORAGE_KEY } from '../../constants/storageKeys';
@@ -17,7 +18,6 @@ import catImg from '../../assets/catIcon.png';
 import flowerImg from '../../assets/flowerIcon.svg';
 import arrowIcon from '../../assets/arrowIcon.svg';
 import heartIconOrange from '../../assets/heartIconOrange.svg';
-import { CUSTOMER_SUPPORT_KAKAO_URL } from '../../constants/customerSupport';
 import { animalProfileImageMap } from '../../constants/animalProfile';
 import { isServerError } from '../../utils/apiError';
 
@@ -28,6 +28,7 @@ function MyPage() {
   const { mutateAsync: logout, isPending: isLoggingOut } = useLogoutMutation();
   const { mutateAsync: deleteMe, isPending: isDeleting } = useDeleteMeMutation();
   const [logoutErrorMessage, setLogoutErrorMessage] = useState('');
+  const [withdrawErrorMessage, setWithdrawErrorMessage] = useState('');
   const [serverError, setServerError] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showEditProfileToast, setShowEditProfileToast] = useState(() => {
@@ -261,12 +262,56 @@ function MyPage() {
       {showWithdrawModal && (
         <WithdrawConfirmModal
           onConfirm={async () => {
-            // 실제 회원탈퇴 API 호출은 임시 비활성화하고 고객센터 문의로 연결한다.
-            void deleteMe;
-            window.location.href = CUSTOMER_SUPPORT_KAKAO_URL;
+            try {
+              setWithdrawErrorMessage('');
+              await deleteMe();
+              setShowWithdrawModal(false);
+              navigate('/', { replace: true });
+            } catch (error) {
+              if (isServerError(error)) {
+                setServerError(true);
+                return;
+              }
+
+              if (isAxiosError(error)) {
+                const status = error.response?.status;
+                const data = error.response?.data as
+                  | { code?: string; message?: string; error?: string }
+                  | undefined;
+
+                if (status === 401) {
+                  navigate('/auth', { replace: true });
+                  return;
+                }
+
+                if (status === 404) {
+                  navigate('/', { replace: true });
+                  return;
+                }
+
+                if (status === 502) {
+                  setWithdrawErrorMessage(
+                    data?.message || '페이액션 주문 매칭 제외에 실패했습니다. 고객센터로 문의해주세요.'
+                  );
+                  return;
+                }
+
+                if (data?.message) {
+                  setWithdrawErrorMessage(data.message);
+                  return;
+                }
+              }
+
+              console.error(error);
+              setWithdrawErrorMessage('회원탈퇴에 실패했어요. 다시 시도해주세요.');
+            }
           }}
-          onCancel={() => setShowWithdrawModal(false)}
+          onCancel={() => {
+            setShowWithdrawModal(false);
+            setWithdrawErrorMessage('');
+          }}
           isLoading={isDeleting}
+          errorMessage={withdrawErrorMessage}
         />
       )}
     </div>
