@@ -230,7 +230,7 @@ function DatingRegisterMbtiStep() {
         </div>
       </main>
 
-      <section className="fixed inset-x-0 bottom-0 bg-grey-100 px-5 pt-2.5 pb-[2.75rem]">
+      <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 bg-grey-100 px-5 pt-2.5 pb-[2.75rem]">
         <div className="mx-auto w-full max-w-[22.625rem]">
           <Button
             label="다음"
@@ -288,7 +288,7 @@ function DatingRegisterTextStep({
         </div>
       </main>
 
-      <section className="fixed inset-x-0 bottom-0 bg-grey-100 px-5 pt-2.5 pb-[2.75rem]">
+      <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 bg-grey-100 px-5 pt-2.5 pb-[2.75rem]">
         <div className="mx-auto w-full max-w-[22.625rem]">
           <Button
             label="다음"
@@ -389,7 +389,7 @@ function DatingRegisterContactStep() {
         </div>
       </main>
 
-      <section className="fixed inset-x-0 bottom-0 bg-grey-100 px-5 pt-2.5 pb-[2.75rem]">
+      <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 bg-grey-100 px-5 pt-2.5 pb-[2.75rem]">
         <div className="mx-auto w-full max-w-[22.625rem]">
           <Button
             label="다음"
@@ -697,7 +697,7 @@ function DatingRegisterPhotoStep() {
         </div>
       </main>
 
-      <section className="fixed inset-x-0 bottom-0 bg-grey-100 px-5 pt-2.5 pb-[2.75rem]">
+      <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 bg-grey-100 px-5 pt-2.5 pb-[2.75rem]">
         <div className="mx-auto w-full max-w-[22.625rem]">
           <Button
             label="다음"
@@ -883,7 +883,7 @@ function DatingRegisterNotificationPhoneStep() {
         </div>
       </main>
 
-      <section className="fixed inset-x-0 bottom-0 bg-grey-100 px-5 pt-2.5 pb-[2.75rem]">
+      <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 bg-grey-100 px-5 pt-2.5 pb-[2.75rem]">
         <div className="mx-auto w-full max-w-[22.625rem]">
           <Button
             label={isSubmitting ? '등록 중...' : '프로필 등록하기'}

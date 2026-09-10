@@ -200,7 +200,7 @@ function IntroduceFriendGeneratingPage() {
                     </div>
                 </main>
 
-                <section className="fixed inset-x-0 bottom-0 bg-grey-100 px-5 pt-[0.62rem] pb-[2.94rem]">
+                <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 bg-grey-100 px-5 pt-[0.62rem] pb-[2.94rem]">
                     <button
                         type="button"
                         onClick={() => navigate("/")}

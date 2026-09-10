@@ -429,7 +429,7 @@ function TermsPage({ type }: TermsPageProps) {
 
   return (
     <div className="min-h-screen bg-grey-400">
-      <header className="fixed inset-x-0 top-0 z-40 bg-grey-100">
+      <header className="fixed top-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-40 bg-grey-100">
         <NotLoginHeader title={content.title} onBack={handleBack} />
       </header>
       <main className="bg-grey-400 px-5 pt-[8.875rem] pb-[8.75rem]">
@@ -438,7 +438,7 @@ function TermsPage({ type }: TermsPageProps) {
           <div className="flex flex-col gap-6">{content.body}</div>
         </section>
       </main>
-      <section className="fixed inset-x-0 bottom-0 bg-grey-400 px-5 pt-2.5 pb-[2.75rem]">
+      <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 bg-grey-400 px-5 pt-2.5 pb-[2.75rem]">
         <div className="mx-auto w-full max-w-[22.625rem]">
           <Button label="돌아가기" onClick={handleBack} />
         </div>

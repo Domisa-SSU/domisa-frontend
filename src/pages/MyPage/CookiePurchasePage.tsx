@@ -316,7 +316,7 @@ function CookiePurchasePage() {
       )}
 
       {/* 하단 고정 영역 */}
-      <section className="fixed inset-x-0 bottom-0 bg-grey-100 px-5 pt-2.5 pb-[2.75rem] flex flex-col items-center gap-2.5">
+      <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 bg-grey-100 px-5 pt-2.5 pb-[2.75rem] flex flex-col items-center gap-2.5">
         <p className="typo-button-text text-grey-900">송금 완료 후, 아래 버튼을 눌러주세요</p>
         <div className="w-full max-w-[22.625rem]">
           <Button

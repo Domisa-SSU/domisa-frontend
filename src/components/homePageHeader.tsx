@@ -2,8 +2,8 @@ import icon from "../assets/domisaHeartIcon.png"
 import existNotificationIcon from "../assets/existNotificationHeartIcon.png"
 import { useNavigate } from "react-router-dom";
 
-const festivalStart = { year: 2026, month: 5, day: 13 };
-const festivalEnd = { year: 2026, month: 5, day: 15 };
+const festivalStart = { year: 2026, month: 9, day: 15 };
+const festivalEnd = { year: 2026, month: 9, day: 16 };
 const millisecondsPerDay = 24 * 60 * 60 * 1000;
 
 type HomeTheme = "day" | "night";
@@ -92,23 +92,27 @@ function Header({dayText, isLoggedIn, theme, unreadCount = 0} : HeaderProps) {
 
     return (
         <div className="px-5 py-2.5 flex justify-between items-center">
-            <button
-                type="button"
-                onClick={() => navigate("/notifications")}
-                className="relative flex size-11 items-center justify-center"
-            >
-                <img
-                    src={hasUnreadNotification ? existNotificationIcon : icon}
-                    alt="알림"
-                    className="size-11"
-                />
-                {hasUnreadNotification ? (
-                    <span className="absolute left-[1.625rem] top-[1.625rem] flex size-[1.125rem] items-center justify-center rounded-[0.525rem] bg-warning pt-px typo-comment-1-b text-grey-100">
-                        {notificationCountLabel}
-                    </span>
-                ) : null}
-            </button>
-            <h1 className="text-primary-500 typo-button-text-b">{headerLabel}</h1>
+            {isLoggedIn ? (
+                <button
+                    type="button"
+                    onClick={() => navigate("/notifications")}
+                    className="relative flex size-11 items-center justify-center"
+                >
+                    <img
+                        src={hasUnreadNotification ? existNotificationIcon : icon}
+                        alt="알림"
+                        className="size-11"
+                    />
+                    {hasUnreadNotification ? (
+                        <span className="absolute left-[1.625rem] top-[1.625rem] flex size-[1.125rem] items-center justify-center rounded-[0.525rem] bg-warning pt-px typo-comment-1-b text-grey-100">
+                            {notificationCountLabel}
+                        </span>
+                    ) : null}
+                </button>
+            ) : (
+                <span className="size-11" aria-hidden="true" />
+            )}
+            <h1 className="text-autumn-brown typo-button-text-b">{headerLabel}</h1>
             <button className={`typo-comment-1 ${dayText}`} onClick={() => {navigate(rightPath)}}>{rightLabel}</button>
         </div>
     );

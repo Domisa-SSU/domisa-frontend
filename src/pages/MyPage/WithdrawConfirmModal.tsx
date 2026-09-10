@@ -4,9 +4,15 @@ type WithdrawConfirmModalProps = {
   onConfirm: () => void;
   onCancel: () => void;
   isLoading?: boolean;
+  errorMessage?: string;
 };
 
-function WithdrawConfirmModal({ onConfirm, onCancel, isLoading }: WithdrawConfirmModalProps) {
+function WithdrawConfirmModal({
+  onConfirm,
+  onCancel,
+  isLoading,
+  errorMessage,
+}: WithdrawConfirmModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
@@ -19,16 +25,23 @@ function WithdrawConfirmModal({ onConfirm, onCancel, isLoading }: WithdrawConfir
         {/* 내용 */}
         <div className="flex flex-col items-center gap-[0.9375rem]">
           <p className="typo-subtitle-header-2 text-grey-900">
-            탈퇴는 도미사 고객센터로 문의해주세요
+            정말 탈퇴하시겠어요?
           </p>
           <div className="flex flex-col items-center gap-1">
-            <p className="typo-input-text-m text-warning-ac">탈퇴 시 내정보와 소개팅 카드,</p>
+            <p className="typo-input-text-m text-warning-ac">탈퇴 시 내 정보와 친구 소개서,</p>
             <p className="typo-input-text-m text-warning-ac flex items-center gap-1">
               주고받은 호감이 모두 사라져요
               <img src={cryIcon} alt="" className="w-3.5 h-3.5" />
             </p>
           </div>
         </div>
+
+        {/* 에러 메시지 */}
+        {errorMessage && (
+          <p className="typo-comment-2 text-center text-warning px-4 -mt-3">
+            {errorMessage}
+          </p>
+        )}
 
         {/* 버튼 영역 */}
         <div className="flex w-[18.75rem] gap-2.5">
@@ -38,7 +51,7 @@ function WithdrawConfirmModal({ onConfirm, onCancel, isLoading }: WithdrawConfir
             disabled={isLoading}
             className="flex flex-1 h-[3.125rem] items-center justify-center rounded-[0.875rem] bg-grey-400 typo-button-text-b text-grey-800 disabled:opacity-50"
           >
-            {isLoading ? '이동 중' : '문의하기'}
+            {isLoading ? '탈퇴 중' : '탈퇴할래요'}
           </button>
           <button
             type="button"
