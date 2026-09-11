@@ -24,7 +24,7 @@ import datingHeartIcon from "./assets/datingHeartIcon.svg";
 import datingDeletedHeartIcon from "./assets/datingDeletedHeartIcon.png";
 import datingHeartUnderIcon from "./assets/datingHeartUnderIcon.svg";
 import datingArrowIcon from "./assets/datingArrowIcon.svg";
-import bothIcon from "./assets/bothIcon.png";
+import mutualMatchIcon from "./assets/mutualMatchIcon.svg";
 import cardBackImage from "./assets/cardBackImage.png";
 import sumnailIcon from "./assets/sumnailIcon.png";
 import timerPanelBackground from "./assets/timerPanelBackground.png";
@@ -380,11 +380,11 @@ function TimerPanel({
         type="button"
         onClick={onShuffleClick}
         disabled={isShuffleLoading}
-        className="flex h-[3.125rem] flex-col items-center justify-center rounded-[0.3125rem] bg-[linear-gradient(180deg,#ff98b5_0%,#ff5a99_100%)] disabled:cursor-wait disabled:opacity-80"
+        className="flex h-[3.6875rem] flex-col items-center justify-center rounded-[0.625rem] bg-[linear-gradient(180deg,#fe77b0_13.161%,#ec1479_100.03%)] disabled:cursor-wait disabled:opacity-80"
       >
-        <span className="flex items-center gap-1.5 typo-comment-1-b text-grey-100">
+        <span className="flex items-center gap-1.5 typo-button-text-b text-grey-100">
           카드 섞기
-          <img src={reloadIcon} alt="" className="h-[0.786rem] w-[1.0125rem]" />
+          <img src={reloadIcon} alt="" className="h-[0.875rem] w-[1.125rem]" />
         </span>
         <span className="typo-comment-2 text-primary-200">
           더 많은 솔로가 보고싶다면
@@ -545,7 +545,7 @@ function MainCardSection({
   return (
     <section className="flex flex-col items-center gap-[0.9375rem]">
       <div className="flex flex-col items-center gap-2.5 text-center">
-        <p className="typo-input-text-m text-grey-700">
+        <p className="typo-input-text-m text-[#5b3649]">
           소개팅카드를 눌러서 열어보세요
         </p>
         <p className="typo-button-text-b text-primary-600">
@@ -610,7 +610,13 @@ function SectionIcon({
   variant: "received" | "sent" | "matched";
 }) {
   if (variant === "matched") {
-    return <img src={bothIcon} alt="" className="h-[1.125rem] w-[1.125rem]" />;
+    return (
+      <img
+        src={mutualMatchIcon}
+        alt=""
+        className="h-[0.8125rem] w-[2.4568rem]"
+      />
+    );
   }
 
   const heartIcon = (
@@ -642,12 +648,14 @@ function DatingPreviewSection({
   cards,
   variant,
   emptyMessage,
+  onMore,
   onViewDetail,
 }: {
   title: string;
   cards: DatingPreviewItem[];
   variant: DatingPreviewSectionVariant;
   emptyMessage: string;
+  onMore: () => void;
   onViewDetail: (id: string, viewType: DatingCardDetailViewType) => void;
 }) {
   const detailViewType = datingPreviewDetailViewTypeByVariant[variant];
@@ -689,20 +697,33 @@ function DatingPreviewSection({
   }, [cards.length]);
 
   return (
-    <section className="relative flex flex-col gap-2.5">
-      <div className="flex items-center gap-1">
-        <h2
-          className={`typo-subtitle-header-2 ${
-            variant === "matched" ? "text-[#fff5c4]" : "text-grey-900"
-          }`}
+    <section
+      className={`relative flex flex-col ${
+        variant === "received" ? "gap-[0.9375rem]" : "gap-2.5"
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1">
+          <h2
+            className={`typo-subtitle-header-2 ${
+              variant === "matched" ? "text-[#fff5c4]" : "text-grey-900"
+            }`}
+          >
+            {title}
+          </h2>
+          <SectionIcon variant={variant} />
+        </div>
+        <button
+          type="button"
+          onClick={onMore}
+          className="typo-comment-1 text-grey-800/50 underline underline-offset-0"
         >
-          {title}
-        </h2>
-        <SectionIcon variant={variant} />
+          더보기 &gt;
+        </button>
       </div>
 
       {cards.length === 0 ? (
-        <p className="typo-comment-1 text-grey-800">{emptyMessage}</p>
+        <p className="typo-comment-1 text-[#837175]">{emptyMessage}</p>
       ) : (
         <div className="relative -mx-1">
           <div
@@ -939,7 +960,7 @@ function DatingPage({ preview = false }: { preview?: boolean }) {
   const renderedDatingData = datingData ?? datingAccessPreviewData;
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f9f9f9_0%,#ff88b0_61.8%,#ff73a2_100%)]">
+    <div className="min-h-screen overflow-x-hidden bg-[linear-gradient(180.1deg,#ff98ba_0%,#ffceaf_63.759%,#ff88b0_110.49%)]">
       <header className="fixed top-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-40 bg-grey-100">
         <HeaderTop
           showNotificationIcon
@@ -969,6 +990,7 @@ function DatingPage({ preview = false }: { preview?: boolean }) {
             cards={renderedDatingData.receivedLikes}
             variant="received"
             emptyMessage="아직 받은 호감이 없어요"
+            onMore={() => navigate("/my/likes-received")}
             onViewDetail={handleViewCardDetail}
           />
           <DatingPreviewSection
@@ -976,6 +998,7 @@ function DatingPage({ preview = false }: { preview?: boolean }) {
             cards={renderedDatingData.sentLikes}
             variant="sent"
             emptyMessage="아직 보낸 호감이 없어요"
+            onMore={() => navigate("/my/likes-sent")}
             onViewDetail={handleViewCardDetail}
           />
           <DatingPreviewSection
@@ -983,6 +1006,7 @@ function DatingPage({ preview = false }: { preview?: boolean }) {
             cards={renderedDatingData.matches}
             variant="matched"
             emptyMessage="아직 매칭된 프로필이 없어요"
+            onMore={() => navigate("/my/mutual-match")}
             onViewDetail={handleViewCardDetail}
           />
         </div>
