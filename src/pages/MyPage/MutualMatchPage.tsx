@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import ErrorPage from '../ErrorPage/ErrorPage';
 import HeaderTop from '../../components/HeaderTop';
 import headerArrow from '../../assets/headerArrow.svg';
-import heartIconOrange from '../../assets/heartIconOrange.svg';
 import loginImg from '../LoginPage/asset/loginImg.png';
+import mutualMatchIcon from '../DatingPage/assets/mutualMatchIcon.svg';
+import mutualMatchCardFrame from './assets/mutualMatchCardFrame.svg';
 import { getDatingMatches } from '../../api/datingHome';
 import type { DatingMatch } from '../../api/datingHome';
 import { isServerError } from '../../utils/apiError';
@@ -15,13 +16,19 @@ function ProfileCard({ match, onClick }: { match: DatingMatch; onClick: () => vo
     <button
       type="button"
       onClick={onClick}
-      className="w-full aspect-[85/123] bg-white rounded-[0.3125rem] flex items-center justify-center"
+      className="relative h-[7.6875rem] w-[5.3125rem] shrink-0 overflow-hidden rounded-[0.3125rem] bg-white"
     >
-      <div className="w-[88.235%] aspect-[75/113] overflow-hidden">
+      <div className="absolute inset-[0.3125rem] overflow-hidden rounded-[0.3125rem]">
         {match.profile && (
           <img src={match.profile} alt="" className="w-full h-full object-cover" />
         )}
       </div>
+      <img
+        src={mutualMatchCardFrame}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 h-full w-full"
+      />
     </button>
   );
 }
@@ -86,7 +93,7 @@ function MutualMatchPage() {
     }
 
     return (
-      <div className="grid grid-cols-4 gap-[0.625rem]">
+      <div className="grid w-[23.125rem] max-w-full grid-cols-4 gap-[0.625rem]">
         {matches.map((match) => (
           <ProfileCard
             key={match.publicId}
@@ -108,12 +115,17 @@ function MutualMatchPage() {
           </button>
           <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1">
             <span className="typo-subtitle-header-2 text-grey-900">쌍방 매칭</span>
-            <img src={heartIconOrange} alt="" className="w-4 h-4" />
+            <img
+              src={mutualMatchIcon}
+              alt=""
+              aria-hidden="true"
+              className="h-[0.8125rem] w-[2.4568rem]"
+            />
           </div>
         </div>
       </div>
       <div className="flex flex-1 justify-center bg-grey-400">
-        <div className="w-full max-w-[22.6875rem] px-5 pt-6 pb-10">
+        <div className="flex w-full max-w-[23.125rem] flex-col items-center pt-8 pb-10">
           {renderContent()}
         </div>
       </div>
