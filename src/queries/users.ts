@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { checkNicknameAvailability, deleteMe, getCookies, getMe, registerUser, updateMe } from "../api/users";
+import type { UserMeResponse } from "../api/users";
 import { authMeQueryKey } from "./auth";
 
 export const userMeQueryKey = ["users", "me"] as const;
@@ -11,7 +12,7 @@ export const useUserMeQuery = () =>
     queryKey: userMeQueryKey,
     queryFn: getMe,
     retry: false,
-    staleTime: Infinity,
+    staleTime: 10 * 60 * 1000, // 10분 (imageUrl Signed URL 만료 20분보다 짧게)
   });
 
 export const useUserCookiesQuery = (options?: { enabled?: boolean }) =>
@@ -28,8 +29,11 @@ export const useUpdateMeMutation = () => {
 
   return useMutation({
     mutationFn: updateMe,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: userMeQueryKey });
+    onSuccess: (updated) => {
+      // PUT 응답에는 status 가 없다. 기존 캐시의 status 를 유지한 채 병합한다
+      queryClient.setQueryData<UserMeResponse>(userMeQueryKey, (prev) =>
+        prev ? { ...prev, ...updated } : prev,
+      );
     },
   });
 };

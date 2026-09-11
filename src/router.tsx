@@ -10,7 +10,6 @@ import MyPage from "./pages/MyPage/MyPage";
 import MyCookiePage from "./pages/MyPage/MyCookiePage";
 import CookiePurchasePage from "./pages/MyPage/CookiePurchasePage";
 import EditProfilePage from "./pages/MyPage/EditProfilePage";
-import DatingCardEditPage from "./pages/MyPage/DatingCardEditPage";
 import LikesReceivedPage from "./pages/MyPage/LikesReceivedPage";
 import LikesSentPage from "./pages/MyPage/LikesSentPage";
 import MutualMatchPage from "./pages/MyPage/MutualMatchPage";
@@ -100,14 +99,6 @@ const activeRoutes = [
         element: (
           <RegisteredOnlyRoute>
             <EditProfilePage />
-          </RegisteredOnlyRoute>
-        ),
-      },
-      {
-        path: "my/dating-card",
-        element: (
-          <RegisteredOnlyRoute>
-            <DatingCardEditPage />
           </RegisteredOnlyRoute>
         ),
       },
