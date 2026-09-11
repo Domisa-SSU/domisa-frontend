@@ -23,9 +23,6 @@ export type DatingCardDetailResponse = {
   q2: string;
   q3: string | null;
   q3Length: number | null;
-  datingStyle: string;
-  idealType: string | null;
-  idealTypeLength: number | null;
   mbti: string;
   contact: DatingCardDetailContact | null;
   isBlurred: boolean;
@@ -81,9 +78,6 @@ const baseMockDatingCardDetail: DatingCardDetailResponse = {
   q2: INTRODUCTION_QUESTIONS.q2.placeholder,
   q3: INTRODUCTION_QUESTIONS.q3.placeholder,
   q3Length: INTRODUCTION_QUESTIONS.q3.placeholder.length,
-  datingStyle: "다정하고 친구 같은 연애!",
-  idealType: "곰같은 남자",
-  idealTypeLength: 5,
   mbti: "INFJ",
   contact: {
     type: "INSTAGRAM",
@@ -114,8 +108,6 @@ const mockDatingCardDetails: Record<string, DatingCardDetailResponse> = {
     animalProfile: "BEAR",
     q3: null,
     q3Length: INTRODUCTION_QUESTIONS.q3.placeholder.length,
-    idealType: null,
-    idealTypeLength: 14,
     contact: null,
     isBlurred: true,
     hasReceivedLike: true,
@@ -216,13 +208,6 @@ const isDatingCardDetailResponse = (
         ? response.q3Length === null || typeof response.q3Length === "number"
         : typeof response.q3Length === "number"
     ) &&
-    typeof response.datingStyle === "string" &&
-    (typeof response.idealType === "string" || response.idealType === null) &&
-    (
-      typeof response.idealType === "string"
-        ? response.idealTypeLength === null || typeof response.idealTypeLength === "number"
-        : typeof response.idealTypeLength === "number"
-    ) &&
     typeof response.mbti === "string" &&
     (isDatingCardDetailContact(response.contact) || response.contact === null) &&
     typeof response.isBlurred === "boolean" &&
@@ -296,8 +281,6 @@ export const unblurReceivedDatingLike = async (
       ...cardDetail,
       q3: cardDetail.q3 ?? baseMockDatingCardDetail.q3,
       q3Length: baseMockDatingCardDetail.q3Length,
-      idealType: cardDetail.idealType ?? baseMockDatingCardDetail.idealType,
-      idealTypeLength: baseMockDatingCardDetail.idealTypeLength,
       contact: cardDetail.contact ?? {
         type: "KAKAO",
         content: "cuty882",

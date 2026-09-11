@@ -91,22 +91,6 @@ const getFriendIntroductionItems = (
   },
 ];
 
-const getSelfIntroductionItems = (
-  cardDetail: DatingCardDetailResponse,
-): DatingCardDetailSectionItem[] => [
-  {
-    title: "원하는 연애 스타일을 적어주세요",
-    content: cardDetail.datingStyle,
-  },
-  {
-    title: "이상형을 한 줄로 적어주세요",
-    content:
-      cardDetail.idealType ??
-      createLockedPlaceholder(cardDetail.idealTypeLength ?? 0),
-    isLocked: cardDetail.idealType === null,
-  },
-];
-
 const contactTypeLabels: Record<DatingCardDetailContact["type"], string> = {
   PHONE: "전화번호",
   KAKAO: "카카오톡 ID",
@@ -293,18 +277,11 @@ function MatchedContactCard({
 
 function InfoCard({
   item,
-  variant,
 }: {
   item: DatingCardDetailSectionItem;
-  variant: "friend" | "self";
 }) {
-  const className =
-    variant === "friend"
-      ? "bg-primary-100"
-      : "bg-[linear-gradient(165deg,#ffcde3_2.77%,#ffe8f2_95.22%)]";
-
   return (
-    <article className={`w-full rounded-[0.625rem] px-2 py-2.5 ${className}`}>
+    <article className="w-full rounded-[0.625rem] bg-primary-100 px-2 py-2.5">
       <div className="flex flex-col gap-2.5 px-2.5 py-2">
         <h3
           className={`flex items-center gap-1 typo-input-text ${
@@ -336,12 +313,10 @@ function DetailSection({
   title,
   icon,
   items,
-  variant,
 }: {
   title: string;
   icon: string;
   items: DatingCardDetailSectionItem[];
-  variant: "friend" | "self";
 }) {
   return (
     <section className="flex flex-col gap-[1.125rem]">
@@ -351,7 +326,7 @@ function DetailSection({
       </div>
       <div className="flex flex-col gap-[0.875rem]">
         {items.map((item) => (
-          <InfoCard key={item.title} item={item} variant={variant} />
+          <InfoCard key={item.title} item={item} />
         ))}
       </div>
     </section>
@@ -816,7 +791,6 @@ function DatingCardDetailPage() {
   const isMatched = cardDetail.isMatched;
   const hasSentLike = cardDetail.hasSentLike || isMatched;
   const friendIntroductionItems = getFriendIntroductionItems(cardDetail);
-  const selfIntroductionItems = getSelfIntroductionItems(cardDetail);
 
   return (
     <div className="min-h-screen bg-grey-100">
@@ -878,13 +852,6 @@ function DatingCardDetailPage() {
             title="친구 소개서"
             icon={inviteCreatedIcon}
             items={friendIntroductionItems}
-            variant="friend"
-          />
-          <DetailSection
-            title="자기소개"
-            icon={flowerIcon}
-            items={selfIntroductionItems}
-            variant="self"
           />
         </div>
       </main>
