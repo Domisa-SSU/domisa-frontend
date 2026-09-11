@@ -1,9 +1,6 @@
-import type { UserStatus } from "../types/user";
-
 export type BackendStatusDto = {
   isRegistered: boolean;
   hasIntroduction: boolean;
-  isProfileCompleted?: boolean;
 };
 
 export const isBackendStatusDto = (value: unknown): value is BackendStatusDto => {
@@ -18,9 +15,3 @@ export const isBackendStatusDto = (value: unknown): value is BackendStatusDto =>
     typeof status.hasIntroduction === "boolean"
   );
 };
-
-export const normalizeUserStatus = (status: BackendStatusDto): UserStatus => ({
-  isRegistered: status.isRegistered,
-  hasIntroduction: status.hasIntroduction,
-  isProfileCompleted: status.isProfileCompleted ?? status.isRegistered,
-});

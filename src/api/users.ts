@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import { isBackendStatusDto, normalizeUserStatus } from './status';
+import { isBackendStatusDto } from './status';
 import type { UserStatus } from '../types/user';
 
 export type AnimalProfile =
@@ -59,7 +59,7 @@ const parseRegisterUserResponse = (value: unknown): RegisterUserResponse | null 
 
   return {
     publicId: response.publicId,
-    status: normalizeUserStatus(response.status),
+    status: response.status,
     totalUserCount: response.totalUserCount,
   };
 };
@@ -195,7 +195,7 @@ const parseUserMeResponse = (value: unknown): UserMeResponse | null => {
     contactType: typeof r.contactType === 'string' ? (r.contactType as ContactType) : undefined,
     contact: typeof r.contact === 'string' ? r.contact : undefined,
     notificationPhone: typeof r.notificationPhone === 'string' ? r.notificationPhone : null,
-    status: normalizeUserStatus(r.status),
+    status: r.status,
   };
 };
 

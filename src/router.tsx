@@ -72,10 +72,6 @@ const activeRoutes = [
       },
       { path: "dating/require-introduce", element: <RequireIntroducePage /> },
       {
-        path: "dating/register",
-        element: <Navigate to="/dating" replace />,
-      },
-      {
         path: "my",
         element: (
           <RegisteredOnlyRoute>

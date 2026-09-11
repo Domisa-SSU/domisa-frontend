@@ -12,11 +12,6 @@ import RightArrow from '../../assets/right_arrow.svg?react';
 import WithdrawConfirmModal from './WithdrawConfirmModal';
 import editPencilImg from '../../assets/edit_pencil.svg';
 import cookieImg from '../../assets/cookie.svg';
-import dogImg from '../../assets/dogIcon.png';
-import domisaHeartImg from '../../assets/domisaHeartIcon.png';
-import catImg from '../../assets/catIcon.png';
-import flowerImg from '../../assets/flowerIcon.svg';
-import arrowIcon from '../../assets/arrowIcon.svg';
 import heartIconOrange from '../../assets/heartIconOrange.svg';
 import { CUSTOMER_SUPPORT_KAKAO_URL } from '../../constants/customerSupport';
 import { animalProfileImageMap } from '../../constants/animalProfile';
@@ -115,60 +110,6 @@ function MyPage() {
                 </div>
               </button>
             </div>
-
-            {/* 소개팅 카드 */}
-            {me.status.isProfileCompleted ? (
-              <button
-                onClick={() => navigate('/my/dating-card')}
-                className="relative flex flex-col gap-1 h-[10.25rem] p-2.5 rounded-[0.625rem] overflow-hidden w-full text-left"
-                style={{ background: 'linear-gradient(to bottom, #ff98b5, #ff5a99)' }}
-              >
-                <div className="flex items-center justify-between w-full">
-                  <span className="typo-header-3-b text-grey-100">소개팅 카드</span>
-                  <div className="flex items-center justify-center h-[2.15rem] w-[1.7rem]">
-                    <RightArrow className="text-grey-100" />
-                  </div>
-                </div>
-                <span className="typo-comment-1-m text-grey-300">
-                  내가 적은 소개와 이상형 정보가 담겨있어요
-                </span>
-                <div
-                  className="absolute left-1/2 -translate-x-1/2 w-[11.257rem] h-[3.95rem]"
-                  style={{ top: '82px' }}
-                >
-                  <img
-                    src={dogImg}
-                    alt=""
-                    className="absolute left-0 top-0 w-[4.542rem] h-[3.95rem]"
-                  />
-                  <img
-                    src={domisaHeartImg}
-                    alt=""
-                    className="absolute rounded-[0.69rem] object-cover size-[2.123rem]"
-                    style={{ left: '72.68px', top: '14.22px' }}
-                  />
-                  <img
-                    src={catImg}
-                    alt=""
-                    className="absolute w-[4.345rem] h-[3.752rem]"
-                    style={{ left: '110.6px', top: '1.58px' }}
-                  />
-                </div>
-              </button>
-            ) : (
-              <div className="flex flex-col items-center justify-center gap-2.5 h-[7.25rem] px-2.5 bg-grey-200 rounded-[0.625rem]">
-                <span className="typo-comment-1-m text-grey-700">등록된 프로필이 없어요</span>
-                <button
-                  onClick={() => navigate('/dating/register')}
-                  className="flex items-center justify-center gap-2.5 h-[3.125rem] px-5 rounded-[0.875rem] w-full"
-                  style={{ background: 'linear-gradient(to bottom, #ff98b5, #ff5a99)' }}
-                >
-                  <span className="typo-button-text-b text-grey-100">등록하러 가기</span>
-                  <img src={flowerImg} alt="" className="w-4 h-4" />
-                  <img src={arrowIcon} alt="" className="shrink-0 h-3 w-3" />
-                </button>
-              </div>
-            )}
 
             {/* 소개팅 */}
             <div className="flex flex-col gap-2.5">
