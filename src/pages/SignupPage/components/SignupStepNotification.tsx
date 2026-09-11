@@ -56,7 +56,7 @@ export function SignupStepNotification({
                 </h1>
                 <div className="flex items-center gap-1">
                     <p className="typo-input-text-m text-grey-700">
-                        매일 낮 12시와 18시에 문자로 알려드려요
+                        2시간 간격으로 문자로 알려드려요
                     </p>
                     <img src={smileIcon} alt="" className="h-3.5 w-3.5" />
                 </div>
@@ -89,24 +89,11 @@ export function SignupStepNotification({
                 type="button"
                 aria-pressed={formData.isSmsOptedOut}
                 onClick={handleToggleOptOut}
-                className="flex items-center gap-2.5 self-start"
+                className={`fixed bottom-[7.5rem] left-1/2 z-30 -translate-x-1/2 underline underline-offset-2 transition-colors ${
+                    formData.isSmsOptedOut ? "text-primary-600" : "text-grey-700"
+                }`}
             >
-                <span
-                    className={`flex h-[1.5625rem] w-[1.5625rem] items-center justify-center rounded-[0.3125rem] typo-comment-1-b transition-colors ${
-                        formData.isSmsOptedOut
-                            ? "bg-primary-500 text-grey-100"
-                            : "border-[1.8px] border-grey-500 bg-grey-100 text-transparent"
-                    }`}
-                >
-                    ✓
-                </span>
-                <span
-                    className={`typo-button-text transition-colors ${
-                        formData.isSmsOptedOut ? "text-primary-600 font-semibold" : "text-grey-700"
-                    }`}
-                >
-                    문자 괜찮아요
-                </span>
+                <span className="typo-button-text">문자 괜찮아요</span>
             </button>
 
             {errorMessage && (
