@@ -1,4 +1,4 @@
-import { type ChangeEvent } from "react";
+import { type ChangeEvent, useState } from "react";
 import type { ContactType } from "../../../api/users";
 import { useSignupFlow } from "../useSignupFlow";
 
@@ -14,15 +14,24 @@ const CONTACT_METHOD_PLACEHOLDERS: Record<ContactType, string> = {
     KAKAO: "카카오톡 ID를 입력하세요",
 };
 
+const CONTACT_ID_ALLOWED_CHARACTERS = /[^A-Za-z0-9_.-]/g;
+
 export function SignupStepContact() {
     const { formData, updateFormData, goNextStep } = useSignupFlow();
     const isInstagram = formData.contactType === "INSTAGRAM";
     const isComplete = formData.contact.trim().length > 0;
+    const [hasInvalidContactCharacter, setHasInvalidContactCharacter] = useState(false);
 
     const handleContactChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const nextValue = event.target.value;
+        const rawValue = event.target.value;
+        const nextValue = rawValue
+            .replace(CONTACT_ID_ALLOWED_CHARACTERS, "")
+            .replace(/^@+/, "");
+
+        setHasInvalidContactCharacter(rawValue !== nextValue);
+
         updateFormData({
-            contact: isInstagram ? nextValue.replace(/^@+/, "") : nextValue,
+            contact: nextValue,
         });
     };
 
@@ -66,9 +75,26 @@ export function SignupStepContact() {
                         value={formData.contact}
                         onChange={handleContactChange}
                         placeholder={CONTACT_METHOD_PLACEHOLDERS[formData.contactType]}
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        aria-describedby={
+                            hasInvalidContactCharacter
+                                ? "contact-format-warning"
+                                : undefined
+                        }
                         className="min-w-0 flex-1 bg-transparent typo-header-3 text-primary-500 placeholder:text-grey-600 focus:outline-none"
                     />
                 </div>
+                {hasInvalidContactCharacter ? (
+                    <span
+                        id="contact-format-warning"
+                        role="alert"
+                        className="typo-comment-1-m text-warning"
+                    >
+                        영문, 숫자, 밑줄(_), 하이픈(-), 마침표(.)만 사용할 수 있어요.
+                    </span>
+                ) : null}
             </label>
 
             <div className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-20 bg-grey-100 px-5 pt-2.5 pb-[2.75rem]">
