@@ -3,7 +3,6 @@ import type { UserStatus } from "../types/user";
 export type BackendStatusDto = {
   isRegistered: boolean;
   hasIntroduction: boolean;
-  isCardCompleted?: boolean;
   isProfileCompleted?: boolean;
 };
 
@@ -23,5 +22,5 @@ export const isBackendStatusDto = (value: unknown): value is BackendStatusDto =>
 export const normalizeUserStatus = (status: BackendStatusDto): UserStatus => ({
   isRegistered: status.isRegistered,
   hasIntroduction: status.hasIntroduction,
-  isProfileCompleted: status.isProfileCompleted ?? status.isCardCompleted ?? status.isRegistered,
+  isProfileCompleted: status.isProfileCompleted ?? status.isRegistered,
 });
