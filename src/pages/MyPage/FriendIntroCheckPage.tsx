@@ -4,27 +4,34 @@ import { getMyIntroduction } from "../../api/introduction";
 import { INTRODUCTION_QUESTIONS } from "../../constants/introductionQuestions";
 import ErrorPage from "../ErrorPage/ErrorPage";
 import NotLoginHeader from "../../components/NotLoginHeader";
+import IntroductionLetter from "../../components/IntroductionLetter";
 import inviteCreatedIcon from "../IntroduceFriendPage/assets/inviteCreatedIcon.svg";
+import loginImg from "../LoginPage/asset/loginImg.png";
 import { isServerError } from "../../utils/apiError";
 
 const myIntroductionQueryKey = ["introduction", "my"] as const;
 
-function IntroductionCard({
+function FriendIntroCheckLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-grey-100">
+      <NotLoginHeader title="친구 소개서" />
+      {children}
+    </div>
+  );
+}
+
+function FriendIntroCheckMessage({
   title,
-  content,
+  description,
 }: {
   title: string;
-  content: string;
+  description: string;
 }) {
   return (
-    <section className="rounded-[0.625rem] bg-grey-100 px-4 py-[1.125rem]">
-      <div className="flex flex-col gap-2.5">
-        <h2 className="typo-button-text text-grey-900">{title}</h2>
-        <p className="whitespace-pre-line typo-input-text text-primary-500">
-          {content}
-        </p>
-      </div>
-    </section>
+    <div className="flex min-h-[calc(100vh-7rem)] flex-col items-center justify-center gap-3 px-5">
+      <p className="typo-button-text text-grey-700">{title}</p>
+      <p className="typo-input-text-m text-center text-grey-600">{description}</p>
+    </div>
   );
 }
 
@@ -40,7 +47,7 @@ function FriendIntroCheckPage() {
     retry: false,
   });
 
-  const cardItems = useMemo(
+  const letterItems = useMemo(
     () =>
       introduction
         ? [
@@ -58,8 +65,7 @@ function FriendIntroCheckPage() {
 
   if (isPending) {
     return (
-      <div className="min-h-screen bg-grey-100">
-        <NotLoginHeader title="친구 소개서" />
+      <FriendIntroCheckLayout>
         <div className="flex min-h-[calc(100vh-7rem)] items-center justify-center">
           <div
             role="status"
@@ -67,51 +73,49 @@ function FriendIntroCheckPage() {
             className="h-10 w-10 animate-spin rounded-full border-[0.1875rem] border-primary-200 border-t-primary-500"
           />
         </div>
-      </div>
+      </FriendIntroCheckLayout>
     );
   }
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-grey-100">
-        <NotLoginHeader title="친구 소개서" />
-        <div className="flex min-h-[calc(100vh-7rem)] flex-col items-center justify-center gap-3 px-5">
-          <p className="typo-button-text text-grey-700">오류가 발생했어요</p>
-          <p className="typo-input-text-m text-grey-600 text-center">
-            잠시 후 다시 시도해주세요
-          </p>
-        </div>
-      </div>
+      <FriendIntroCheckLayout>
+        <FriendIntroCheckMessage
+          title="오류가 발생했어요"
+          description="잠시 후 다시 시도해주세요"
+        />
+      </FriendIntroCheckLayout>
     );
   }
 
   if (introduction === null) {
     return (
-      <div className="min-h-screen bg-grey-100">
-        <NotLoginHeader title="친구 소개서" />
-        <div className="flex min-h-[calc(100vh-7rem)] flex-col items-center justify-center gap-3 px-5">
-          <p className="typo-button-text text-grey-700">
-            등록된 친구 소개서가 없어요
-          </p>
-          <p className="typo-input-text-m text-grey-600 text-center">
-            친구에게 소개서 작성을 부탁해보세요
-          </p>
+      <FriendIntroCheckLayout>
+        <div className="flex min-h-[calc(100vh-7rem)] justify-center bg-grey-400">
+          <div className="w-full max-w-[22.6875rem] px-5 pt-6 pb-10">
+            <div className="flex flex-col items-center justify-center pt-24">
+              <span className="typo-header-3 leading-7 text-center text-grey-700">
+                아직 받은 친구 소개서가 없어요
+              </span>
+              <img
+                src={loginImg}
+                alt=""
+                className="h-[15.36rem] w-[15.36rem] object-cover"
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      </FriendIntroCheckLayout>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-grey-100">
-      <NotLoginHeader title="친구 소개서" />
-
-      <main className="flex-1 bg-primary-100 px-5 pt-6 pb-10">
-        <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-[2.25rem]">
+    <FriendIntroCheckLayout>
+      <main className="mx-auto w-full max-w-[25.1875rem] px-5 pt-6 pb-10">
+        <div className="mx-auto flex w-full max-w-[22.6875rem] flex-col gap-[1.125rem]">
           <section className="flex flex-col gap-2.5">
             <div className="flex items-center gap-1">
-              <h1 className="typo-button-text text-grey-900">
-                친구 소개서가 도착했어요
-              </h1>
+              <h1 className="typo-button-text text-grey-900">나의 소개서</h1>
               <img
                 src={inviteCreatedIcon}
                 alt=""
@@ -120,22 +124,14 @@ function FriendIntroCheckPage() {
               />
             </div>
             <p className="typo-input-text-m text-grey-700">
-              친구가 작성한 소개서를 확인해보세요
+              친구가 작성해준 내 소개서를 확인해보세요
             </p>
           </section>
 
-          <div className="flex flex-col gap-5">
-            {cardItems.map((item) => (
-              <IntroductionCard
-                key={item.title}
-                title={item.title}
-                content={item.content}
-              />
-            ))}
-          </div>
+          <IntroductionLetter items={letterItems} />
         </div>
       </main>
-    </div>
+    </FriendIntroCheckLayout>
   );
 }
 

@@ -16,6 +16,8 @@ import {
 import ProfileChangeIcon from '../../assets/profile_change.svg?react';
 import PhotoUploadIcon from '../../assets/photo_upload.svg?react';
 import CheckIcon from '../../assets/check.svg?react';
+import sumnailIcon from '../DatingPage/assets/sumnailIcon.png';
+import uploadIcon from '../DatingPage/assets/uploadIcon.svg';
 import xIcon from '../../assets/X.svg';
 import forbiddenIcon from '../SignupPage/asset/forbiddenIcon.svg';
 import pinkCheckIcon from '../SignupPage/asset/pinkCheckIcon.svg';
@@ -188,9 +190,10 @@ function MbtiModal({ mbti, onConfirm, onClose }: MbtiModalProps) {
 
 type EditProfileFormProps = {
   me: UserMeResponse;
+  isPhotoProcessing: boolean;
 };
 
-function EditProfileForm({ me }: EditProfileFormProps) {
+function EditProfileForm({ me, isPhotoProcessing }: EditProfileFormProps) {
   const navigate = useNavigate();
   const [selectedAnimal, setSelectedAnimal] = useState(animalNameByProfile[me.animalProfile]);
   const [showAnimalModal, setShowAnimalModal] = useState(false);
@@ -205,7 +208,9 @@ function EditProfileForm({ me }: EditProfileFormProps) {
   const [contact, setContact] = useState(me.contact ?? '');
   const [notifPhone, setNotifPhone] = useState(me.notificationPhone ?? '');
   const [isSmsOptedOut, setIsSmsOptedOut] = useState(!me.notificationPhone);
-  const [photoUrl, setPhotoUrl] = useState<string | null>(me.imageUrl ?? null);
+  // 사용자가 새로 고른 사진. 없으면 서버가 준 imageUrl 을 그대로 보여준다.
+  // 처리 중이라 null 로 오던 imageUrl 이 뒤늦게 도착해도 파생값이라 자동 반영된다
+  const [pickedPhotoUrl, setPickedPhotoUrl] = useState<string | null>(null);
   const [cropSourceFile, setCropSourceFile] = useState<File | null>(null);
   const [cropSourceUrl, setCropSourceUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -229,6 +234,9 @@ function EditProfileForm({ me }: EditProfileFormProps) {
       if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
     };
   }, []);
+
+
+  const photoUrl = pickedPhotoUrl ?? me.imageUrl ?? null;
 
   const isFormValid = useMemo(() => {
     return (
@@ -277,7 +285,7 @@ function EditProfileForm({ me }: EditProfileFormProps) {
     if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
     const nextPreviewUrl = URL.createObjectURL(croppedFile);
     previewUrlRef.current = nextPreviewUrl;
-    setPhotoUrl(nextPreviewUrl);
+    setPickedPhotoUrl(nextPreviewUrl);
     closeCropModal();
   };
 
@@ -407,18 +415,18 @@ function EditProfileForm({ me }: EditProfileFormProps) {
             <div className="flex items-center gap-2.5">
               <h2 className="typo-button-text text-grey-900">닉네임</h2>
               <p className="typo-comment-2 text-primary-300">
-                * 닉네임은 4자까지만 작성이 가능해요
+                * 닉네임은 8자까지만 작성이 가능해요
               </p>
             </div>
             <div className="flex flex-col gap-[0.31rem]">
               <div className="relative">
                 <input
                   value={nickname}
-                  maxLength={4}
+                  maxLength={8}
                   onChange={(event) => {
                     const nextNickname = event.target.value;
 
-                    handleLimitedChange(nextNickname, 4, setNickname);
+                    handleLimitedChange(nextNickname, 8, setNickname);
                     setIsNicknameChecked(nextNickname.trim() === me.nickname);
                     setNicknameErrorMessage('');
                   }}
@@ -504,10 +512,27 @@ function EditProfileForm({ me }: EditProfileFormProps) {
             </div>
           </section>
 
+          {/* MBTI */}
+          <section className="flex flex-col gap-4">
+            <h2 className="typo-subtitle-header-2 text-grey-900">MBTI</h2>
+            <div className="flex items-center">
+              <button
+                type="button"
+                onClick={() => setShowMbtiModal(true)}
+                className="flex items-center justify-center gap-1.5 rounded-[0.9375rem] bg-primary-100 px-[1.375rem] py-2.5"
+              >
+                <span className="typo-button-text-b text-primary-500">
+                  {mbti || 'MBTI 선택'}
+                </span>
+                <ProfileChangeIcon className="h-[0.6875rem] w-[0.875rem] text-primary-500" />
+              </button>
+            </div>
+          </section>
+
           {/* 나를 표현하는 사진 */}
           <section className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <h2 className="typo-button-text text-grey-900">나를 표현하는 사진</h2>
+              <h2 className="typo-subtitle-header-2 text-grey-900">나를 표현하는 사진</h2>
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -524,29 +549,50 @@ function EditProfileForm({ me }: EditProfileFormProps) {
                 onChange={handlePhotoChange}
               />
             </div>
-            <div className="relative mx-auto flex aspect-[71/109] w-full max-w-[13.3125rem] items-center justify-center overflow-hidden rounded-[0.625rem] bg-grey-300">
-              {photoUrl && (
-                <img
-                  src={photoUrl}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              )}
-            </div>
-          </section>
-
-          {/* MBTI */}
-          <section className="flex flex-col gap-[0.875rem]">
-            <h2 className="typo-button-text text-grey-900">MBTI</h2>
+            {/* 회원가입 사진 스텝(SignupStepPhoto)과 동일한 영역 */}
             <button
               type="button"
-              onClick={() => setShowMbtiModal(true)}
-              className={`${fieldClassName} flex items-center justify-between`}
+              onClick={() => fileInputRef.current?.click()}
+              className={`relative mx-auto flex aspect-[71/109] w-full max-w-[13.3125rem] items-center justify-center overflow-hidden rounded-[0.625rem] bg-grey-300 ${
+                photoUrl ? '' : 'border-[1.8px] border-dashed border-grey-700'
+              }`}
             >
-              <span className={mbti ? 'text-primary-500' : 'text-grey-600'}>
-                {mbti || 'MBTI를 선택해주세요'}
-              </span>
-              <img src={selectArrow} alt="" className="h-[0.3125rem] w-[0.625rem]" />
+              {photoUrl ? (
+                <img
+                  src={photoUrl}
+                  alt="선택한 프로필 사진"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <>
+                  <img
+                    src={sumnailIcon}
+                    alt=""
+                    className="absolute left-1/2 top-1/2 h-[9.9375rem] w-[10.3125rem] -translate-x-1/2 -translate-y-1/2 object-contain opacity-50"
+                  />
+                  <div className="relative z-10 flex flex-col items-center gap-2.5">
+                    {isPhotoProcessing ? (
+                      <>
+                        <div
+                          role="status"
+                          aria-label="사진 준비 중"
+                          className="h-6 w-6 animate-spin rounded-full border-[0.1875rem] border-primary-200 border-t-primary-500"
+                        />
+                        <span className="typo-input-text-m text-center text-grey-900 opacity-50">
+                          사진을 준비하고 있어요
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <img src={uploadIcon} alt="" className="h-6 w-6" />
+                        <span className="typo-input-text-m text-grey-900 opacity-50">
+                          클릭하여 파일 선택
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
             </button>
           </section>
 
@@ -688,7 +734,8 @@ function EditProfileForm({ me }: EditProfileFormProps) {
 }
 
 function EditProfilePage() {
-  const { data: me, error, isLoading } = useUserMeQuery();
+  // 가입 직후에는 서버가 사진을 처리하는 동안 imageUrl 이 null 로 온다
+  const { data: me, error, isLoading } = useUserMeQuery({ pollWhileImageMissing: true });
 
   if (isServerError(error)) {
     return <ErrorPage />;
@@ -702,7 +749,7 @@ function EditProfilePage() {
     );
   }
 
-  return <EditProfileForm me={me} />;
+  return <EditProfileForm me={me} isPhotoProcessing={!me.imageUrl} />;
 }
 
 export default EditProfilePage;

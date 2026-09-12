@@ -32,7 +32,7 @@ function WithdrawConfirmModal({
             {isDeleteMode ? '정말 탈퇴하시겠어요?' : '탈퇴는 도미사 고객센터로 문의해주세요'}
           </p>
           <div className="flex flex-col items-center gap-1">
-            <p className="typo-input-text-m text-warning-ac">탈퇴 시 내 정보와 친구 소개서,</p>
+            <p className="typo-input-text-m text-warning-ac">탈퇴 시 내 정보와</p>
             <p className="typo-input-text-m text-warning-ac flex items-center gap-1">
               주고받은 호감이 모두 사라져요
               <img src={cryIcon} alt="" className="w-3.5 h-3.5" />

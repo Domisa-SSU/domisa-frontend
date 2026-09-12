@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { checkNicknameAvailability, deleteMe, getCookies, getMe, registerUser, updateMe } from "../api/users";
@@ -7,13 +8,42 @@ import { authMeQueryKey } from "./auth";
 export const userMeQueryKey = ["users", "me"] as const;
 export const userCookiesQueryKey = ["users", "cookies"] as const;
 
-export const useUserMeQuery = () =>
-  useQuery({
+/** imageUrl 이 준비되기를 기다리며 3초 간격으로 최대 20번(약 1분) 다시 받아온다 */
+const PROFILE_IMAGE_POLL_INTERVAL_MS = 3 * 1000;
+const PROFILE_IMAGE_MAX_POLLS = 20;
+
+/**
+ * 회원가입에서 사진은 필수라, 가입한 사용자의 imageUrl 이 null 이면
+ * "사진 없음"이 아니라 서버에서 아직 처리 중이라는 뜻이다.
+ * pollWhileImageMissing 을 주면 준비될 때까지(최대 1분) 다시 받아온다.
+ */
+export const useUserMeQuery = (options?: { pollWhileImageMissing?: boolean }) => {
+  const pollAttemptsRef = useRef(0);
+
+  return useQuery({
     queryKey: userMeQueryKey,
     queryFn: getMe,
     retry: false,
     staleTime: 10 * 60 * 1000, // 10분 (imageUrl Signed URL 만료 20분보다 짧게)
+    refetchInterval: options?.pollWhileImageMissing
+      ? (query) => {
+          const me = query.state.data;
+
+          if (!me || me.imageUrl) {
+            pollAttemptsRef.current = 0;
+            return false;
+          }
+
+          if (pollAttemptsRef.current >= PROFILE_IMAGE_MAX_POLLS) {
+            return false;
+          }
+
+          pollAttemptsRef.current += 1;
+          return PROFILE_IMAGE_POLL_INTERVAL_MS;
+        }
+      : undefined,
   });
+};
 
 export const useUserCookiesQuery = (options?: { enabled?: boolean }) =>
   useQuery({
