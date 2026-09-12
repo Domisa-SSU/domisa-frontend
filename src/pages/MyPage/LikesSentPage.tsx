@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ErrorPage from '../ErrorPage/ErrorPage';
 import HeaderTop from '../../components/HeaderTop';
 import headerArrow from '../../assets/headerArrow.svg';
-import loginImg from '../LoginPage/asset/loginImg.png';
+import emptyHeartImg from '../../assets/emptyHeartImg.png';
 import { getSentLikes } from '../../api/datingHome';
 import type { DatingHomeCard } from '../../api/datingHome';
 import { isServerError } from '../../utils/apiError';
@@ -75,7 +75,7 @@ function LikesSentPage() {
           <span className="typo-header-3 text-grey-700 leading-7 text-center">
             아직 보낸 호감이 없어요
           </span>
-          <img src={loginImg} alt="" className="w-[15.36rem] h-[15.36rem] object-cover" />
+          <img src={emptyHeartImg} alt="" className="w-[16.75rem] h-[16.75rem] object-cover" />
         </div>
       );
     }

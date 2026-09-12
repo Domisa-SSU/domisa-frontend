@@ -6,7 +6,7 @@ import ErrorPage from "../ErrorPage/ErrorPage";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import IntroductionLetter from "../../components/IntroductionLetter";
 import inviteCreatedIcon from "../IntroduceFriendPage/assets/inviteCreatedIcon.svg";
-import loginImg from "../LoginPage/asset/loginImg.png";
+import emptyIntroductionImg from "../../assets/emptyIntroductionImg.png";
 import { isServerError } from "../../utils/apiError";
 
 const myIntroductionQueryKey = ["introduction", "my"] as const;
@@ -98,7 +98,7 @@ function FriendIntroCheckPage() {
                 아직 받은 친구 소개서가 없어요
               </span>
               <img
-                src={loginImg}
+                src={emptyIntroductionImg}
                 alt=""
                 className="h-[15.36rem] w-[15.36rem] object-cover"
               />
