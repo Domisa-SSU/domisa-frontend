@@ -26,8 +26,11 @@ import type {
 
 const datingMatchCountQueryKey = ["dating", "count"] as const;
 const fallbackMatchCount = 21;
+// 다음 서비스 종료 일정으로 변경하면 공지 문구와 노출 이력이 함께 갱신됩니다.
+const serviceClosingAt = new Date("2026-05-17T00:00:00+09:00");
+const isServiceClosingNoticeActive = Date.now() < serviceClosingAt.getTime();
 const homeServiceClosingNoticeStorageKey =
-  "domisa-home-service-closing-notice-seen";
+  `domisa-home-service-closing-notice-seen-${serviceClosingAt.toISOString()}`;
 
 type HomeOneTimeNoticeType = "serviceClosing";
 
@@ -72,8 +75,28 @@ const homeOneTimeNoticeStorageKeys: Record<HomeOneTimeNoticeType, string> = {
 };
 
 const homeOneTimeNoticeOrder: readonly HomeOneTimeNoticeType[] = [
-  "serviceClosing",
+  ...(isServiceClosingNoticeActive ? (["serviceClosing"] as const) : []),
 ];
+
+const formatServiceClosingDate = () => {
+  const parts = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "numeric",
+    day: "numeric",
+    weekday: "short",
+    hour: "numeric",
+    hourCycle: "h23",
+  }).formatToParts(serviceClosingAt);
+  const partValue = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+  const hour = Number(partValue("hour"));
+
+  return `${partValue("month")}/${partValue("day")}(${partValue("weekday")}) ${
+    hour < 12 ? "오전" : "오후"
+  } ${hour % 12}시 이후`;
+};
+
+const serviceClosingDateLabel = formatServiceClosingDate();
 
 const hasSeenHomeOneTimeNotice = (type: HomeOneTimeNoticeType) => {
   try {
@@ -133,7 +156,7 @@ function HomeOneTimeNoticeModal({
             서비스가 곧 종료돼요
           </div>
           <div className="typo-button-text text-center text-warning-ac">
-            <p>5/17(일) 오전 0시 이후</p>
+            <p>{serviceClosingDateLabel}</p>
             <p>운영이 종료되어 이용이 불가능해요</p>
           </div>
         </div>

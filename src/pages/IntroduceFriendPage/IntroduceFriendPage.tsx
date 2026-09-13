@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import BottomActionBar from "../../components/BottomActionBar";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import letterIcon from "../../assets/letter.svg";
-import { useAuthMeQuery } from "../../queries/auth";
 import {
     EMPTY_INTRODUCTION_ANSWERS,
     hasCompleteIntroductionAnswers,
@@ -16,7 +15,7 @@ import {
     getIntroduceFriendDraft,
     saveIntroduceFriendDraft,
 } from "../../utils/introduceFriendDraftStorage";
-import letterCorner from "./assets/letterCorner.svg";
+import letterCorner from "../../assets/letterCorner.svg";
 import introModalArrow from "./assets/introModalArrow.svg";
 
 const INTRODUCE_FRIEND_GENERATING_PATH = "/introduce-friend/generating";
@@ -108,7 +107,6 @@ function IntroduceFriendIntroModal({ onStart }: { onStart: () => void }) {
 
 function IntroduceFriendPage() {
     const navigate = useNavigate();
-    const { data: authMe } = useAuthMeQuery();
     const [answers, setAnswers] = useState<IntroductionAnswers>(() => ({
         ...EMPTY_INTRODUCTION_ANSWERS,
         ...getIntroduceFriendDraft(),
@@ -129,18 +127,7 @@ function IntroduceFriendPage() {
 
     const handleNext = () => {
         saveIntroduceFriendDraft(answers);
-
-        if (authMe) {
-            navigate(INTRODUCE_FRIEND_GENERATING_PATH);
-            return;
-        }
-
-        const params = new URLSearchParams({
-            flow: "introduce-friend",
-            returnTo: INTRODUCE_FRIEND_GENERATING_PATH,
-        });
-
-        navigate(`/auth?${params.toString()}`);
+        navigate(INTRODUCE_FRIEND_GENERATING_PATH);
     };
 
     useEffect(() => {

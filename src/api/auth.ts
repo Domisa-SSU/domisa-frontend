@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import { apiClient } from "./client";
-import { isBackendStatusDto, normalizeUserStatus } from "./status";
+import { isBackendStatusDto } from "./status";
 import type { AuthMeResponse, UserStatus } from "../types/user";
 
 type LoginWithKakaoRequest = {
@@ -77,7 +77,7 @@ const parseAuthMeResponse = (value: unknown): AuthMeResponse | null => {
     return {
         publicId: response.publicId,
         cookies: response.cookies,
-        status: normalizeUserStatus(response.status),
+        status: response.status,
     };
 };
 
@@ -93,7 +93,7 @@ const parseLoginWithKakaoResponse = (value: unknown): LoginWithKakaoResponse | n
     }
 
     return {
-        status: normalizeUserStatus(response.status),
+        status: response.status,
     };
 };
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ErrorPage from '../ErrorPage/ErrorPage';
 import HeaderTop from '../../components/HeaderTop';
 import headerArrow from '../../assets/headerArrow.svg';
-import loginImg from '../LoginPage/asset/loginImg.png';
+import emptyHeartImg from '../../assets/emptyHeartImg.png';
 import mutualMatchIcon from '../DatingPage/assets/mutualMatchIcon.svg';
 import mutualMatchCardFrame from './assets/mutualMatchCardFrame.svg';
 import { getDatingMatches } from '../../api/datingHome';
@@ -85,9 +85,9 @@ function MutualMatchPage() {
       return (
         <div className="flex flex-col items-center justify-center pt-24">
           <span className="typo-header-3 text-grey-700 leading-7 text-center">
-            아직 쌍방 매칭이 없어요
+            아직 매칭된 프로필이 없어요
           </span>
-          <img src={loginImg} alt="" className="w-[15.36rem] h-[15.36rem] object-cover" />
+          <img src={emptyHeartImg} alt="" className="w-[16.75rem] h-[16.75rem] object-cover" />
         </div>
       );
     }

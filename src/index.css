@@ -56,7 +56,19 @@ body {
 
   to {
     opacity: 1;
-    transform: translate(-50%, 2.35625rem);
+    transform: translate(-50%, 37.7px);
+  }
+}
+
+@keyframes timer-slot-roll-previous {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 0);
+  }
+
+  to {
+    opacity: 0.1;
+    transform: translate(-50%, 45.3px);
   }
 }
 
@@ -68,15 +80,26 @@ body {
 
   to {
     opacity: 0.1;
-    transform: translate(-50%, 2.83125rem);
+    transform: translate(-50%, 45.3px);
   }
 }
 
+.timer-panel-canvas {
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-slot-roll-previous,
 .timer-slot-roll-in,
 .timer-slot-roll-out {
   animation-duration: 380ms;
   animation-fill-mode: both;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.timer-slot-roll-previous {
+  animation-name: timer-slot-roll-previous;
 }
 
 .timer-slot-roll-in {

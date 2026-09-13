@@ -70,11 +70,13 @@ const NICKNAME_NOUNS = [
 ];
 
 /**
- * 4자 이내의 랜덤 목업 닉네임을 생성합니다.
+ * 8자 이내의 랜덤 목업 닉네임을 생성합니다.
  */
+export const NICKNAME_MAX_LENGTH = 8;
+
 export const generateRandomNickname = (): string => {
   const adjIndex = Math.floor(Math.random() * NICKNAME_ADJECTIVES.length);
   const nounIndex = Math.floor(Math.random() * NICKNAME_NOUNS.length);
   const nickname = `${NICKNAME_ADJECTIVES[adjIndex]}${NICKNAME_NOUNS[nounIndex]}`;
-  return nickname.slice(0, 4);
+  return nickname.slice(0, NICKNAME_MAX_LENGTH);
 };

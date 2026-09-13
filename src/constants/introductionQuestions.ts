@@ -1,4 +1,4 @@
-export const INTRODUCTION_QUESTION_IDS = ["q1", "q2", "q3"] as const;
+export const INTRODUCTION_QUESTION_IDS = ["q1", "q3", "q2"] as const;
 
 export type IntroductionQuestionId = (typeof INTRODUCTION_QUESTION_IDS)[number];
 
@@ -22,7 +22,7 @@ export const INTRODUCTION_QUESTIONS: Record<
     maxLength: 35,
   },
   q2: {
-    title: "친구와 잘 맞을 것 같은 사람 ✍🏻",
+    title: "친구와 잘 맞을 것 같은 사람",
     placeholder:
       "ex) 테토라서 연하남이랑 잘 맞을 것 같아요.\n삼겹살에 오렌지 주스 좋아하는 사람?",
     helperText: "* 수많은 솔로 중 내 친구를 선택해야 되는 이유를 어필해주세요",
