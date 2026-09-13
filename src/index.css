@@ -359,6 +359,54 @@ select.typo-input-text-r {
   background: linear-gradient(161.75deg, #caf1ff 2.77%, #bae9ff 61.45%);
 }
 
+@keyframes home-leaf-fall {
+  from {
+    transform: translate3d(-50%, -10rem, 0);
+  }
+
+  to {
+    transform: translate3d(
+      calc(-50% + var(--leaf-drift)),
+      calc(100svh + 10rem),
+      0
+    );
+  }
+}
+
+.home-falling-leaves {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.home-falling-leaf {
+  position: absolute;
+  top: 0;
+  left: var(--leaf-left);
+  display: block;
+  width: var(--leaf-size);
+  height: var(--leaf-size);
+  will-change: transform;
+  animation: home-leaf-fall var(--leaf-duration) linear var(--leaf-delay)
+    infinite;
+}
+
+.home-falling-leaf img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-falling-leaf {
+    animation: none;
+    transform: translate3d(-50%, var(--leaf-rest-y), 0);
+  }
+}
+
 @keyframes marquee {
   from {
     transform: translate(0);
