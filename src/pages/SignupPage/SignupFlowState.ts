@@ -5,7 +5,12 @@ export type SignupFormData = {
     // Step 1: 기본 정보
     nickname: string;
     isNicknameChecked: boolean;
-    /** 랜덤 생성 버튼으로 채웠는지. 직접 입력하면 false 로 돌아간다. */
+    /**
+     * 닉네임을 사용자가 직접 정했는지 판별하는 값.
+     *
+     * 화면에 들어가면 닉네임이 자동 생성되어 있으므로 기본값이 true 다.
+     * 지우고 직접 입력하면 false 로 바뀌고, 랜덤 생성 버튼을 누르면 다시 true 가 된다.
+     */
     isNicknameRandom: boolean;
     gender: "남성" | "여성" | "";
     birthYear: string;
@@ -27,7 +32,7 @@ export type SignupFormData = {
 export const initialSignupFormData: SignupFormData = {
     nickname: "",
     isNicknameChecked: false,
-    isNicknameRandom: false,
+    isNicknameRandom: true,
     gender: "",
     birthYear: "",
     selectedAnimal: "수달",
