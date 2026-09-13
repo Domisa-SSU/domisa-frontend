@@ -1,8 +1,9 @@
+import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ErrorPage from "../ErrorPage/ErrorPage";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import ReferralSection from "../../components/ReferralSection";
-import { useUserCookiesQuery } from "../../queries/users";
+import { useUserCookiesQuery, useUserMeQuery } from "../../queries/users";
 import { isServerError } from "../../utils/apiError";
 import {
   INSUFFICIENT_COOKIES_REASON,
@@ -10,6 +11,7 @@ import {
 } from "../../constants/cookieNavigation";
 import cookieImg from "../../assets/cookie.svg";
 import type { CookieProductCode } from "../../api/orders";
+import { track } from "../../utils/mixpanel";
 
 const COOKIE_PACKAGES: { count: number; price: string; productCode: CookieProductCode }[] = [
   { count: 5, price: "2,000", productCode: "COOKIE_5" },
@@ -22,9 +24,23 @@ function MyCookiePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: cookies, error } = useUserCookiesQuery();
+  /**
+   * 쿠키 구매 지표를 남녀로 나눠 보기 위해 성별을 등록시킨다.
+   * 소개팅에서 쿠키 부족으로 바로 넘어오면 마이페이지를 거치지 않아
+   * 성별이 아직 등록되지 않은 상태일 수 있다. staleTime 이 10분이라
+   * 대개는 캐시를 쓰고 요청이 더 나가지 않는다.
+   */
+  useUserMeQuery();
   const locationState = location.state as CookiePageLocationState | null;
   const isInsufficientCookiesEntry =
     locationState?.reason === INSUFFICIENT_COOKIES_REASON;
+
+  // 구매 퍼널의 시작점. 여기 들어왔다가 구매 없이 나간 사람이 이탈이다.
+  useEffect(() => {
+    track("cookie_page_viewed", {
+      entry: isInsufficientCookiesEntry ? "insufficient_cookies" : "direct",
+    });
+  }, [isInsufficientCookiesEntry]);
 
   if (isServerError(error)) {
     return <ErrorPage />;
@@ -71,7 +87,14 @@ function MyCookiePage() {
                       <span className="typo-comment-1 text-grey-900">쿠키 {count}개</span>
                     </div>
                     <button
-                      onClick={() => navigate("/my/cookie/purchase", { state: { count, price, productCode, returnTo: locationState?.returnTo } })}
+                      onClick={() => {
+                        track("cookie_product_selected", {
+                          product_code: productCode,
+                          cookie_count: count,
+                          price: Number(price.replace(/,/g, "")),
+                        });
+                        navigate("/my/cookie/purchase", { state: { count, price, productCode, returnTo: locationState?.returnTo } });
+                      }}
                       className="flex items-center justify-center h-8 w-20 rounded-[0.3125rem] typo-comment-2 text-grey-100"
                       style={{
                         background:

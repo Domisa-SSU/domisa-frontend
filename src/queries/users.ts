@@ -1,9 +1,10 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { checkNicknameAvailability, deleteMe, getCookies, getMe, registerUser, updateMe } from "../api/users";
 import type { UserMeResponse } from "../api/users";
 import { authMeQueryKey } from "./auth";
+import { registerGender } from "../utils/mixpanel";
 
 export const userMeQueryKey = ["users", "me"] as const;
 export const userCookiesQueryKey = ["users", "cookies"] as const;
@@ -20,7 +21,7 @@ const PROFILE_IMAGE_MAX_POLLS = 20;
 export const useUserMeQuery = (options?: { pollWhileImageMissing?: boolean }) => {
   const pollAttemptsRef = useRef(0);
 
-  return useQuery({
+  const query = useQuery({
     queryKey: userMeQueryKey,
     queryFn: getMe,
     retry: false,
@@ -43,6 +44,23 @@ export const useUserMeQuery = (options?: { pollWhileImageMissing?: boolean }) =>
         }
       : undefined,
   });
+
+  /**
+   * 쿠키 구매 지표를 남녀로 나눠 보려면 성별이 이벤트에 붙어 있어야 한다.
+   * gender 는 이 응답에만 있으므로 여기서 한 번 등록하고,
+   * 수퍼 프로퍼티라 이후 이벤트에는 계속 따라붙는다.
+   */
+  const gender = query.data?.gender;
+
+  useEffect(() => {
+    if (gender === undefined) {
+      return;
+    }
+
+    registerGender(gender);
+  }, [gender]);
+
+  return query;
 };
 
 export const useUserCookiesQuery = (options?: { enabled?: boolean }) =>

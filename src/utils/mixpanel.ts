@@ -17,6 +17,40 @@ const registerEnv = () => {
 };
 
 /**
+ * 유입 경로 파라미터. 인스타그램·에브리타임·QR 처럼 채널별로 다른 링크를 뿌리고
+ * 여기서 읽어 수퍼 프로퍼티로 등록한다. 그래야 가입·구매 같은 뒤쪽 이벤트까지
+ * 유입 경로를 달고 다녀서 "인스타로 온 사람이 얼마나 구매했나" 를 볼 수 있다.
+ *
+ * 나중에 다른 링크로 다시 들어오면 덮어쓴다(마지막 유입 기준).
+ * 최초 유입은 믹스패널이 initial_utm_* 로 알아서 한 번만 남기므로 따로 하지 않는다.
+ */
+const campaignKeys = [
+  'utm_source',
+  'utm_medium',
+  'utm_campaign',
+  'utm_content',
+  'utm_term',
+] as const;
+
+const registerCampaignParams = () => {
+  const params = new URLSearchParams(window.location.search);
+  const found: Record<string, string> = {};
+
+  for (const key of campaignKeys) {
+    const value = params.get(key);
+    if (value) {
+      found[key] = value;
+    }
+  }
+
+  if (Object.keys(found).length === 0) {
+    return;
+  }
+
+  mixpanel.register(found);
+};
+
+/**
  * 믹스패널을 초기화한다.
  *
  * 토큰이 없으면 초기화하지 않고 이후 track/identify 도 전부 무시한다.
@@ -46,6 +80,7 @@ export const initMixpanel = () => {
   });
 
   registerEnv();
+  registerCampaignParams();
 
   enabled = true;
 };
@@ -71,6 +106,23 @@ export const registerUserState = (state: UserState) => {
   }
 
   mixpanel.register({ user_state: state });
+};
+
+/**
+ * 성별을 수퍼 프로퍼티로 등록한다. 서버는 boolean 으로 주는데(true = 남성)
+ * 리포트에서 읽기 어려우므로 문자열로 바꿔 남긴다.
+ *
+ * 프로필 속성으로도 함께 남겨 "현재 가입자 남녀 비율" 을 볼 수 있게 한다.
+ */
+export const registerGender = (isMale: boolean) => {
+  if (!enabled) {
+    return;
+  }
+
+  const gender = isMale ? 'male' : 'female';
+
+  mixpanel.register({ gender });
+  mixpanel.people.set({ gender });
 };
 
 export const track = (event: string, properties?: Record<string, unknown>) => {
