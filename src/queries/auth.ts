@@ -58,6 +58,14 @@ const getAuthMeOrNull = async (): Promise<AuthMeResponse | null> => {
   }
 };
 
+/**
+ * 마운트마다 다시 부르지는 않는다. 헤더까지 authMe 를 읽어서 요청이 과하게 늘기 때문이다.
+ *
+ * 다만 포커스 재조회는 켠다. 소개서 수락은 친구가 보낸 링크(다른 탭/인앱 브라우저)에서
+ * 이뤄지는데, 그 탭의 갱신은 원래 탭 캐시에 닿지 않는다. 돌아왔을 때 다시 받아오지
+ * 않으면 이미 수락했는데도 소개팅 진입이 계속 막힌다.
+ * staleTime 이 30초라 탭을 자주 오가도 요청은 그만큼만 늘어난다.
+ */
 export const useAuthMeQuery = () =>
   useQuery({
     queryKey: authMeQueryKey,
@@ -65,7 +73,7 @@ export const useAuthMeQuery = () =>
     retry: false,
     staleTime: 30_000,
     refetchOnMount: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
   });
 
 export const useKakaoLoginMutation = () => {

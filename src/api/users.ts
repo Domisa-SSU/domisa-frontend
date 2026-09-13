@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import { isBackendStatusDto, normalizeUserStatus } from './status';
+import { isBackendStatusDto } from './status';
 import type { UserStatus } from '../types/user';
 
 export type AnimalProfile =
@@ -59,7 +59,7 @@ const parseRegisterUserResponse = (value: unknown): RegisterUserResponse | null 
 
   return {
     publicId: response.publicId,
-    status: normalizeUserStatus(response.status),
+    status: response.status,
     totalUserCount: response.totalUserCount,
   };
 };
@@ -167,7 +167,25 @@ type UpdateMeRequest = {
   gender: boolean;
   birthYear: number;
   animalProfile: AnimalProfile;
+  mbti: string;
+  contactType: ContactType;
+  contact: string;
+  /** 문자 알림을 받지 않으면 null 을 보낸다. PUT 은 전체 교체라 키를 빼면 안 된다 */
+  notificationPhone: string | null;
+};
+
+/**
+ * PUT /api/users/me 응답.
+ * GET 과 달리 status 가 없어 UserMeResponse 와 파서를 공유할 수 없다.
+ */
+export type UpdateMeResponse = {
+  publicId: string;
+  nickname: string;
+  gender: boolean;
+  birthYear: number;
+  animalProfile: AnimalProfile;
   mbti?: string;
+  imageUrl?: string | null;
   contactType?: ContactType;
   contact?: string;
   notificationPhone?: string | null;
@@ -195,7 +213,31 @@ const parseUserMeResponse = (value: unknown): UserMeResponse | null => {
     contactType: typeof r.contactType === 'string' ? (r.contactType as ContactType) : undefined,
     contact: typeof r.contact === 'string' ? r.contact : undefined,
     notificationPhone: typeof r.notificationPhone === 'string' ? r.notificationPhone : null,
-    status: normalizeUserStatus(r.status),
+    status: r.status,
+  };
+};
+
+const parseUpdateMeResponse = (value: unknown): UpdateMeResponse | null => {
+  if (!value || typeof value !== 'object') return null;
+  const r = value as Record<string, unknown>;
+  if (
+    typeof r.publicId !== 'string' ||
+    typeof r.nickname !== 'string' ||
+    typeof r.birthYear !== 'number' ||
+    typeof r.gender !== 'boolean' ||
+    typeof r.animalProfile !== 'string'
+  ) return null;
+  return {
+    publicId: r.publicId,
+    nickname: r.nickname,
+    birthYear: r.birthYear,
+    gender: r.gender,
+    animalProfile: r.animalProfile as AnimalProfile,
+    imageUrl: typeof r.imageUrl === 'string' ? r.imageUrl : null,
+    mbti: typeof r.mbti === 'string' ? r.mbti : undefined,
+    contactType: typeof r.contactType === 'string' ? (r.contactType as ContactType) : undefined,
+    contact: typeof r.contact === 'string' ? r.contact : undefined,
+    notificationPhone: typeof r.notificationPhone === 'string' ? r.notificationPhone : null,
   };
 };
 
@@ -235,6 +277,9 @@ export const getCookies = async (): Promise<UserCookiesResponse> => {
  * PUT /api/users/me
  * 현재 로그인한 사용자의 프로필 정보를 수정한다.
  */
-export const updateMe = async (payload: UpdateMeRequest): Promise<void> => {
-  await apiClient.put('/api/users/me', payload);
+export const updateMe = async (payload: UpdateMeRequest): Promise<UpdateMeResponse> => {
+  const { data } = await apiClient.put<unknown>('/api/users/me', payload);
+  const result = parseUpdateMeResponse(data);
+  if (!result) throw new Error('Invalid update user me response');
+  return result;
 };

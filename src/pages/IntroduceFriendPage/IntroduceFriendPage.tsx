@@ -16,7 +16,7 @@ import {
     getIntroduceFriendDraft,
     saveIntroduceFriendDraft,
 } from "../../utils/introduceFriendDraftStorage";
-import letterCorner from "./assets/letterCorner.svg";
+import letterCorner from "../../assets/letterCorner.svg";
 import introModalArrow from "./assets/introModalArrow.svg";
 
 const INTRODUCE_FRIEND_GENERATING_PATH = "/introduce-friend/generating";
