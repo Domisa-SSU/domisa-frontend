@@ -736,10 +736,10 @@ function DatingCardDetailPage() {
       return;
     }
 
-    // 무료 호감은 쿠키를 쓰지 않는다. 섞어서 세면 호감에 쓴 쿠키가 부풀려진다.
+    // 무료 호감은 쿠키를 쓰지 않으므로 cookie_spent 를 남기지 않는다.
     sendLikeMutation.mutate(cardId, {
       onSuccess: () => {
-        track("cookie_spent", { feature: "send_like", used_free_like: true });
+        track("like_sent", { is_paid: false });
       },
     });
   };
@@ -751,7 +751,8 @@ function DatingCardDetailPage() {
 
     sendLikeMutation.mutate(cardId, {
       onSuccess: () => {
-        track("cookie_spent", { feature: "send_like", used_free_like: false });
+        track("like_sent", { is_paid: true });
+        track("cookie_spent", { feature: "send_like" });
       },
     });
   };
