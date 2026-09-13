@@ -23,6 +23,7 @@ import {
   type CookieProductCode,
 } from '../../api/cookiePayment';
 import { useConfirmCookiePaymentMutation } from '../../queries/cookiePayment';
+import { track } from '../../utils/mixpanel';
 import { clearGlobalError, reportGlobalErrorIfNeeded } from '../../stores/globalErrorStore';
 
 type CookiePurchaseLocationState = {
@@ -34,7 +35,16 @@ type CookiePurchaseLocationState = {
 
 type CookieModalState = 'none' | 'success' | 'failure' | 'duplicated' | 'error';
 
-const PAYMENT_METHODS = [{ label: '토스로 송금하기' }, { label: '계좌이체 하기' }];
+/**
+ * 결제 수단. code 가 동작과 지표의 기준이고 label 은 화면 문구일 뿐이다.
+ * 문구로 분기하면 카피를 다듬는 순간 딥링크도 지표도 조용히 깨진다.
+ */
+const PAYMENT_METHODS = [
+  { code: 'toss', label: '토스로 송금하기' },
+  { code: 'bank_transfer', label: '계좌이체 하기' },
+] as const;
+
+type PaymentMethodCode = (typeof PAYMENT_METHODS)[number]['code'];
 
 const PAYMENT_METHOD_GRADIENT =
   'linear-gradient(97.05deg, rgb(255, 66, 129) 5.942%, rgb(255, 115, 162) 95.332%)';
@@ -88,18 +98,22 @@ function CookiePurchasePage() {
     setConfirmedName(trimmed);
   };
 
-  const handlePaymentMethodClick = (label: string) => {
+  const handlePaymentMethodClick = (code: PaymentMethodCode) => {
     if (!isNameConfirmed) {
       setShowWarningToast(true);
       return;
     }
-    if (label === '토스로 송금하기') {
+
+    track('cookie_payment_method_clicked', { method: code });
+
+    if (code === 'toss') {
       const amount = state.price.replace(/,/g, '');
       const deepLink = `supertoss://send?bank=${BANK_NAME}&accountNo=${ACCOUNT_NUMBER_PLAIN}&amount=${amount}`;
       window.open(deepLink, '_self');
       return;
     }
-    if (label === '계좌이체 하기') {
+
+    if (code === 'bank_transfer') {
       setShowBankModal(true);
     }
   };
@@ -109,6 +123,11 @@ function CookiePurchasePage() {
       if (!isConfirming) setShowWarningToast(true);
       return;
     }
+
+    track('cookie_transfer_reported', {
+      product_code: state.productCode,
+      cookie_count: state.count,
+    });
 
     setCookieModalState('none');
     setIsConfirming(true);
@@ -133,6 +152,12 @@ function CookiePurchasePage() {
         }
 
         if (result.status === 'PAID') {
+          // 실제 구매 완료. 구매 수와 남녀 비율은 이 이벤트로 센다.
+          track('cookie_purchase_completed', {
+            product_code: state.productCode,
+            cookie_count: state.count,
+            order_amount: Number(state.price.replace(/,/g, '')),
+          });
           setPaymentResult(result);
           setCookieModalState('success');
           return;
@@ -141,9 +166,11 @@ function CookiePurchasePage() {
       }
 
       // 끝까지 입금이 확인되지 않았다. 유저가 직접 다시 시도할 수 있게 둔다.
+      track('cookie_purchase_failed', { reason: 'waiting_timeout' });
       setCookieModalState('failure');
     } catch (error) {
       if (isDuplicatedPaymentError(error)) {
+        track('cookie_purchase_failed', { reason: 'duplicated_payment' });
         setCookieModalState('duplicated');
         return;
       }
@@ -159,6 +186,7 @@ function CookiePurchasePage() {
 
       // 400 / 404 등 정상 플로우에서는 거의 없는 케이스.
       // 입금 문제로 오해하지 않게 별도 모달로 안내하고 문의 경로를 준다.
+      track('cookie_purchase_failed', { reason: 'unexpected_error' });
       setCookieModalState('error');
     } finally {
       setIsConfirming(false);
@@ -209,11 +237,11 @@ function CookiePurchasePage() {
 
           {/* 결제 방법 */}
           <div className="flex flex-col gap-[1.875rem]">
-            {PAYMENT_METHODS.map(({ label }) => (
+            {PAYMENT_METHODS.map(({ code, label }) => (
               <button
-                key={label}
+                key={code}
                 type="button"
-                onClick={() => handlePaymentMethodClick(label)}
+                onClick={() => handlePaymentMethodClick(code)}
                 className={`relative flex items-center justify-center h-[3.4375rem] w-full border-[1.2px] rounded-[1.25rem] px-5 ${
                   isNameConfirmed
                     ? 'border-grey-100 text-grey-100'

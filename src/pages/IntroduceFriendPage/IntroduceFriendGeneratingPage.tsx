@@ -11,6 +11,7 @@ import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
 import introduceInvitationCreated from "./assets/introduceInvitationCreated.png";
 import inviteShareArrow from "./assets/inviteShareArrow.svg";
 import requireIcon from "./assets/requireIcon.png";
+import { track } from "../../utils/mixpanel";
 import {
     clearIntroduceFriendDraft,
     getIntroduceFriendDraft,
@@ -34,6 +35,9 @@ const createInvitationUrl = (draft: IntroduceFriendDraft) => {
 
     const promise = createIntroductionLink(draft)
         .then((response) => {
+            // 소개서가 실제로 만들어진 지점. 같은 초안은 위에서 걸러져 한 번만 발생한다.
+            track("introduce_friend_created");
+
             const linkCode = encodeURIComponent(response.linkCode);
 
             return `${window.location.origin}/introduce/${linkCode}`;

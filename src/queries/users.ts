@@ -1,9 +1,18 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { checkNicknameAvailability, deleteMe, getCookies, getMe, registerUser, updateMe } from "../api/users";
+import {
+  checkNicknameAvailability,
+  deleteMe,
+  getCookies,
+  getMe,
+  getRandomNickname,
+  registerUser,
+  updateMe,
+} from "../api/users";
 import type { UserMeResponse } from "../api/users";
-import { authMeQueryKey } from "./auth";
+import { authMeQueryKey, clearAuthenticatedUserQueries } from "./auth";
+import { registerGender } from "../utils/mixpanel";
 
 export const userMeQueryKey = ["users", "me"] as const;
 export const userCookiesQueryKey = ["users", "cookies"] as const;
@@ -17,13 +26,14 @@ const PROFILE_IMAGE_MAX_POLLS = 20;
  * "사진 없음"이 아니라 서버에서 아직 처리 중이라는 뜻이다.
  * pollWhileImageMissing 을 주면 준비될 때까지(최대 1분) 다시 받아온다.
  */
-export const useUserMeQuery = (options?: { pollWhileImageMissing?: boolean }) => {
+export const useUserMeQuery = (options?: { pollWhileImageMissing?: boolean; enabled?: boolean }) => {
   const pollAttemptsRef = useRef(0);
 
-  return useQuery({
+  const query = useQuery({
     queryKey: userMeQueryKey,
     queryFn: getMe,
     retry: false,
+    enabled: options?.enabled,
     staleTime: 10 * 60 * 1000, // 10분 (imageUrl Signed URL 만료 20분보다 짧게)
     refetchInterval: options?.pollWhileImageMissing
       ? (query) => {
@@ -43,6 +53,23 @@ export const useUserMeQuery = (options?: { pollWhileImageMissing?: boolean }) =>
         }
       : undefined,
   });
+
+  /**
+   * 쿠키 구매 지표를 남녀로 나눠 보려면 성별이 이벤트에 붙어 있어야 한다.
+   * gender 는 이 응답에만 있으므로 여기서 한 번 등록하고,
+   * 수퍼 프로퍼티라 이후 이벤트에는 계속 따라붙는다.
+   */
+  const gender = query.data?.gender;
+
+  useEffect(() => {
+    if (gender === undefined) {
+      return;
+    }
+
+    registerGender(gender);
+  }, [gender]);
+
+  return query;
 };
 
 export const useUserCookiesQuery = (options?: { enabled?: boolean }) =>
@@ -85,15 +112,20 @@ export const useCheckNicknameMutation = () =>
     mutationFn: checkNicknameAvailability,
   });
 
+export const useRandomNicknameMutation = () =>
+  useMutation({
+    mutationKey: ["users", "random-nickname"],
+    meta: { suppressGlobalError: true },
+    mutationFn: getRandomNickname,
+  });
+
 export const useDeleteMeMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: deleteMe,
     onSuccess: () => {
-      queryClient.setQueryData(authMeQueryKey, null);
-      queryClient.removeQueries({ queryKey: userMeQueryKey });
-      queryClient.removeQueries({ queryKey: userCookiesQueryKey });
+      clearAuthenticatedUserQueries(queryClient);
     },
   });
 };

@@ -183,11 +183,12 @@ function HomePage() {
   const navigate = useNavigate();
   const { data: authMe, isPending: isAuthMePending } = useAuthMeQuery();
   const isBlacklistedUser = useIsBlacklistedUser();
+  const isRegistered = authMe?.status.isRegistered === true;
   const { data: activeNotifications } = useActiveNotificationsQuery(
-    Boolean(authMe),
+    isRegistered,
   );
   const { data: notificationStatus } = useNotificationStatusQuery(
-    Boolean(authMe),
+    isRegistered,
   );
   const { data: matchCountData } = useQuery({
     queryKey: datingMatchCountQueryKey,
@@ -201,7 +202,7 @@ function HomePage() {
 
   useEffect(() => {
     const nextQueue =
-      authMe && activeNotifications
+      isRegistered && activeNotifications
         ? buildActiveNotificationQueue(activeNotifications)
         : [];
     const frameId = window.requestAnimationFrame(() => {
@@ -211,7 +212,7 @@ function HomePage() {
     return () => {
       window.cancelAnimationFrame(frameId);
     };
-  }, [activeNotifications, authMe]);
+  }, [activeNotifications, isRegistered]);
 
   const handleDatingClick = () => {
     navigate("/dating");
@@ -256,7 +257,7 @@ function HomePage() {
       <section className="relative flex flex-1 flex-col">
         <Header
           dayText="text-grey-700"
-          isLoggedIn={Boolean(authMe)}
+          isLoggedIn={isRegistered}
           theme={theme}
           unreadCount={notificationStatus?.unreadCount ?? 0}
         ></Header>

@@ -9,10 +9,21 @@ import {
   logout,
 } from "../api/auth";
 import { reportBlacklistedUser } from "../stores/blacklistedUserStore";
+import { resetMixpanel } from "../utils/mixpanel";
 import type { AuthMeResponse } from "../types/user";
 
 export const authMeQueryKey = ["auth", "me"] as const;
 const unauthenticatedStatusCodes = new Set([401, 403]);
+
+export const clearAuthenticatedUserQueries = (
+  queryClient: ReturnType<typeof useQueryClient>,
+) => {
+  queryClient.setQueryData(authMeQueryKey, null);
+  queryClient.removeQueries({ queryKey: ["users"] });
+  queryClient.removeQueries({ queryKey: ["dating"] });
+  queryClient.removeQueries({ queryKey: ["notifications"] });
+  queryClient.removeQueries({ queryKey: ["introduction"] });
+};
 
 const isUserNotFoundError = (error: unknown) => {
   if (!isAxiosError(error) || error.response?.status !== 404) {
@@ -93,7 +104,11 @@ export const useLogoutMutation = () => {
   return useMutation({
     mutationFn: logout,
     onSuccess: () => {
-      queryClient.setQueryData(authMeQueryKey, null);
+      // distinct_id 를 끊어야 공용 기기에서 다음 사용자 이벤트가 섞이지 않는다.
+      // reset 은 수퍼 프로퍼티도 지우는데, authMe 가 null 이 되면서
+      // App 의 effect 가 user_state 를 anonymous 로 다시 등록한다.
+      resetMixpanel();
+      clearAuthenticatedUserQueries(queryClient);
     },
   });
 };

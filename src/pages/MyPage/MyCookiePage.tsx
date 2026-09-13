@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ErrorPage from "../ErrorPage/ErrorPage";
 import NotLoginHeader from "../../components/NotLoginHeader";
@@ -11,6 +12,7 @@ import {
 import cookieImg from "../../assets/cookie.svg";
 import cookiePackageImg from "../../assets/cookieIllerst.png";
 import type { CookieProductCode } from "../../api/cookiePayment";
+import { track } from "../../utils/mixpanel";
 
 const COOKIE_PACKAGES: {
   count: number;
@@ -37,6 +39,13 @@ function MyCookiePage() {
   const locationState = location.state as CookiePageLocationState | null;
   const isInsufficientCookiesEntry =
     locationState?.reason === INSUFFICIENT_COOKIES_REASON;
+
+  // 구매 퍼널의 시작점. 여기 들어왔다가 구매 없이 나간 사람이 이탈이다.
+  useEffect(() => {
+    track("cookie_page_viewed", {
+      entry: isInsufficientCookiesEntry ? "insufficient_cookies" : "direct",
+    });
+  }, [isInsufficientCookiesEntry]);
 
   if (isServerError(error)) {
     return <ErrorPage />;
@@ -90,7 +99,14 @@ function MyCookiePage() {
                       <span className="typo-comment-1 text-grey-900">쿠키 {count.toLocaleString()}개</span>
                     </div>
                     <button
-                      onClick={() => navigate("/my/cookie/purchase", { state: { count, price, productCode, returnTo: locationState?.returnTo } })}
+                      onClick={() => {
+                        track("cookie_product_selected", {
+                          product_code: productCode,
+                          cookie_count: count,
+                          price: Number(price.replace(/,/g, "")),
+                        });
+                        navigate("/my/cookie/purchase", { state: { count, price, productCode, returnTo: locationState?.returnTo } });
+                      }}
                       className="flex flex-col items-center justify-center h-10 w-[5.625rem] px-2.5 rounded-[0.3125rem]"
                       style={{ background: PRICE_BUTTON_GRADIENT }}
                     >
