@@ -170,16 +170,8 @@ function SignupPage() {
             await queryClient.invalidateQueries({ queryKey: userMeQueryKey });
 
             // 4. Navigate according to flow and status
-            const isIntroduceFriendFlow =
-                searchParams.get("flow") === "introduce-friend";
-
             if (returnTo) {
                 navigate(returnTo, { replace: true });
-                return;
-            }
-
-            if (isIntroduceFriendFlow) {
-                navigate("/introduce-friend/generating", { replace: true });
                 return;
             }
 
