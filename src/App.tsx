@@ -7,6 +7,7 @@ import { SignupFlowProvider } from "./pages/SignupPage/SignupFlowContext";
 import { useAuthMeQuery } from "./queries/auth";
 import { useIsBlacklistedUser } from "./stores/blacklistedUserStore";
 import { useHasGlobalError } from "./stores/globalErrorStore";
+import { identifyUser, registerUserState, type UserState } from "./utils/mixpanel";
 import "./App.css";
 
 function BlacklistedUserModal() {
@@ -47,7 +48,7 @@ function MobileFrame({ children }: MobileFrameProps) {
 
 function App() {
   const hasGlobalError = useHasGlobalError();
-  const { isError, isPending } = useAuthMeQuery();
+  const { data: authMe, isError, isPending } = useAuthMeQuery();
   const location = useLocation();
   const navigate = useNavigate();
   const isBlacklistedUser = useIsBlacklistedUser();
@@ -57,6 +58,38 @@ function App() {
       navigate("/", { replace: true });
     }
   }, [isBlacklistedUser, location.pathname, navigate]);
+
+  /**
+   * 믹스패널에 사용자 상태를 붙인다.
+   *
+   * 로그인 여부만으로는 "가입 완료"와 "로그인했지만 가입 미완료"가 구분되지 않는다.
+   * 두 경우 모두 isRegistered 가 참이 아니지만 후자는 publicId 를 가지므로,
+   * 상태를 명시적으로 남겨야 이탈 지점을 구간별로 볼 수 있다.
+   */
+  useEffect(() => {
+    if (isPending) {
+      return;
+    }
+
+    if (!authMe) {
+      registerUserState("anonymous");
+      return;
+    }
+
+    const { isRegistered, hasIntroduction } = authMe.status;
+    const userState: UserState = hasIntroduction
+      ? "has_introduction"
+      : isRegistered
+        ? "registered"
+        : "signed_up_incomplete";
+
+    registerUserState(userState);
+    identifyUser(authMe.publicId, {
+      isRegistered,
+      hasIntroduction,
+      cookies: authMe.cookies,
+    });
+  }, [authMe, isPending]);
 
   useEffect(() => {
     window.gtag?.("event", "page_view", {
