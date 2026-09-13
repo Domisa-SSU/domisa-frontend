@@ -68,6 +68,8 @@ function IntroduceFriendGeneratingPage() {
     const [isResultVisible, setIsResultVisible] = useState(false);
     const [invitationUrl, setInvitationUrl] = useState("");
     const [toastMessage, setToastMessage] = useState("");
+    // 공유를 끝내기 전에 홈으로 빠져나갈 길을 열어두면 링크를 보내지 않고 나가버린다.
+    const [hasShared, setHasShared] = useState(false);
 
     useEffect(() => {
         let isMounted = true;
@@ -141,8 +143,10 @@ function IntroduceFriendGeneratingPage() {
                     title: "도미사 친구 소개서",
                     url: invitationUrl,
                 });
+                setHasShared(true);
                 return;
             } catch (error) {
+                // 공유 시트를 그냥 닫은 것이라 아직 보낸 게 아니다.
                 if (error instanceof DOMException && error.name === "AbortError") {
                     return;
                 }
@@ -151,6 +155,7 @@ function IntroduceFriendGeneratingPage() {
 
         await copyInvitationUrl(invitationUrl);
 
+        setHasShared(true);
         setToastMessage("공유를 지원하지 않아 링크를 복사했어요");
     };
 
@@ -216,15 +221,17 @@ function IntroduceFriendGeneratingPage() {
                     </div>
                 </main>
 
-                <section className="fixed bottom-8 left-1/2 w-full frame-max-w -translate-x-1/2 text-center">
-                    <button
-                        type="button"
-                        onClick={() => navigate("/")}
-                        className="typo-button-text-b text-grey-700 underline underline-offset-0"
-                    >
-                        홈으로 갈래요
-                    </button>
-                </section>
+                {hasShared && (
+                    <section className="fixed bottom-8 left-1/2 w-full frame-max-w -translate-x-1/2 text-center">
+                        <button
+                            type="button"
+                            onClick={() => navigate("/")}
+                            className="typo-button-text-b text-grey-700 underline underline-offset-0"
+                        >
+                            홈으로 갈래요
+                        </button>
+                    </section>
+                )}
 
                 {toastMessage && <Toast message={toastMessage} />}
             </div>
