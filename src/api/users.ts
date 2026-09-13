@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { logout } from './auth';
 import { isBackendStatusDto } from './status';
 import type { UserStatus } from '../types/user';
 
@@ -37,6 +38,8 @@ export type RegisterUserResponse = {
 export type CheckNicknameAvailabilityResponse = {
   isAvailable: boolean;
 };
+
+const NICKNAME_PATTERN = /^(?=.*[A-Za-z0-9가-힣])[A-Za-z0-9가-힣 ]{1,8}$/;
 
 export type DeleteUserResponse = {
   message: string;
@@ -78,6 +81,18 @@ const parseCheckNicknameAvailabilityResponse = (
   }
 
   return { isAvailable: response.isAvailable };
+};
+
+const parseRandomNicknameResponse = (value: unknown): string | null => {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return typeof response.RandomNick === 'string' && NICKNAME_PATTERN.test(response.RandomNick)
+    ? response.RandomNick
+    : null;
 };
 
 const parseDeleteUserResponse = (value: unknown): DeleteUserResponse | null => {
@@ -129,6 +144,26 @@ export const checkNicknameAvailability = async (nickname: string) => {
 };
 
 /**
+ * API 제목: 랜덤 닉네임 생성
+ * GET /api/users/random-nickname
+ * 서버가 중복되지 않는 닉네임을 생성해 반환한다.
+ */
+export const getRandomNickname = async () => {
+  const { data } = await apiClient.get<unknown>('/api/users/random-nickname');
+  const randomNickname = parseRandomNicknameResponse(data);
+
+  if (!randomNickname) {
+    if (import.meta.env.DEV) {
+      console.error("[Invalid random nickname response]", data);
+    }
+
+    throw new Error('Invalid random nickname response');
+  }
+
+  return randomNickname;
+};
+
+/**
  * API 제목: 회원탈퇴
  * DELETE /api/users/me
  * 현재 로그인한 사용자의 계정을 삭제한다.
@@ -139,6 +174,15 @@ export const deleteMe = async () => {
 
   if (!deleteResponse) {
     throw new Error('Invalid delete user response');
+  }
+
+  // 탈퇴 API가 인증 쿠키까지 만료하지 않는 서버 구현도 안전하게 처리한다.
+  // 계정 삭제 자체는 완료됐으므로, 로그아웃 실패가 탈퇴 성공을 뒤집지는 않는다.
+  try {
+    await logout();
+  } catch {
+    // 브라우저의 HttpOnly 쿠키는 프론트에서 직접 지울 수 없다.
+    // 서버 로그아웃이 실패한 경우에도 아래 호출자는 로컬 인증 상태를 정리한다.
   }
 
   return deleteResponse;
