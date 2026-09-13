@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { isAxiosError } from "axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 
 import {
     completeProfileImageUpload,
@@ -12,10 +11,13 @@ import NotLoginHeader from "../../components/NotLoginHeader";
 import Toast from "../../components/Toast";
 import { animalProfileByName } from "../../constants/animalProfile";
 import { KAKAO_LOGIN_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
-import { authMeQueryKey } from "../../queries/auth";
-import { useRegisterUserMutation, userMeQueryKey } from "../../queries/users";
+import { useRegisterUserMutation } from "../../queries/users";
 import { reportGlobalErrorIfNeeded } from "../../stores/globalErrorStore";
 import { track } from "../../utils/mixpanel";
+import {
+    getPostSignupPath,
+    isReceiveIntroducePath,
+} from "../../utils/postSignupPath";
 
 import { SignupStepBasic } from "./components/SignupStepBasic";
 import { SignupStepAnimal } from "./components/SignupStepAnimal";
@@ -46,15 +48,8 @@ const getSafeReturnTo = (value: string | null) => {
     return value;
 };
 
-const getReceiveIntroduceReturnTo = (returnTo: string | null) => {
-    if (!returnTo) {
-        return null;
-    }
-
-    const pathname = new URL(returnTo, window.location.origin).pathname;
-
-    return pathname.startsWith("/introduce/") ? returnTo : null;
-};
+const getReceiveIntroduceReturnTo = (returnTo: string | null) =>
+    returnTo && isReceiveIntroducePath(returnTo) ? returnTo : null;
 
 const getRegisterErrorMessage = (error: unknown) => {
     if (isAxiosError(error)) {
@@ -71,7 +66,6 @@ const getRegisterErrorMessage = (error: unknown) => {
 function SignupPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const queryClient = useQueryClient();
     const {
         formData,
         currentStep,
@@ -187,10 +181,13 @@ function SignupPage() {
                 notificationPhone,
             });
 
-            // 3. Clear draft and invalidate queries
+            /**
+             * 3. Clear draft
+             * authMe/userMe 무효화는 useRegisterUserMutation 의 onSuccess 가 이미 끝내고 돌아온다.
+             * 여기서 또 기다리면 그 사이 authMe 가 가입 완료로 바뀐 걸 본 CompletedFlowRoute 가
+             * 아래 이동보다 먼저 화면을 되돌려버린다.
+             */
             resetSignupFlow();
-            await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
-            await queryClient.invalidateQueries({ queryKey: userMeQueryKey });
 
             track("signup_completed", {
                 nickname_source: formData.isNicknameRandom ? "random" : "typed",
@@ -200,17 +197,7 @@ function SignupPage() {
             });
 
             // 4. Navigate according to flow and status
-            if (returnTo) {
-                navigate(returnTo, { replace: true });
-                return;
-            }
-
-            if (!response.status.hasIntroduction) {
-                navigate("/dating/require-introduce", { replace: true });
-                return;
-            }
-
-            navigate("/", { replace: true });
+            navigate(getPostSignupPath(response.status, returnTo), { replace: true });
         } catch (error) {
             track("signup_failed", {
                 status: isAxiosError(error) ? error.response?.status : undefined,
