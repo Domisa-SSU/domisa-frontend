@@ -13,13 +13,11 @@ import WithdrawConfirmModal from './WithdrawConfirmModal';
 import editPencilImg from '../../assets/edit_pencil.svg';
 import cookieImg from '../../assets/cookie.svg';
 import heartIconOrange from '../../assets/heartIconOrange.svg';
-import { CUSTOMER_SUPPORT_KAKAO_URL } from '../../constants/customerSupport';
 import { animalProfileImageMap } from '../../constants/animalProfile';
 import { isServerError } from '../../utils/apiError';
 
 function MyPage() {
   const navigate = useNavigate();
-  const canDeleteAccount = window.location.hostname === 'localhost';
   const { data: me, error: meError, isLoading: isMeLoading } = useUserMeQuery();
   const { data: cookies, error: cookiesError, isLoading: isCookiesLoading } = useUserCookiesQuery();
   const { mutateAsync: logout, isPending: isLoggingOut } = useLogoutMutation();
@@ -208,11 +206,6 @@ function MyPage() {
       {showWithdrawModal && (
         <WithdrawConfirmModal
           onConfirm={async () => {
-            if (!canDeleteAccount) {
-              window.location.href = CUSTOMER_SUPPORT_KAKAO_URL;
-              return;
-            }
-
             try {
               setWithdrawErrorMessage('');
               await deleteMe();
@@ -262,7 +255,6 @@ function MyPage() {
             setWithdrawErrorMessage('');
           }}
           isLoading={isDeleting}
-          mode={canDeleteAccount ? 'delete' : 'inquiry'}
           errorMessage={withdrawErrorMessage}
         />
       )}
