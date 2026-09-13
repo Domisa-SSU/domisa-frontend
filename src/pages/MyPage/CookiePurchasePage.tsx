@@ -66,9 +66,6 @@ function CookiePurchasePage() {
             order_amount: created.orderAmount,
           });
         },
-        onError: () => {
-          track('cookie_order_failed', { product_code: state.productCode });
-        },
       }
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -159,8 +156,6 @@ function CookiePurchasePage() {
 
   const handlePaymentMethodClick = (label: string) => {
     if (!isNameConfirmed) {
-      // 입금자명 확인을 건너뛰고 결제를 시도하는 사람이 얼마나 되는지 본다.
-      track('cookie_payment_blocked', { reason: 'name_not_confirmed' });
       setShowWarningToast(true);
       return;
     }

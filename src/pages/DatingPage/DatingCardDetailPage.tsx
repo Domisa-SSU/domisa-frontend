@@ -41,6 +41,7 @@ import wolfImg from "../SignupPage/asset/wolfImg.png";
 import inviteCreatedIcon from "../IntroduceFriendPage/assets/inviteCreatedIcon.svg";
 import doubleArrowIcon from "./assets/doubleArrowIcon.svg";
 import lockIcon from "./assets/lockIcon.png";
+import { track } from "../../utils/mixpanel";
 
 type DatingCardDetailSectionItem = {
   title: string;
@@ -691,6 +692,10 @@ function DatingCardDetailPage() {
     mutationFn: unblurReceivedDatingLike,
     onSuccess: async () => {
       const remainingCookieCount = await fetchCurrentCookieCount();
+      track("cookie_spent", {
+        feature: "unblur_profile",
+        remaining_cookies: remainingCookieCount,
+      });
       setActionModal({
         type: "received-unblur-success",
         remainingCookieCount,
@@ -731,7 +736,12 @@ function DatingCardDetailPage() {
       return;
     }
 
-    sendLikeMutation.mutate(cardId);
+    // 무료 호감은 쿠키를 쓰지 않는다. 섞어서 세면 호감에 쓴 쿠키가 부풀려진다.
+    sendLikeMutation.mutate(cardId, {
+      onSuccess: () => {
+        track("cookie_spent", { feature: "send_like", used_free_like: true });
+      },
+    });
   };
 
   const handleConfirmPaidLike = () => {
@@ -739,7 +749,11 @@ function DatingCardDetailPage() {
       return;
     }
 
-    sendLikeMutation.mutate(cardId);
+    sendLikeMutation.mutate(cardId, {
+      onSuccess: () => {
+        track("cookie_spent", { feature: "send_like", used_free_like: false });
+      },
+    });
   };
 
   const handleUnblurReceivedLike = () => {

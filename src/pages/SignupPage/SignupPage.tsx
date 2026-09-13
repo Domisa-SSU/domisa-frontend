@@ -146,7 +146,6 @@ function SignupPage() {
 
         // Check required fields
         if (!formData.photoFile) {
-            track("signup_submit_blocked", { reason: "photo_missing" });
             setSubmitErrorMessage("프로필 사진을 등록해주세요.");
             setCurrentStep(4);
             return;
