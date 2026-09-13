@@ -51,12 +51,12 @@ body {
 @keyframes timer-slot-roll-in {
   from {
     opacity: 0.1;
-    transform: translate(-50%, 0);
+    transform: translate(-50%, 0) scale(0.875);
   }
 
   to {
     opacity: 1;
-    transform: translate(-50%, 37.7px);
+    transform: translate(-50%, 37.7px) scale(1);
   }
 }
 
@@ -75,12 +75,12 @@ body {
 @keyframes timer-slot-roll-out {
   from {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translate(-50%, 0) scale(1);
   }
 
   to {
     opacity: 0.1;
-    transform: translate(-50%, 45.3px);
+    transform: translate(-50%, 45.3px) scale(0.875);
   }
 }
 
@@ -96,6 +96,7 @@ body {
   animation-duration: 380ms;
   animation-fill-mode: both;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: center;
 }
 
 .timer-slot-roll-previous {
