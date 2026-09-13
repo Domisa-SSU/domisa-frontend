@@ -219,12 +219,12 @@ function ReceiveIntroducePage() {
               content: introduction.q1,
             },
             {
-              title: INTRODUCTION_QUESTIONS.q2.title,
-              content: introduction.q2,
-            },
-            {
               title: INTRODUCTION_QUESTIONS.q3.title,
               content: introduction.q3,
+            },
+            {
+              title: INTRODUCTION_QUESTIONS.q2.title,
+              content: introduction.q2,
             },
           ]
         : [],

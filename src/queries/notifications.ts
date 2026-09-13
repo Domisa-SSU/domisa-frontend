@@ -45,6 +45,7 @@ export const useMarkNotificationAsReadMutation = () => {
     mutationFn: markNotificationAsRead,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationsQueryKey });
+      queryClient.invalidateQueries({ queryKey: activeNotificationsQueryKey });
       queryClient.invalidateQueries({ queryKey: notificationStatusQueryKey });
     },
   });

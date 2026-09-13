@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import cookieIcon from "./assets/cookiesImg.png";
@@ -37,6 +37,11 @@ const isUserNotification = (
   notification: Notification,
 ): notification is UserNotification =>
   notification.type === "LIKE" || notification.type === "MATCH";
+
+const isRewardNotification = (
+  notification: Notification,
+): notification is RewardNotification =>
+  notification.type === "SIGNUP" || notification.type === "REFERRAL";
 
 const userNotificationDetailViewTypeByType: Record<UserNotification["type"], string> = {
   LIKE: "FAN",
@@ -170,9 +175,30 @@ function NotificationStateMessage({ children }: NotificationStateMessageProps) {
 function NotificationPage() {
   const navigate = useNavigate();
   const [pendingNotificationId, setPendingNotificationId] = useState<number | null>(null);
+  const processedRewardNotificationIds = useRef(new Set<number>());
   const { data, isPending, isError } = useNotificationsQuery();
-  const markNotificationAsReadMutation = useMarkNotificationAsReadMutation();
+  const { mutateAsync: markNotificationAsRead } = useMarkNotificationAsReadMutation();
   const groups = data ? groupByDate(data.notifications) : [];
+
+  useEffect(() => {
+    const unreadRewardNotifications = data?.notifications.filter(
+      (notification) =>
+        isRewardNotification(notification) &&
+        !notification.isRead &&
+        !processedRewardNotificationIds.current.has(notification.notificationId),
+    );
+
+    if (!unreadRewardNotifications?.length) {
+      return;
+    }
+
+    unreadRewardNotifications.forEach((notification) => {
+      processedRewardNotificationIds.current.add(notification.notificationId);
+      void markNotificationAsRead(notification.notificationId).catch(() => {
+        processedRewardNotificationIds.current.delete(notification.notificationId);
+      });
+    });
+  }, [data, markNotificationAsRead]);
 
   const handleUserNotificationClick = async (notification: UserNotification) => {
     if (pendingNotificationId !== null) {
@@ -183,7 +209,7 @@ function NotificationPage() {
     setPendingNotificationId(notification.notificationId);
 
     try {
-      await markNotificationAsReadMutation.mutateAsync(notification.notificationId);
+      await markNotificationAsRead(notification.notificationId);
     } catch {
       // The detail page should still open even if marking as read fails.
     } finally {

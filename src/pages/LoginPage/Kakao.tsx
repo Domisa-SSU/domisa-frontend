@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import friendSignUpImg from "../IntroduceFriendPage/assets/friendSignUpImg.png";
 import {
-    INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY,
-    KAKAO_OAUTH_FLOW_STORAGE_KEY,
     KAKAO_OAUTH_STATE_STORAGE_KEY,
     KAKAO_RETURN_TO_STORAGE_KEY,
     KAKAO_LOGIN_TOAST_STORAGE_KEY,
@@ -20,10 +17,8 @@ import {
 import { useAuthMeQuery, useKakaoLoginMutation } from "../../queries/auth";
 import { reportBlacklistedUser } from "../../stores/blacklistedUserStore";
 import type { UserStatus } from "../../types/user";
-import { hasValidIntroduceFriendDraft } from "../../utils/introduceFriendDraftStorage";
 
 const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
-const INTRODUCE_FRIEND_FLOW = "introduce-friend";
 const canBypassKakaoLogin = import.meta.env.DEV;
 const SIGNUP_AGREEMENT_ITEMS = [
     {
@@ -81,12 +76,8 @@ const getSignupReturnTo = (value: string | null) => {
     return pathname.startsWith("/auth/signup") ? value : null;
 };
 
-const createSignupPath = (isIntroduceFriendFlow: boolean, returnTo: string | null) => {
+const createSignupPath = (returnTo: string | null) => {
     const params = new URLSearchParams();
-
-    if (isIntroduceFriendFlow) {
-        params.set("flow", INTRODUCE_FRIEND_FLOW);
-    }
 
     if (returnTo) {
         params.set("returnTo", returnTo);
@@ -97,17 +88,11 @@ const createSignupPath = (isIntroduceFriendFlow: boolean, returnTo: string | nul
     return `/auth/signup${search ? `?${search}` : ""}`;
 };
 
-const createPendingSignupPath = (
-    isIntroduceFriendFlow: boolean,
-    returnTo: string | null,
-) => getSignupReturnTo(returnTo) ?? createSignupPath(isIntroduceFriendFlow, returnTo);
+const createPendingSignupPath = (returnTo: string | null) =>
+    getSignupReturnTo(returnTo) ?? createSignupPath(returnTo);
 
-const createAuthPath = (isIntroduceFriendFlow: boolean, returnTo: string | null) => {
+const createAuthPath = (returnTo: string | null) => {
     const params = new URLSearchParams();
-
-    if (isIntroduceFriendFlow) {
-        params.set("flow", INTRODUCE_FRIEND_FLOW);
-    }
 
     if (returnTo) {
         params.set("returnTo", returnTo);
@@ -140,7 +125,6 @@ const createKakaoOAuthState = () => {
 
 const clearKakaoOAuthContext = () => {
     sessionStorage.removeItem(KAKAO_OAUTH_STATE_STORAGE_KEY);
-    sessionStorage.removeItem(KAKAO_OAUTH_FLOW_STORAGE_KEY);
     sessionStorage.removeItem(KAKAO_RETURN_TO_STORAGE_KEY);
 };
 
@@ -148,18 +132,17 @@ const getKakaoRedirectUri = () => `${window.location.origin}/auth`;
 
 const getNextPathAfterLogin = (
     status: UserStatus,
-    isIntroduceFriendFlow: boolean,
     returnTo: string | null,
 ) => {
     if (!status.isRegistered) {
-        return createPendingSignupPath(isIntroduceFriendFlow, returnTo);
+        return createPendingSignupPath(returnTo);
     }
 
     if (returnTo) {
         return returnTo;
     }
 
-    return isIntroduceFriendFlow ? "/introduce-friend/generating" : "/";
+    return "/";
 };
 
 type PendingSignupTransition = {
@@ -304,14 +287,10 @@ function Kakao() {
     const kakaoError = searchParams.get("error");
     const kakaoErrorDescription = searchParams.get("error_description");
     const callbackState = searchParams.get("state");
-    const storedOAuthFlow = sessionStorage.getItem(KAKAO_OAUTH_FLOW_STORAGE_KEY);
     const returnTo = getSafeReturnTo(
         searchParams.get("returnTo") ??
         sessionStorage.getItem(KAKAO_RETURN_TO_STORAGE_KEY),
     );
-    const isIntroduceFriendFlow =
-        searchParams.get("flow") === INTRODUCE_FRIEND_FLOW ||
-        storedOAuthFlow === INTRODUCE_FRIEND_FLOW;
     const processedCodeRef = useRef<string | null>(null);
     const [errorMessage, setErrorMessage] = useState("");
     const [pendingSignupTransition, setPendingSignupTransition] =
@@ -321,17 +300,11 @@ function Kakao() {
         isPending: isLoggingIn,
     } = useKakaoLoginMutation();
 
-    const loginImage = isIntroduceFriendFlow ? friendSignUpImg : loginHeartImg;
-    const nextPath = isIntroduceFriendFlow
-        ? "/introduce-friend/generating"
-        : "/auth/signup";
-    const headerTitle = isIntroduceFriendFlow ? "솔로인 내 친구 소개하기" : "회원가입";
-    const currentAuthPath = createAuthPath(isIntroduceFriendFlow, returnTo);
+    const currentAuthPath = createAuthPath(returnTo);
     const receiveIntroduceReturnTo = getReceiveIntroduceReturnTo(returnTo);
     const locationState = location.state as KakaoLocationState;
     const signupReturnTo = getSignupReturnTo(returnTo);
     const authPathAfterClosingSignupTerms = createAuthPath(
-        isIntroduceFriendFlow,
         signupReturnTo ? null : returnTo,
     );
     const pendingSignupPathFromLocationState =
@@ -395,31 +368,6 @@ function Kakao() {
     );
 
     useEffect(() => {
-        if (
-            !isIntroduceFriendFlow ||
-            !authMe ||
-            authMe.status.isRegistered !== true ||
-            authorizationCode ||
-            kakaoError ||
-            kakaoErrorDescription
-        ) {
-            return;
-        }
-
-        navigate(
-            hasValidIntroduceFriendDraft() ? "/introduce-friend/generating" : "/introduce-friend",
-            { replace: true },
-        );
-    }, [
-        authMe,
-        authorizationCode,
-        isIntroduceFriendFlow,
-        kakaoError,
-        kakaoErrorDescription,
-        navigate,
-    ]);
-
-    useEffect(() => {
         const setDeferredErrorMessage = (message: string) => {
             window.setTimeout(() => setErrorMessage(message), 0);
         };
@@ -466,16 +414,8 @@ function Kakao() {
 
                 const nextPathAfterLogin = getNextPathAfterLogin(
                     response.status,
-                    isIntroduceFriendFlow,
                     returnTo,
                 );
-
-                if (isIntroduceFriendFlow) {
-                    sessionStorage.setItem(
-                        INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY,
-                        "logged-in",
-                    );
-                }
 
                 if (nextPathAfterLogin.startsWith("/auth/signup")) {
                     openSignupTermsModal(nextPathAfterLogin, true);
@@ -508,7 +448,6 @@ function Kakao() {
         currentAuthPath,
         kakaoError,
         kakaoErrorDescription,
-        isIntroduceFriendFlow,
         loginWithKakao,
         navigate,
         openSignupTermsModal,
@@ -534,10 +473,6 @@ function Kakao() {
         });
 
         sessionStorage.setItem(KAKAO_OAUTH_STATE_STORAGE_KEY, state);
-        sessionStorage.setItem(
-            KAKAO_OAUTH_FLOW_STORAGE_KEY,
-            isIntroduceFriendFlow ? INTRODUCE_FRIEND_FLOW : "default",
-        );
 
         if (returnTo) {
             sessionStorage.setItem(KAKAO_RETURN_TO_STORAGE_KEY, returnTo);
@@ -555,23 +490,16 @@ function Kakao() {
         navigate(
             receiveIntroduceReturnTo
                 ? receiveIntroduceReturnTo
-                : isIntroduceFriendFlow
-                ? "/introduce-friend"
                 : "/",
             { replace: true },
         );
-    };
-
-    const handleSkip = () => {
-        sessionStorage.setItem(INTRODUCE_FRIEND_AUTH_STATE_STORAGE_KEY, "guest");
-        navigate(nextPath);
     };
 
     const handleSignupBypass = () => {
         clearKakaoOAuthContext();
         setErrorMessage("");
         openSignupTermsModal(
-            createPendingSignupPath(isIntroduceFriendFlow, returnTo),
+            createPendingSignupPath(returnTo),
             false,
         );
     };
@@ -651,115 +579,51 @@ function Kakao() {
             }}
         >
             <div className="shrink-0">
-                <NotLoginHeader title={headerTitle} onBack={handleHeaderBack}></NotLoginHeader>
+                <NotLoginHeader title="회원가입" onBack={handleHeaderBack}></NotLoginHeader>
             </div>
-            {isIntroduceFriendFlow ? (
-                <>
-                    <main className="flex min-h-0 flex-1 items-center justify-center px-5 pb-[10.5rem]">
-                        <div className="flex w-full max-w-[22.625rem] flex-col items-center">
-                            <p className="text-center typo-title-header-1 leading-[1.55] text-grey-900">
-                            {"지금 로그인하고 친구에게 공유하면,"}
-                            <br />
-                            {"친구가 서비스에 등록할 시"}
-                            <br />
-                            <span className="text-primary-600">쿠키 200P</span>
-                            {"를 받을 수 있어요"}
-                            </p>
-                            <img
-                                src={loginImage}
-                                alt=""
-                                className="h-[15.36rem] w-[15.36rem] object-contain"
-                            />
-                        </div>
-                    </main>
-                    <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-30 px-5 pb-[2.94rem]">
-                        <div className="mx-auto flex w-full max-w-[22.625rem] flex-col items-center gap-[1.12rem]">
-                            <button
-                                type="button"
-                                onClick={handleSkip}
-                                className="typo-button-text-b text-grey-100 underline underline-offset-[0.18rem]"
-                            >
-                                건너뛰기
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleKakaoLogin}
-                                disabled={isLoggingIn}
-                                className="relative flex h-12 w-full items-center justify-center rounded-[0.375rem] bg-[#FEE500] px-[0.875rem]"
-                            >
-                                <img
-                                    src={kakaoIconImg}
-                                    alt=""
-                                    className="absolute left-[0.875rem] h-[1.125rem] w-[1.125rem]"
-                                />
-                                <span className="text-[1.125rem] font-semibold leading-[1.5] text-[rgba(0,0,0,0.85)]">
-                                    {isLoggingIn ? "로그인 처리 중..." : "카카오 로그인"}
-                                </span>
-                            </button>
-                            {canBypassKakaoLogin ? (
-                                <button
-                                    type="button"
-                                    onClick={handleSignupBypass}
-                                    className="typo-comment-1 text-grey-100 underline underline-offset-[0.18rem]"
-                                >
-                                    회원가입 UI 확인하기
-                                </button>
-                            ) : null}
-                            {errorMessage && (
-                                <p className="typo-comment-2 text-warning">
-                                    {errorMessage}
-                                </p>
-                            )}
-                        </div>
-                    </section>
-                </>
-            ) : (
-                <>
-                    <main className="flex min-h-0 flex-1 items-center justify-center px-5 pb-[7.75rem]">
-                        <div className="flex flex-col items-center">
-                            <p className="whitespace-pre-line text-center text-[1.25rem] font-semibold leading-[1.75rem] text-grey-900">
-                                {"3초만에 회원가입 하고\n캠퍼스에서 기다리고 있는\n내 인연을 만나보세요"}
-                            </p>
-                            <img
-                                src={loginImage}
-                                alt=""
-                                className="mt-2 h-[16.75rem] w-[16.75rem] object-contain"
-                            />
-                        </div>
-                    </main>
-                    <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-30 bg-[#ffa6c4] px-5 pt-[0.62rem] pb-[2.94rem]">
-                        <button
-                            type="button"
-                            onClick={handleKakaoLogin}
-                            disabled={isLoggingIn}
-                            className="relative mx-auto flex h-12 w-full max-w-[20.9375rem] items-center justify-center rounded-[0.375rem] bg-[#FEE500] px-[0.875rem]"
-                        >
-                            <img
-                                src={kakaoIconImg}
-                                alt=""
-                                className="absolute left-[0.875rem] h-[1.125rem] w-[1.125rem]"
-                            />
-                            <span className="text-[1.125rem] font-semibold leading-[1.5] text-[rgba(0,0,0,0.85)]">
-                                {isLoggingIn ? "로그인 처리 중..." : "카카오 로그인"}
-                            </span>
-                        </button>
-                        {canBypassKakaoLogin ? (
-                            <button
-                                type="button"
-                                onClick={handleSignupBypass}
-                                className="mx-auto mt-3 block typo-comment-1 text-grey-100 underline underline-offset-[0.18rem]"
-                            >
-                                회원가입 UI 확인하기
-                            </button>
-                        ) : null}
-                        {errorMessage && (
-                            <p className="mt-2 text-center typo-comment-2 text-warning">
-                                {errorMessage}
-                            </p>
-                        )}
-                    </section>
-                </>
-            )}
+            <main className="flex min-h-0 flex-1 items-center justify-center px-5 pb-[7.75rem]">
+                <div className="flex flex-col items-center">
+                    <p className="whitespace-pre-line text-center text-[1.25rem] font-semibold leading-[1.75rem] text-grey-900">
+                        {"3초만에 회원가입 하고\n캠퍼스에서 기다리고 있는\n내 인연을 만나보세요"}
+                    </p>
+                    <img
+                        src={loginHeartImg}
+                        alt=""
+                        className="mt-2 h-[16.75rem] w-[16.75rem] object-contain"
+                    />
+                </div>
+            </main>
+            <section className="fixed bottom-0 left-1/2 w-full frame-max-w -translate-x-1/2 z-30 bg-[#ffa6c4] px-5 pt-[0.62rem] pb-[2.94rem]">
+                <button
+                    type="button"
+                    onClick={handleKakaoLogin}
+                    disabled={isLoggingIn}
+                    className="relative mx-auto flex h-12 w-full max-w-[20.9375rem] items-center justify-center rounded-[0.375rem] bg-[#FEE500] px-[0.875rem]"
+                >
+                    <img
+                        src={kakaoIconImg}
+                        alt=""
+                        className="absolute left-[0.875rem] h-[1.125rem] w-[1.125rem]"
+                    />
+                    <span className="text-[1.125rem] font-semibold leading-[1.5] text-[rgba(0,0,0,0.85)]">
+                        {isLoggingIn ? "로그인 처리 중..." : "카카오 로그인"}
+                    </span>
+                </button>
+                {canBypassKakaoLogin ? (
+                    <button
+                        type="button"
+                        onClick={handleSignupBypass}
+                        className="mx-auto mt-3 block typo-comment-1 text-grey-100 underline underline-offset-[0.18rem]"
+                    >
+                        회원가입 UI 확인하기
+                    </button>
+                ) : null}
+                {errorMessage && (
+                    <p className="mt-2 text-center typo-comment-2 text-warning">
+                        {errorMessage}
+                    </p>
+                )}
+            </section>
             {activePendingSignupTransition ? (
                 <SignupTermsAgreementModal
                     checkedAgreements={activePendingSignupTransition.checkedAgreements}
