@@ -269,10 +269,7 @@ function RollingTimerUnit({
     return () => window.clearTimeout(timeoutId);
   }, [isRolling, value]);
 
-  const { previous, next } = getAdjacentTimerUnit(
-    isRolling ? displayedValue : value,
-    limit,
-  );
+  const { previous, next } = getAdjacentTimerUnit(value, limit);
 
   return (
     <div
@@ -281,6 +278,9 @@ function RollingTimerUnit({
     >
       {isRolling ? (
         <>
+          <span className="timer-slot-roll-previous absolute left-1/2 top-[-9.3px] text-[35px] font-semibold leading-[40px] text-grey-900">
+            {previous}
+          </span>
           <span className="timer-slot-roll-in absolute left-1/2 top-[36px] text-[40px] font-semibold leading-[44px] text-grey-900">
             {value}
           </span>
