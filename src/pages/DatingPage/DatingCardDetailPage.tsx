@@ -81,13 +81,13 @@ const getFriendIntroductionItems = (
     content: cardDetail.q1,
   },
   {
-    title: INTRODUCTION_QUESTIONS.q2.title,
-    content: cardDetail.q2,
-  },
-  {
     title: INTRODUCTION_QUESTIONS.q3.title,
     content: cardDetail.q3 ?? createLockedPlaceholder(cardDetail.q3Length ?? 0),
     isLocked: cardDetail.q3 === null,
+  },
+  {
+    title: INTRODUCTION_QUESTIONS.q2.title,
+    content: cardDetail.q2,
   },
 ];
 
