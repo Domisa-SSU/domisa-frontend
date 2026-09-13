@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react';
 import XIcon from '../../assets/X.svg';
 import copyIcon from '../../assets/copy.svg';
 import Toast from '../../components/Toast';
-
-const ACCOUNT_NUMBER = '1001-4015-2657';
+import {
+  ACCOUNT_HOLDER,
+  ACCOUNT_NUMBER,
+  BANK_NAME,
+} from '../../constants/bankAccount';
 
 type BankTransferModalProps = {
   amount: string;
@@ -71,9 +74,9 @@ function BankTransferModal({ amount, billingName, onClose }: BankTransferModalPr
             <span className="typo-input-text-m text-primary-400">계좌번호</span>
             <div className="flex flex-col items-center gap-[0.3125rem]">
               <span className="typo-subtitle-header-2 text-grey-900">
-                케이뱅크 {ACCOUNT_NUMBER}
+                {BANK_NAME} {ACCOUNT_NUMBER}
               </span>
-              <span className="typo-input-text-m text-grey-700">예금주 : 오영록</span>
+              <span className="typo-input-text-m text-grey-700">예금주 : {ACCOUNT_HOLDER}</span>
             </div>
             <span className="typo-header-3-b text-primary-600">금액 : {amount}원</span>
           </div>
