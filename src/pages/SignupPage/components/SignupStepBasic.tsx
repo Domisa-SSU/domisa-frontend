@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
-import { useCheckNicknameMutation } from "../../../queries/users";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-    generateRandomNickname,
-    NICKNAME_MAX_LENGTH,
-} from "../../../utils/randomNickname";
+    useCheckNicknameMutation,
+    useRandomNicknameMutation,
+} from "../../../queries/users";
+import { NICKNAME_MAX_LENGTH } from "../../../utils/randomNickname";
+import Toast from "../../../components/Toast";
 import { useSignupFlow } from "../useSignupFlow";
 import forbiddenIcon from "../asset/forbiddenIcon.svg";
 import pinkCheckIcon from "../asset/pinkCheckIcon.svg";
@@ -16,10 +17,30 @@ const NICKNAME_ALLOWED_CHARACTERS = /[^A-Za-z0-9가-힣]/g;
 export function SignupStepBasic() {
     const { formData, updateFormData, goNextStep } = useSignupFlow();
     const [nicknameErrorMessage, setNicknameErrorMessage] = useState("");
+    const [toastMessage, setToastMessage] = useState("");
+    const hasRequestedInitialRandomNickname = useRef(false);
+    const randomNicknameRequestId = useRef(0);
+    const isNicknameComposing = useRef(false);
     const {
         mutateAsync: checkNicknameAvailability,
         isPending: isCheckingNickname,
     } = useCheckNicknameMutation();
+    const {
+        mutateAsync: getRandomNickname,
+        isPending: isGeneratingRandomNickname,
+    } = useRandomNicknameMutation();
+
+    useEffect(() => {
+        if (!toastMessage) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            setToastMessage("");
+        }, 2000);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [toastMessage]);
 
     const isFormValid = useMemo(() => {
         return (
@@ -36,6 +57,7 @@ export function SignupStepBasic() {
     ]);
 
     const handleNicknameChange = (value: string) => {
+        randomNicknameRequestId.current += 1;
         const normalizedNickname = value.replace(NICKNAME_ALLOWED_CHARACTERS, "");
         const nickname = normalizedNickname.slice(0, NICKNAME_MAX_LENGTH);
 
@@ -45,8 +67,24 @@ export function SignupStepBasic() {
             isNicknameRandom: false,
         });
         setNicknameErrorMessage(
-            value !== normalizedNickname ? "한글, 영문, 숫자만 사용할 수 있어요" : "",
+            value !== normalizedNickname
+                ? "공백 및 특수문자 없이 한글, 영문, 숫자만 사용할 수 있어요"
+                : "",
         );
+    };
+
+    const handleNicknameInputChange = (value: string) => {
+        if (isNicknameComposing.current) {
+            randomNicknameRequestId.current += 1;
+            updateFormData({
+                nickname: value,
+                isNicknameChecked: false,
+            });
+            setNicknameErrorMessage("");
+            return;
+        }
+
+        handleNicknameChange(value);
     };
 
     const handleCheckNickname = async (nicknameToCheck?: string) => {
@@ -72,19 +110,62 @@ export function SignupStepBasic() {
         }
     };
 
-    const handleGenerateRandomNickname = async () => {
-        const randomName = generateRandomNickname();
-        updateFormData({
-            nickname: randomName,
-            isNicknameChecked: false,
-            isNicknameRandom: true,
-        });
-        setNicknameErrorMessage("");
-        await handleCheckNickname(randomName);
-    };
+    const requestRandomNickname = useCallback(async () => {
+        const requestId = randomNicknameRequestId.current + 1;
+        randomNicknameRequestId.current = requestId;
+
+        try {
+            const randomNickname = await getRandomNickname();
+
+            if (requestId !== randomNicknameRequestId.current) {
+                return;
+            }
+
+            const { isAvailable } = await checkNicknameAvailability(randomNickname);
+
+            if (requestId !== randomNicknameRequestId.current) {
+                return;
+            }
+
+            updateFormData({
+                nickname: randomNickname,
+                isNicknameChecked: isAvailable,
+                isNicknameRandom: true,
+            });
+            setNicknameErrorMessage(
+                isAvailable ? "" : "이미 사용 중인 닉네임입니다",
+            );
+        } catch (error) {
+            if (import.meta.env.DEV) {
+                console.error("[Signup random nickname error]", error);
+            }
+
+            if (requestId === randomNicknameRequestId.current) {
+                setToastMessage("닉네임을 불러오지 못했어요. 다시 시도해주세요.");
+            }
+        }
+    }, [checkNicknameAvailability, getRandomNickname, updateFormData]);
+
+    useEffect(() => {
+        if (formData.nickname || hasRequestedInitialRandomNickname.current) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            if (hasRequestedInitialRandomNickname.current) {
+                return;
+            }
+
+            hasRequestedInitialRandomNickname.current = true;
+            void requestRandomNickname();
+        }, 0);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [formData.nickname, requestRandomNickname]);
 
     return (
         <div className="flex flex-col gap-[20px]">
+            {toastMessage ? <Toast message={toastMessage} /> : null}
             {/* 닉네임 섹션 */}
             <section className="flex flex-col gap-[14px]">
                 <div className="flex items-center gap-[10px]">
@@ -107,7 +188,17 @@ export function SignupStepBasic() {
                         <input
                             value={formData.nickname}
                             maxLength={NICKNAME_MAX_LENGTH}
-                            onChange={(event) => handleNicknameChange(event.target.value)}
+                            spellCheck={false}
+                            autoCorrect="off"
+                            autoCapitalize="none"
+                            onChange={(event) => handleNicknameInputChange(event.target.value)}
+                            onCompositionStart={() => {
+                                isNicknameComposing.current = true;
+                            }}
+                            onCompositionEnd={(event) => {
+                                isNicknameComposing.current = false;
+                                handleNicknameChange(event.currentTarget.value);
+                            }}
                             placeholder="난최고야"
                             className="h-full w-full bg-transparent pr-[4.75rem] text-[16px] font-medium tracking-[-0.32px] text-primary-500 placeholder:text-grey-600 focus:outline-none"
                         />
@@ -151,13 +242,13 @@ export function SignupStepBasic() {
                     {/* 닉네임 자동 생성 버튼 */}
                     <button
                         type="button"
-                        onClick={handleGenerateRandomNickname}
-                        disabled={isCheckingNickname}
+                        onClick={() => void requestRandomNickname()}
+                        disabled={isCheckingNickname || isGeneratingRandomNickname}
                         className="flex h-[40px] w-[140px] items-center justify-center gap-[6px] rounded-[10px] border border-primary-200 bg-white pl-[10px] pr-[8px] transition-colors hover:bg-primary-100/50 disabled:opacity-50"
                     >
                         <img src={sparkleIcon} alt="" className="size-[16px]" />
                         <span className="text-[14px] font-semibold leading-[17px] text-primary-400 whitespace-nowrap">
-                            닉네임 자동 생성
+                            {isGeneratingRandomNickname ? "생성 중" : "닉네임 자동 생성"}
                         </span>
                     </button>
                 </div>

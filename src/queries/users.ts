@@ -1,9 +1,17 @@
 import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { checkNicknameAvailability, deleteMe, getCookies, getMe, registerUser, updateMe } from "../api/users";
+import {
+  checkNicknameAvailability,
+  deleteMe,
+  getCookies,
+  getMe,
+  getRandomNickname,
+  registerUser,
+  updateMe,
+} from "../api/users";
 import type { UserMeResponse } from "../api/users";
-import { authMeQueryKey } from "./auth";
+import { authMeQueryKey, clearAuthenticatedUserQueries } from "./auth";
 import { registerGender } from "../utils/mixpanel";
 
 export const userMeQueryKey = ["users", "me"] as const;
@@ -104,15 +112,20 @@ export const useCheckNicknameMutation = () =>
     mutationFn: checkNicknameAvailability,
   });
 
+export const useRandomNicknameMutation = () =>
+  useMutation({
+    mutationKey: ["users", "random-nickname"],
+    meta: { suppressGlobalError: true },
+    mutationFn: getRandomNickname,
+  });
+
 export const useDeleteMeMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: deleteMe,
     onSuccess: () => {
-      queryClient.setQueryData(authMeQueryKey, null);
-      queryClient.removeQueries({ queryKey: userMeQueryKey });
-      queryClient.removeQueries({ queryKey: userCookiesQueryKey });
+      clearAuthenticatedUserQueries(queryClient);
     },
   });
 };
