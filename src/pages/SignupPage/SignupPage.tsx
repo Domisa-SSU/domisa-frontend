@@ -193,6 +193,7 @@ function SignupPage() {
             await queryClient.invalidateQueries({ queryKey: userMeQueryKey });
 
             track("signup_completed", {
+                nickname_source: formData.isNicknameRandom ? "random" : "typed",
                 contact_type: formData.contactType,
                 has_notification_phone: notificationPhone !== null,
                 animal_profile: animalProfile,

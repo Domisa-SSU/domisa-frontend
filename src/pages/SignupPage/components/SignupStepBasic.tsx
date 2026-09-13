@@ -42,6 +42,7 @@ export function SignupStepBasic() {
         updateFormData({
             nickname,
             isNicknameChecked: false,
+            isNicknameRandom: false,
         });
         setNicknameErrorMessage(
             value !== normalizedNickname ? "한글, 영문, 숫자만 사용할 수 있어요" : "",
@@ -76,6 +77,7 @@ export function SignupStepBasic() {
         updateFormData({
             nickname: randomName,
             isNicknameChecked: false,
+            isNicknameRandom: true,
         });
         setNicknameErrorMessage("");
         await handleCheckNickname(randomName);

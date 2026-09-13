@@ -5,6 +5,8 @@ export type SignupFormData = {
     // Step 1: 기본 정보
     nickname: string;
     isNicknameChecked: boolean;
+    /** 랜덤 생성 버튼으로 채웠는지. 직접 입력하면 false 로 돌아간다. */
+    isNicknameRandom: boolean;
     gender: "남성" | "여성" | "";
     birthYear: string;
     // Step 2: 동물 프로필
@@ -25,6 +27,7 @@ export type SignupFormData = {
 export const initialSignupFormData: SignupFormData = {
     nickname: "",
     isNicknameChecked: false,
+    isNicknameRandom: false,
     gender: "",
     birthYear: "",
     selectedAnimal: "수달",
