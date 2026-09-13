@@ -39,7 +39,7 @@ export type CheckNicknameAvailabilityResponse = {
   isAvailable: boolean;
 };
 
-const NICKNAME_PATTERN = /^(?=.*[A-Za-z0-9가-힣])[A-Za-z0-9가-힣 ]{1,8}$/;
+const NICKNAME_PATTERN = /^[A-Za-z0-9가-힣]{1,8}$/;
 
 export type DeleteUserResponse = {
   message: string;
@@ -90,9 +90,13 @@ const parseRandomNicknameResponse = (value: unknown): string | null => {
 
   const response = value as Record<string, unknown>;
 
-  return typeof response.RandomNick === 'string' && NICKNAME_PATTERN.test(response.RandomNick)
-    ? response.RandomNick
-    : null;
+  if (typeof response.RandomNick !== 'string') {
+    return null;
+  }
+
+  const nickname = response.RandomNick.replace(/\s+/g, '');
+
+  return NICKNAME_PATTERN.test(nickname) ? nickname : null;
 };
 
 const parseDeleteUserResponse = (value: unknown): DeleteUserResponse | null => {

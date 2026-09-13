@@ -12,7 +12,7 @@ import selectArrow from "../asset/selectArrow.svg";
 import sparkleIcon from "../asset/sparkleIcon.svg";
 
 const birthYears = Array.from({ length: 28 }, (_, index) => `${2007 - index}`);
-const NICKNAME_ALLOWED_CHARACTERS = /[^A-Za-z0-9가-힣 ]/g;
+const NICKNAME_ALLOWED_CHARACTERS = /[^A-Za-z0-9가-힣]/g;
 
 export function SignupStepBasic() {
     const { formData, updateFormData, goNextStep } = useSignupFlow();
@@ -20,6 +20,7 @@ export function SignupStepBasic() {
     const [toastMessage, setToastMessage] = useState("");
     const hasRequestedInitialRandomNickname = useRef(false);
     const randomNicknameRequestId = useRef(0);
+    const isNicknameComposing = useRef(false);
     const {
         mutateAsync: checkNicknameAvailability,
         isPending: isCheckingNickname,
@@ -65,8 +66,24 @@ export function SignupStepBasic() {
             isNicknameChecked: false,
         });
         setNicknameErrorMessage(
-            value !== normalizedNickname ? "한글, 영문, 숫자만 사용할 수 있어요" : "",
+            value !== normalizedNickname
+                ? "공백 및 특수문자 없이 한글, 영문, 숫자만 사용할 수 있어요"
+                : "",
         );
+    };
+
+    const handleNicknameInputChange = (value: string) => {
+        if (isNicknameComposing.current) {
+            randomNicknameRequestId.current += 1;
+            updateFormData({
+                nickname: value,
+                isNicknameChecked: false,
+            });
+            setNicknameErrorMessage("");
+            return;
+        }
+
+        handleNicknameChange(value);
     };
 
     const handleCheckNickname = async (nicknameToCheck?: string) => {
@@ -103,11 +120,19 @@ export function SignupStepBasic() {
                 return;
             }
 
+            const { isAvailable } = await checkNicknameAvailability(randomNickname);
+
+            if (requestId !== randomNicknameRequestId.current) {
+                return;
+            }
+
             updateFormData({
                 nickname: randomNickname,
-                isNicknameChecked: true,
+                isNicknameChecked: isAvailable,
             });
-            setNicknameErrorMessage("");
+            setNicknameErrorMessage(
+                isAvailable ? "" : "이미 사용 중인 닉네임입니다",
+            );
         } catch (error) {
             if (import.meta.env.DEV) {
                 console.error("[Signup random nickname error]", error);
@@ -117,7 +142,7 @@ export function SignupStepBasic() {
                 setToastMessage("닉네임을 불러오지 못했어요. 다시 시도해주세요.");
             }
         }
-    }, [getRandomNickname, updateFormData]);
+    }, [checkNicknameAvailability, getRandomNickname, updateFormData]);
 
     useEffect(() => {
         if (formData.nickname || hasRequestedInitialRandomNickname.current) {
@@ -161,7 +186,17 @@ export function SignupStepBasic() {
                         <input
                             value={formData.nickname}
                             maxLength={NICKNAME_MAX_LENGTH}
-                            onChange={(event) => handleNicknameChange(event.target.value)}
+                            spellCheck={false}
+                            autoCorrect="off"
+                            autoCapitalize="none"
+                            onChange={(event) => handleNicknameInputChange(event.target.value)}
+                            onCompositionStart={() => {
+                                isNicknameComposing.current = true;
+                            }}
+                            onCompositionEnd={(event) => {
+                                isNicknameComposing.current = false;
+                                handleNicknameChange(event.currentTarget.value);
+                            }}
                             placeholder="난최고야"
                             className="h-full w-full bg-transparent pr-[4.75rem] text-[16px] font-medium tracking-[-0.32px] text-primary-500 placeholder:text-grey-600 focus:outline-none"
                         />
