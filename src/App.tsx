@@ -5,8 +5,10 @@ import ErrorPage from "./pages/ErrorPage/ErrorPage";
 import HomePage from "./pages/HomePage";
 import { SignupFlowProvider } from "./pages/SignupPage/SignupFlowContext";
 import { useAuthMeQuery } from "./queries/auth";
+import { useUserMeQuery } from "./queries/users";
 import { useIsBlacklistedUser } from "./stores/blacklistedUserStore";
 import { useHasGlobalError } from "./stores/globalErrorStore";
+import { identifyUser, registerUserState, type UserState } from "./utils/mixpanel";
 import "./App.css";
 
 function BlacklistedUserModal() {
@@ -47,7 +49,14 @@ function MobileFrame({ children }: MobileFrameProps) {
 
 function App() {
   const hasGlobalError = useHasGlobalError();
-  const { isError, isPending } = useAuthMeQuery();
+  const { data: authMe, isError, isPending } = useAuthMeQuery();
+  /**
+   * 성별은 이 응답에만 있는데, 소개팅 페이지들은 이 쿼리를 부르지 않는다.
+   * 페이지마다 따로 부르면 어떤 이벤트에는 성별이 붙고 어떤 이벤트에는 안 붙어
+   * 부분적으로만 채워진 지표가 나온다. 여기서 한 번 불러 전역에 등록한다.
+   * staleTime 이 10분이라 요청이 크게 늘지 않는다.
+   */
+  useUserMeQuery({ enabled: Boolean(authMe) });
   const location = useLocation();
   const navigate = useNavigate();
   const isBlacklistedUser = useIsBlacklistedUser();
@@ -57,6 +66,38 @@ function App() {
       navigate("/", { replace: true });
     }
   }, [isBlacklistedUser, location.pathname, navigate]);
+
+  /**
+   * 믹스패널에 사용자 상태를 붙인다.
+   *
+   * 로그인 여부만으로는 "가입 완료"와 "로그인했지만 가입 미완료"가 구분되지 않는다.
+   * 두 경우 모두 isRegistered 가 참이 아니지만 후자는 publicId 를 가지므로,
+   * 상태를 명시적으로 남겨야 이탈 지점을 구간별로 볼 수 있다.
+   */
+  useEffect(() => {
+    if (isPending) {
+      return;
+    }
+
+    if (!authMe) {
+      registerUserState("anonymous");
+      return;
+    }
+
+    const { isRegistered, hasIntroduction } = authMe.status;
+    const userState: UserState = hasIntroduction
+      ? "has_introduction"
+      : isRegistered
+        ? "registered"
+        : "signed_up_incomplete";
+
+    registerUserState(userState);
+    identifyUser(authMe.publicId, {
+      isRegistered,
+      hasIntroduction,
+      cookies: authMe.cookies,
+    });
+  }, [authMe, isPending]);
 
   useEffect(() => {
     window.gtag?.("event", "page_view", {

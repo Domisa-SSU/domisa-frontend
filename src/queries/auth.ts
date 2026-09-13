@@ -9,6 +9,7 @@ import {
   logout,
 } from "../api/auth";
 import { reportBlacklistedUser } from "../stores/blacklistedUserStore";
+import { resetMixpanel } from "../utils/mixpanel";
 import type { AuthMeResponse } from "../types/user";
 
 export const authMeQueryKey = ["auth", "me"] as const;
@@ -103,6 +104,10 @@ export const useLogoutMutation = () => {
   return useMutation({
     mutationFn: logout,
     onSuccess: () => {
+      // distinct_id 를 끊어야 공용 기기에서 다음 사용자 이벤트가 섞이지 않는다.
+      // reset 은 수퍼 프로퍼티도 지우는데, authMe 가 null 이 되면서
+      // App 의 effect 가 user_state 를 anonymous 로 다시 등록한다.
+      resetMixpanel();
       clearAuthenticatedUserQueries(queryClient);
     },
   });

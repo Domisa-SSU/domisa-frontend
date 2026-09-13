@@ -18,6 +18,7 @@ import forbiddenIcon from '../../assets/toastForbidden.svg';
 import checkIcon from '../../assets/check.svg';
 import { useCancelCookieOrderMutation, useCreateCookieOrderMutation } from '../../queries/orders';
 import { useUserCookiesQuery } from '../../queries/users';
+import { track } from '../../utils/mixpanel';
 import type { CookieProductCode } from '../../api/orders';
 import { getCookieOrderStatus } from '../../api/orders';
 import { isServerError } from '../../utils/apiError';
@@ -34,12 +35,24 @@ type CookieModalState = 'none' | 'pending' | 'success' | 'failure' | 'already_pr
 
 const MAX_POLL_COUNT = 3; // 3초마다 호출. 최대 3번. (최대 9초 대기)
 
-const PAYMENT_METHODS = [{ label: '토스페이로 송금하기' }, { label: '계좌이체 하기' }];
+/**
+ * 결제 수단. code 가 동작과 지표의 기준이고 label 은 화면 문구일 뿐이다.
+ * 문구로 분기하면 카피를 다듬는 순간 딥링크도 지표도 조용히 깨진다.
+ */
+const PAYMENT_METHODS = [
+  { code: 'toss', label: '토스로 송금하기' },
+  { code: 'bank_transfer', label: '계좌이체 하기' },
+] as const;
+
+type PaymentMethodCode = (typeof PAYMENT_METHODS)[number]['code'];
 
 function CookiePurchasePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as CookiePurchaseLocationState | null;
+  // 폴링 effect 에서 쓰려고 원시값으로 뽑는다. 객체를 의존성에 넣으면 폴링이 다시 돈다.
+  const productCode = state?.productCode;
+  const cookieCount = state?.count;
 
   const {
     mutate: createOrder,
@@ -52,7 +65,18 @@ function CookiePurchasePage() {
 
   useEffect(() => {
     if (!state) return;
-    createOrder({ productCode: state.productCode });
+    createOrder(
+      { productCode: state.productCode },
+      {
+        onSuccess: (created) => {
+          track('cookie_order_created', {
+            product_code: state.productCode,
+            cookie_count: state.count,
+            order_amount: created.orderAmount,
+          });
+        },
+      }
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -97,17 +121,29 @@ function CookiePurchasePage() {
           orderAmount: order.orderAmount,
         });
         if (result.status === 'PAID' || result.status === 'ALREADY_PROCESSED') {
+          if (result.status === 'PAID') {
+            // 실제 구매 완료. 구매 수와 남녀 비율은 이 이벤트로 센다.
+            track('cookie_purchase_completed', {
+              product_code: productCode,
+              cookie_count: cookieCount,
+              order_amount: order.orderAmount,
+            });
+          }
           setCookieModalState(result.status === 'PAID' ? 'success' : 'already_processed');
         } else if (result.status === 'PENDING') {
           if (pollCountRef.current >= MAX_POLL_COUNT) {
+            // 입금했다고 눌렀지만 확인 시간 안에 입금이 안 잡힌 경우다.
+            track('cookie_purchase_failed', { reason: 'poll_timeout' });
             setCookieModalState('failure');
             return;
           }
           pollCountRef.current += 1;
           setPollTick((t) => t + 1);
         } else if (result.status === 'CANCELED') {
+          track('cookie_purchase_failed', { reason: 'canceled' });
           setCookieModalState('canceled');
         } else {
+          track('cookie_purchase_failed', { reason: 'unknown_status' });
           setCookieModalState('failure');
         }
       } catch (error) {
@@ -125,20 +161,24 @@ function CookiePurchasePage() {
     }, 3000);
 
     return () => window.clearTimeout(timerId);
-  }, [cookieModalState, order, pollTick]);
+  }, [cookieModalState, order, pollTick, productCode, cookieCount]);
 
-  const handlePaymentMethodClick = (label: string) => {
+  const handlePaymentMethodClick = (code: PaymentMethodCode) => {
     if (!isNameConfirmed) {
       setShowWarningToast(true);
       return;
     }
-    if (label === '토스페이로 송금하기') {
+
+    track('cookie_payment_method_clicked', { method: code });
+
+    if (code === 'toss') {
       const amount = state!.price.replace(/,/g, '');
       const deepLink = `supertoss://send?bank=케이뱅크&accountNo=100140152657&amount=${amount}`;
       window.open(deepLink, '_self');
       return;
     }
-    if (label === '계좌이체 하기') {
+
+    if (code === 'bank_transfer') {
       setShowBankModal(true);
     }
   };
@@ -173,6 +213,10 @@ function CookiePurchasePage() {
   const billingName = order?.billingName;
 
   const handleTransferComplete = () => {
+    track('cookie_transfer_reported', {
+      product_code: state.productCode,
+      cookie_count: state.count,
+    });
     pollCountRef.current = 0;
     setCookieModalState('pending');
   };
@@ -244,11 +288,11 @@ function CookiePurchasePage() {
 
           {/* 결제 방법 */}
           <div className="flex flex-col gap-[1.875rem]">
-            {PAYMENT_METHODS.map(({ label }) => (
+            {PAYMENT_METHODS.map(({ code, label }) => (
               <button
-                key={label}
+                key={code}
                 type="button"
-                onClick={() => handlePaymentMethodClick(label)}
+                onClick={() => handlePaymentMethodClick(code)}
                 className="relative flex items-center justify-center h-[3.4375rem] w-full bg-primary-100 border-[1.2px] border-primary-200 rounded-[1.25rem] px-5"
               >
                 <span className="typo-header-3-b text-primary-500">{label}</span>
