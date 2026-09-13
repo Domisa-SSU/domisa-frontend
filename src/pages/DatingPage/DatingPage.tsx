@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -36,6 +36,8 @@ import timerPanelLeafRight from "./assets/timerPanelLeafRight.svg";
 const datingHomeQueryKey = ["dating", "home"] as const;
 const refreshReloadStorageKey = "dating:last-refresh-reload-at";
 const maxFreeLikeCount = 3;
+const timerPanelWidth = 352;
+const timerPanelHeight = 165;
 
 const datingAccessPreviewData: DatingHomeResponse = {
   refreshAvailableAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
@@ -275,32 +277,77 @@ function RollingTimerUnit({
   return (
     <div
       style={{ left }}
-      className="absolute inset-y-0 w-[4.5rem] -translate-x-1/2 overflow-hidden [clip-path:inset(1.25rem_0_1.25rem)]"
+      className="absolute inset-y-0 w-[72px] -translate-x-1/2 overflow-hidden [clip-path:inset(20px_0_20px)]"
     >
       {isRolling ? (
         <>
-          <span className="timer-slot-roll-in absolute left-1/2 top-[2.25rem] text-[2.5rem] font-semibold leading-[2.75rem] text-grey-900">
+          <span className="timer-slot-roll-in absolute left-1/2 top-[36px] text-[40px] font-semibold leading-[44px] text-grey-900">
             {value}
           </span>
-          <span className="timer-slot-roll-out absolute left-1/2 top-[4.60625rem] text-[2.5rem] font-semibold leading-[2.75rem] text-grey-900">
+          <span className="timer-slot-roll-out absolute left-1/2 top-[73.7px] text-[40px] font-semibold leading-[44px] text-grey-900">
             {displayedValue}
           </span>
         </>
       ) : (
         <>
-          <span className="absolute left-1/2 top-[2.25rem] -translate-x-1/2 text-[2.1875rem] font-semibold leading-10 text-grey-900/10">
+          <span className="absolute left-1/2 top-[36px] -translate-x-1/2 text-[35px] font-semibold leading-[40px] text-grey-900/10">
             {previous}
           </span>
-          <span className="absolute left-1/2 top-[4.60625rem] -translate-x-1/2 text-[2.5rem] font-semibold leading-[2.75rem] text-grey-900">
+          <span className="absolute left-1/2 top-[73.7px] -translate-x-1/2 text-[40px] font-semibold leading-[44px] text-grey-900">
             {value}
           </span>
-          <span className="absolute left-1/2 top-[7.4375rem] -translate-x-1/2 text-[2.1875rem] font-semibold leading-10 text-grey-900/10">
+          <span className="absolute left-1/2 top-[119px] -translate-x-1/2 text-[35px] font-semibold leading-[40px] text-grey-900/10">
             {next}
           </span>
         </>
       )}
     </div>
   );
+}
+
+function useTimerPanelScale() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    const updateScale = () => {
+      const availableWidth = container.getBoundingClientRect().width;
+
+      if (availableWidth <= 0) {
+        return;
+      }
+
+      const nextScale = Math.min(1, availableWidth / timerPanelWidth);
+      setScale((currentScale) =>
+        Math.abs(currentScale - nextScale) < 0.001 ? currentScale : nextScale,
+      );
+    };
+
+    updateScale();
+
+    if (typeof ResizeObserver !== "undefined") {
+      const resizeObserver = new ResizeObserver(updateScale);
+      resizeObserver.observe(container);
+
+      return () => resizeObserver.disconnect();
+    }
+
+    window.addEventListener("resize", updateScale);
+    window.visualViewport?.addEventListener("resize", updateScale);
+
+    return () => {
+      window.removeEventListener("resize", updateScale);
+      window.visualViewport?.removeEventListener("resize", updateScale);
+    };
+  }, []);
+
+  return { containerRef, scale };
 }
 
 function TimerPanel({
@@ -313,67 +360,80 @@ function TimerPanel({
   onShuffleClick: () => void;
 }) {
   const [hours, minutes, seconds] = getTimerUnits(remainingSeconds);
+  const { containerRef, scale } = useTimerPanelScale();
   const timerUnits = [
-    { value: hours, limit: 100, left: "5.4375rem" },
-    { value: minutes, limit: 60, left: "10.875rem" },
-    { value: seconds, limit: 60, left: "16.21875rem" },
+    { value: hours, limit: 100, left: "87px" },
+    { value: minutes, limit: 60, left: "174px" },
+    { value: seconds, limit: 60, left: "259.5px" },
   ];
+  const accessibleTimerLabel = `다음 카드까지 ${Number(hours)}시간 ${Number(minutes)}분 ${Number(seconds)}초`;
 
   return (
     <section className="mx-auto flex w-full max-w-[22.625rem] flex-col gap-[0.9375rem]">
-      <div className="relative h-[10.3125rem] w-[22rem] max-w-full">
-        <div className="absolute inset-0 overflow-hidden rounded-[0.625rem] shadow-[0_0.25rem_0.75rem_rgba(206,206,206,0.45)]">
-          <img
-            src={timerPanelBackground}
-            alt=""
-            className="absolute -left-[2.19%] -top-[11.93%] h-[117.45%] w-[105.36%] max-w-none"
-          />
-        </div>
-
-        <img
-          src={timerPanelCharacterLeft}
-          alt=""
-          className="absolute -left-6 top-0 h-[4.6875rem] w-[4.6875rem] object-contain"
-        />
-
-        <div className="absolute left-1/2 top-[0.48125rem] flex -translate-x-1/2 items-center gap-[0.25rem] whitespace-nowrap">
-          <img
-            src={timerPanelLeafLeft}
-            alt=""
-            className="h-[0.75625rem] w-[0.89375rem]"
-          />
-          <span className="text-[0.9625rem] font-bold leading-[1.16875rem] text-primary-400">
-            다음 카드까지
-          </span>
-          <img
-            src={timerPanelLeafRight}
-            alt=""
-            className="h-[0.75625rem] w-[0.89375rem]"
-          />
-        </div>
-
-        <div className="absolute inset-0 overflow-hidden rounded-[0.625rem] text-center">
-          {timerUnits.map(({ value, limit, left }) => (
-            <RollingTimerUnit
-              key={left}
-              value={value}
-              limit={limit}
-              left={left}
+      <div
+        ref={containerRef}
+        className="relative w-full max-w-[352px]"
+        style={{ height: `${timerPanelHeight * scale}px` }}
+      >
+        <span className="sr-only">{accessibleTimerLabel}</span>
+        <div
+          aria-hidden="true"
+          className="timer-panel-canvas absolute left-1/2 top-0 h-[165px] w-[352px] origin-top"
+          style={{ transform: `translateX(-50%) scale(${scale})` }}
+        >
+          <div className="absolute inset-0 overflow-hidden rounded-[10px] shadow-[0_4px_12px_rgba(206,206,206,0.45)]">
+            <img
+              src={timerPanelBackground}
+              alt=""
+              className="absolute -left-[2.19%] -top-[11.93%] h-[117.45%] w-[105.36%] max-w-none"
             />
-          ))}
-          <span className="absolute left-[8.175rem] top-[4.4rem] -translate-x-1/2 text-[2.75rem] font-bold leading-[2.75rem] text-primary-900">
-            :
-          </span>
-          <span className="absolute left-[13.60625rem] top-[4.4rem] -translate-x-1/2 text-[2.75rem] font-bold leading-[2.75rem] text-primary-900">
-            :
-          </span>
-        </div>
+          </div>
 
-        <img
-          src={timerPanelCharacterRight}
-          alt=""
-          className="absolute left-[19.1875rem] top-[6.3125rem] h-[3.8125rem] w-[4.375rem] object-contain"
-        />
+          <img
+            src={timerPanelCharacterLeft}
+            alt=""
+            className="absolute -left-[24px] top-0 h-[75px] w-[75px] object-contain"
+          />
+
+          <div className="absolute left-1/2 top-[7.7px] flex -translate-x-1/2 items-center gap-[4px] whitespace-nowrap">
+            <img
+              src={timerPanelLeafLeft}
+              alt=""
+              className="h-[12.1px] w-[14.3px]"
+            />
+            <span className="text-[15.4px] font-bold leading-[18.7px] text-primary-400">
+              다음 카드까지
+            </span>
+            <img
+              src={timerPanelLeafRight}
+              alt=""
+              className="h-[12.1px] w-[14.3px]"
+            />
+          </div>
+
+          <div className="absolute inset-0 overflow-hidden rounded-[10px] text-center">
+            {timerUnits.map(({ value, limit, left }) => (
+              <RollingTimerUnit
+                key={left}
+                value={value}
+                limit={limit}
+                left={left}
+              />
+            ))}
+            <span className="absolute left-[130.8px] top-[70.4px] -translate-x-1/2 text-[44px] font-bold leading-[44px] text-primary-900">
+              :
+            </span>
+            <span className="absolute left-[217.7px] top-[70.4px] -translate-x-1/2 text-[44px] font-bold leading-[44px] text-primary-900">
+              :
+            </span>
+          </div>
+
+          <img
+            src={timerPanelCharacterRight}
+            alt=""
+            className="absolute left-[307px] top-[101px] h-[61px] w-[70px] object-contain"
+          />
+        </div>
       </div>
 
       <button

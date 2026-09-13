@@ -56,7 +56,7 @@ body {
 
   to {
     opacity: 1;
-    transform: translate(-50%, 2.35625rem);
+    transform: translate(-50%, 37.7px);
   }
 }
 
@@ -68,8 +68,14 @@ body {
 
   to {
     opacity: 0.1;
-    transform: translate(-50%, 2.83125rem);
+    transform: translate(-50%, 45.3px);
   }
+}
+
+.timer-panel-canvas {
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+  font-variant-numeric: tabular-nums;
 }
 
 .timer-slot-roll-in,
