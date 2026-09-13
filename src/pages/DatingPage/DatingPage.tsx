@@ -32,6 +32,7 @@ import timerPanelCharacterLeft from "./assets/timerPanelCharacterLeft.png";
 import timerPanelCharacterRight from "./assets/timerPanelCharacterRight.png";
 import timerPanelLeafLeft from "./assets/timerPanelLeafLeft.svg";
 import timerPanelLeafRight from "./assets/timerPanelLeafRight.svg";
+import { track } from "../../utils/mixpanel";
 
 const datingHomeQueryKey = ["dating", "home"] as const;
 const refreshReloadStorageKey = "dating:last-refresh-reload-at";
@@ -864,6 +865,8 @@ function DatingPage({ preview = false }: { preview?: boolean }) {
   const shuffleCardsMutation = useMutation({
     mutationFn: shuffleDatingCards,
     onSuccess: async () => {
+      // 쿠키를 어디에 쓰는지 보려고 소비처를 하나의 이벤트로 모은다.
+      track("cookie_spent", { feature: "shuffle" });
       setShuffleCookieCount(null);
       resetStoredOpenedDatingCards();
       setOpenedCardState({

@@ -2,8 +2,13 @@ import { useNavigate } from "react-router-dom";
 import Button from "./Button/Button";
 import { ButtonVariant, ButtonSize } from "./Button/ButtonEnums";
 import heartImg from "../assets/heartIcon.svg";
+import { track } from "../utils/mixpanel";
 
-function ReferralSection() {
+type ReferralSectionProps = {
+  buttonLabel?: string;
+};
+
+function ReferralSection({ buttonLabel = "친구 소개하기" }: ReferralSectionProps) {
   const navigate = useNavigate();
 
   return (
@@ -17,10 +22,13 @@ function ReferralSection() {
         <img src={heartImg} alt="" className="w-4 h-4" />
       </div>
       <Button
-        label="친구 소개하기"
+        label={buttonLabel}
         variant={ButtonVariant.Main}
         size={ButtonSize.Small}
-        onClick={() => navigate("/introduce-friend")}
+        onClick={() => {
+          track("introduce_friend_started");
+          navigate("/introduce-friend");
+        }}
       />
     </div>
   );

@@ -17,6 +17,7 @@ import {
 import { useAuthMeQuery, useKakaoLoginMutation } from "../../queries/auth";
 import { reportBlacklistedUser } from "../../stores/blacklistedUserStore";
 import type { UserStatus } from "../../types/user";
+import { track } from "../../utils/mixpanel";
 
 const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
 const canBypassKakaoLogin = import.meta.env.DEV;
@@ -463,6 +464,15 @@ function Kakao() {
             setErrorMessage("카카오 로그인 설정이 없습니다.");
             return;
         }
+
+        /**
+         * 카카오로 넘어가면 페이지를 떠나므로 떠나기 전에 남긴다.
+         *
+         * 이 버튼은 신규와 기존 사용자가 모두 누른다. 이미 가입한 사람은
+         * 로그인 후 가입 화면을 거치지 않고 돌아가므로, 이 이벤트를 가입
+         * 퍼널의 첫 단계로 쓰면 기존 사용자가 전부 이탈로 잡힌다.
+         */
+        track("kakao_login_started");
 
         const state = createKakaoOAuthState();
         const redirectUri = getKakaoRedirectUri();

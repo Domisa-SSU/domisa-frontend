@@ -6,6 +6,7 @@ import {
 import { NICKNAME_MAX_LENGTH } from "../../../utils/randomNickname";
 import Toast from "../../../components/Toast";
 import { useSignupFlow } from "../useSignupFlow";
+import { track } from "../../../utils/mixpanel";
 import forbiddenIcon from "../asset/forbiddenIcon.svg";
 import pinkCheckIcon from "../asset/pinkCheckIcon.svg";
 import selectArrow from "../asset/selectArrow.svg";
@@ -64,6 +65,7 @@ export function SignupStepBasic() {
         updateFormData({
             nickname,
             isNicknameChecked: false,
+            isNicknameRandom: false,
         });
         setNicknameErrorMessage(
             value !== normalizedNickname
@@ -129,6 +131,7 @@ export function SignupStepBasic() {
             updateFormData({
                 nickname: randomNickname,
                 isNicknameChecked: isAvailable,
+                isNicknameRandom: true,
             });
             setNicknameErrorMessage(
                 isAvailable ? "" : "이미 사용 중인 닉네임입니다",
@@ -240,7 +243,15 @@ export function SignupStepBasic() {
                     {/* 닉네임 자동 생성 버튼 */}
                     <button
                         type="button"
-                        onClick={() => void requestRandomNickname()}
+                        onClick={() => {
+                            /**
+                             * 함수 안이 아니라 여기서 남긴다.
+                             * requestRandomNickname 은 화면에 들어올 때 자동으로도 불리므로,
+                             * 함수 안에 두면 사용자가 누른 것과 자동 생성이 섞인다.
+                             */
+                            track("nickname_regenerated");
+                            void requestRandomNickname();
+                        }}
                         disabled={isCheckingNickname || isGeneratingRandomNickname}
                         className="flex h-[40px] w-[140px] items-center justify-center gap-[6px] rounded-[10px] border border-primary-200 bg-white pl-[10px] pr-[8px] transition-colors hover:bg-primary-100/50 disabled:opacity-50"
                     >

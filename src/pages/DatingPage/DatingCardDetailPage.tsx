@@ -41,6 +41,7 @@ import wolfImg from "../SignupPage/asset/wolfImg.png";
 import inviteCreatedIcon from "../IntroduceFriendPage/assets/inviteCreatedIcon.svg";
 import doubleArrowIcon from "./assets/doubleArrowIcon.svg";
 import lockIcon from "./assets/lockIcon.png";
+import { track } from "../../utils/mixpanel";
 
 type DatingCardDetailSectionItem = {
   title: string;
@@ -691,6 +692,10 @@ function DatingCardDetailPage() {
     mutationFn: unblurReceivedDatingLike,
     onSuccess: async () => {
       const remainingCookieCount = await fetchCurrentCookieCount();
+      track("cookie_spent", {
+        feature: "unblur_profile",
+        remaining_cookies: remainingCookieCount,
+      });
       setActionModal({
         type: "received-unblur-success",
         remainingCookieCount,
@@ -711,6 +716,8 @@ function DatingCardDetailPage() {
   const matchMutation = useMutation({
     mutationFn: matchReceivedDatingLike,
     onSuccess: async () => {
+      // 받은 호감 흐름의 성사 지점. 여기서 연락처가 공개된다.
+      track("match_completed");
       setToastMessage("매칭 완료! 서로에게 연락처가 공개되었어요");
       await invalidateDatingQueries();
     },
@@ -731,7 +738,12 @@ function DatingCardDetailPage() {
       return;
     }
 
-    sendLikeMutation.mutate(cardId);
+    // 무료 호감은 쿠키를 쓰지 않으므로 cookie_spent 를 남기지 않는다.
+    sendLikeMutation.mutate(cardId, {
+      onSuccess: () => {
+        track("like_sent", { is_paid: false });
+      },
+    });
   };
 
   const handleConfirmPaidLike = () => {
@@ -739,7 +751,12 @@ function DatingCardDetailPage() {
       return;
     }
 
-    sendLikeMutation.mutate(cardId);
+    sendLikeMutation.mutate(cardId, {
+      onSuccess: () => {
+        track("like_sent", { is_paid: true });
+        track("cookie_spent", { feature: "send_like" });
+      },
+    });
   };
 
   const handleUnblurReceivedLike = () => {

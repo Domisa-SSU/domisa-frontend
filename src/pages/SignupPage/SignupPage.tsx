@@ -15,6 +15,7 @@ import { KAKAO_LOGIN_TOAST_STORAGE_KEY } from "../../constants/storageKeys";
 import { authMeQueryKey } from "../../queries/auth";
 import { useRegisterUserMutation, userMeQueryKey } from "../../queries/users";
 import { reportGlobalErrorIfNeeded } from "../../stores/globalErrorStore";
+import { track } from "../../utils/mixpanel";
 
 import { SignupStepBasic } from "./components/SignupStepBasic";
 import { SignupStepAnimal } from "./components/SignupStepAnimal";
@@ -23,6 +24,19 @@ import { SignupStepPhoto } from "./components/SignupStepPhoto";
 import { SignupStepContact } from "./components/SignupStepContact";
 import { SignupStepNotification } from "./components/SignupStepNotification";
 import { useSignupFlow } from "./useSignupFlow";
+
+/**
+ * 퍼널에서 각 단계를 사람이 읽을 수 있게 하기 위한 이름.
+ * 숫자만 남기면 나중에 단계를 끼워넣었을 때 지표 해석이 어긋난다.
+ */
+const signupStepNames: Record<number, string> = {
+    1: "basic",
+    2: "animal",
+    3: "mbti",
+    4: "photo",
+    5: "contact",
+    6: "notification",
+};
 
 const getSafeReturnTo = (value: string | null) => {
     if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -105,6 +119,14 @@ function SignupPage() {
         };
     }, [resetSignupFlow]);
 
+    // 어느 단계에서 이탈하는지 보려면 단계 도달을 매번 남겨야 한다.
+    useEffect(() => {
+        track("signup_step_viewed", {
+            step: currentStep,
+            step_name: signupStepNames[currentStep] ?? "unknown",
+        });
+    }, [currentStep]);
+
     const handleHeaderBack = () => {
         if (currentStep > 1) {
             goPrevStep();
@@ -131,6 +153,7 @@ function SignupPage() {
 
         setIsSubmitting(true);
         setSubmitErrorMessage("");
+        track("signup_submitted");
 
         try {
             // 1. Upload photo to S3
@@ -169,6 +192,13 @@ function SignupPage() {
             await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
             await queryClient.invalidateQueries({ queryKey: userMeQueryKey });
 
+            track("signup_completed", {
+                nickname_source: formData.isNicknameRandom ? "random" : "typed",
+                contact_type: formData.contactType,
+                has_notification_phone: notificationPhone !== null,
+                animal_profile: animalProfile,
+            });
+
             // 4. Navigate according to flow and status
             if (returnTo) {
                 navigate(returnTo, { replace: true });
@@ -182,6 +212,10 @@ function SignupPage() {
 
             navigate("/", { replace: true });
         } catch (error) {
+            track("signup_failed", {
+                status: isAxiosError(error) ? error.response?.status : undefined,
+            });
+
             if (reportGlobalErrorIfNeeded(error)) {
                 return;
             }

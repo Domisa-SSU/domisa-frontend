@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
@@ -16,6 +16,7 @@ import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
 import IntroductionLetter from "../../components/IntroductionLetter";
 import arrowIcon from "../../assets/arrowIcon.svg";
 import eyeIcon from "../SignupPage/asset/eyeIcon.svg";
+import { track } from "../../utils/mixpanel";
 
 type MessageModalProps = {
   title: string;
@@ -205,6 +206,14 @@ function ReceiveIntroducePage() {
   const [invalidIntroductionDescription, setInvalidIntroductionDescription] =
     useState("");
 
+  /**
+   * 소개서 링크로 들어온 시점. 가입보다 먼저 발생하므로,
+   * 퍼널 순서로 "가입 후 수락" 과 "링크로 와서 가입 후 수락" 을 구분할 수 있다.
+   */
+  useEffect(() => {
+    track("introduction_link_opened");
+  }, [linkCode]);
+
   const {
     data: introduction,
     isPending: isIntroductionPending,
@@ -255,6 +264,8 @@ function ReceiveIntroducePage() {
       );
       await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
 
+      track("introduction_accepted", { accept_type: successType });
+
       setIsReplaceConfirmOpen(false);
       setTotalUserCount(acceptedTotalUserCount);
       setAcceptSuccessType(successType);
@@ -293,12 +304,14 @@ function ReceiveIntroducePage() {
     }
 
     if (!authMe) {
+      track("introduction_accept_blocked", { reason: "not_logged_in" });
       const returnTo = `/introduce/${encodeURIComponent(linkCode)}`;
       navigate(`/auth?returnTo=${encodeURIComponent(returnTo)}`);
       return;
     }
 
     if (authMe.status.isRegistered !== true) {
+      track("introduction_accept_blocked", { reason: "not_registered" });
       const returnTo = `/introduce/${encodeURIComponent(linkCode)}`;
       navigate(`/auth/signup?returnTo=${encodeURIComponent(returnTo)}`);
       return;
