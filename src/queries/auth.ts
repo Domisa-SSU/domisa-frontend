@@ -14,6 +14,16 @@ import type { AuthMeResponse } from "../types/user";
 export const authMeQueryKey = ["auth", "me"] as const;
 const unauthenticatedStatusCodes = new Set([401, 403]);
 
+export const clearAuthenticatedUserQueries = (
+  queryClient: ReturnType<typeof useQueryClient>,
+) => {
+  queryClient.setQueryData(authMeQueryKey, null);
+  queryClient.removeQueries({ queryKey: ["users"] });
+  queryClient.removeQueries({ queryKey: ["dating"] });
+  queryClient.removeQueries({ queryKey: ["notifications"] });
+  queryClient.removeQueries({ queryKey: ["introduction"] });
+};
+
 const isUserNotFoundError = (error: unknown) => {
   if (!isAxiosError(error) || error.response?.status !== 404) {
     return false;
@@ -93,7 +103,7 @@ export const useLogoutMutation = () => {
   return useMutation({
     mutationFn: logout,
     onSuccess: () => {
-      queryClient.setQueryData(authMeQueryKey, null);
+      clearAuthenticatedUserQueries(queryClient);
     },
   });
 };

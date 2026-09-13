@@ -313,9 +313,10 @@ function Kakao() {
             : null;
     const shouldShowKakaoLoginToastFromLocationState =
         locationState?.showKakaoLoginToast === true;
-    const canShowSignupTermsModal = authMe?.status.isRegistered !== true;
+    const isAuthenticatedUnregisteredUser =
+        authMe?.status.isRegistered === false;
     const pendingSignupTransitionFromLocationState =
-        canShowSignupTermsModal && pendingSignupPathFromLocationState
+        isAuthenticatedUnregisteredUser && pendingSignupPathFromLocationState
             ? {
                 path: pendingSignupPathFromLocationState,
                 showKakaoLoginToast: shouldShowKakaoLoginToastFromLocationState,
@@ -325,7 +326,7 @@ function Kakao() {
             }
             : null;
     const pendingSignupTransitionFromReturnTo =
-        canShowSignupTermsModal &&
+        isAuthenticatedUnregisteredUser &&
         !authorizationCode &&
         !kakaoError &&
         !kakaoErrorDescription &&
