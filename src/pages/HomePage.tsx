@@ -23,6 +23,7 @@ import type {
   ActiveNotificationsResponse,
   NotificationType,
 } from "../types/notification";
+import FallingLeaves from "./HomePage/FallingLeaves";
 
 const datingMatchCountQueryKey = ["dating", "count"] as const;
 const fallbackMatchCount = 21;
@@ -255,14 +256,17 @@ function HomePage() {
       <MessageSlider></MessageSlider>
 
       <section className="relative flex flex-1 flex-col">
-        <Header
-          dayText="text-grey-700"
-          isLoggedIn={isRegistered}
-          theme={theme}
-          unreadCount={notificationStatus?.unreadCount ?? 0}
-        ></Header>
+        <FallingLeaves />
+        <div className="relative z-10">
+          <Header
+            dayText="text-grey-700"
+            isLoggedIn={isRegistered}
+            theme={theme}
+            unreadCount={notificationStatus?.unreadCount ?? 0}
+          ></Header>
+        </div>
 
-        <div className="mt-[1.1875rem] flex flex-col items-center gap-4">
+        <div className="relative z-10 mt-[1.1875rem] flex flex-col items-center gap-4">
           <img src={logo} alt="도미사럽" className="w-[14.1875rem]" />
           <div className="flex items-center gap-0.5">
             <span className="typo-comment-1 text-grey-900/50">
@@ -275,7 +279,7 @@ function HomePage() {
           </div>
         </div>
 
-        <div className="mt-[1.875rem] flex flex-col items-center gap-2.5 px-5">
+        <div className="relative z-10 mt-[1.875rem] flex flex-col items-center gap-2.5 px-5">
           <button
             type="button"
             onClick={handleDatingClick}
@@ -337,7 +341,7 @@ function HomePage() {
           </button>
         </div>
 
-        <div className="mt-auto flex flex-col items-center gap-2 pb-[6%] whitespace-nowrap">
+        <div className="relative z-10 mt-auto flex flex-col items-center gap-2 pb-[6%] whitespace-nowrap">
           <div className="flex items-center justify-center gap-1 typo-comment-2 text-grey-700">
             <a
               href="https://jungle-friend-b65.notion.site/35a755591c5c80abbde1c17845ec516f"

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { isAxiosError } from "axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -82,6 +82,8 @@ function SignupPage() {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitErrorMessage, setSubmitErrorMessage] = useState("");
+    const signupHeaderRef = useRef<HTMLDivElement>(null);
+    const signupContentRef = useRef<HTMLElement>(null);
 
     const { mutateAsync: registerUser } = useRegisterUserMutation();
 
@@ -99,6 +101,34 @@ function SignupPage() {
     const returnTo = getSafeReturnTo(searchParams.get("returnTo"));
     const receiveIntroduceReturnTo = getReceiveIntroduceReturnTo(returnTo);
 
+    const keepFocusedSectionVisible = useCallback(() => {
+        const focusedElement = document.activeElement;
+        const signupContent = signupContentRef.current;
+
+        if (!(focusedElement instanceof HTMLElement) || !signupContent?.contains(focusedElement)) {
+            return;
+        }
+
+        const headerBottom = signupHeaderRef.current?.getBoundingClientRect().bottom ?? 0;
+        const minimumTop = headerBottom + 16;
+        const section = focusedElement.closest<HTMLElement>("section, label");
+        const target = section ?? focusedElement;
+        const targetTop = target.getBoundingClientRect().top;
+
+        if (targetTop < minimumTop) {
+            window.scrollBy({
+                top: targetTop - minimumTop,
+                behavior: "auto",
+            });
+        }
+    }, []);
+
+    const scheduleFocusedSectionVisibility = useCallback(() => {
+        window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(keepFocusedSectionVisible);
+        });
+    }, [keepFocusedSectionVisible]);
+
     useEffect(() => {
         if (!showKakaoLoginToast) {
             return;
@@ -112,6 +142,27 @@ function SignupPage() {
             window.clearTimeout(timeoutId);
         };
     }, [showKakaoLoginToast]);
+
+    useEffect(() => {
+        const visualViewport = window.visualViewport;
+        const content = signupContentRef.current;
+        const resizeObserver = content
+            ? new ResizeObserver(scheduleFocusedSectionVisibility)
+            : null;
+
+        if (content) {
+            resizeObserver?.observe(content);
+        }
+
+        visualViewport?.addEventListener("resize", scheduleFocusedSectionVisibility);
+        window.addEventListener("resize", scheduleFocusedSectionVisibility);
+
+        return () => {
+            resizeObserver?.disconnect();
+            visualViewport?.removeEventListener("resize", scheduleFocusedSectionVisibility);
+            window.removeEventListener("resize", scheduleFocusedSectionVisibility);
+        };
+    }, [scheduleFocusedSectionVisibility]);
 
     useEffect(() => {
         return () => {
@@ -229,11 +280,15 @@ function SignupPage() {
     return (
         <div className="min-h-screen bg-grey-100">
             {showKakaoLoginToast ? <Toast message="카카오 로그인 완료!" /> : null}
-            <div className="sticky top-0 z-40 bg-grey-100">
+            <div ref={signupHeaderRef} className="sticky top-0 z-40 bg-grey-100">
                 <NotLoginHeader title="회원가입" onBack={handleHeaderBack} />
             </div>
 
-            <main className="px-5 pt-6 pb-[7.5rem]">
+            <main
+                ref={signupContentRef}
+                onFocusCapture={scheduleFocusedSectionVisibility}
+                className="signup-scroll-content px-5 pt-6 pb-[7.5rem]"
+            >
                 <div className="mx-auto w-full max-w-[22.6875rem]">
                     {currentStep === 1 && <SignupStepBasic />}
                     {currentStep === 2 && <SignupStepAnimal />}
