@@ -716,6 +716,8 @@ function DatingCardDetailPage() {
   const matchMutation = useMutation({
     mutationFn: matchReceivedDatingLike,
     onSuccess: async () => {
+      // 받은 호감 흐름의 성사 지점. 여기서 연락처가 공개된다.
+      track("match_completed");
       setToastMessage("매칭 완료! 서로에게 연락처가 공개되었어요");
       await invalidateDatingQueries();
     },
