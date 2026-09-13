@@ -17,6 +17,7 @@ import {
 import { useAuthMeQuery, useKakaoLoginMutation } from "../../queries/auth";
 import { reportBlacklistedUser } from "../../stores/blacklistedUserStore";
 import type { UserStatus } from "../../types/user";
+import { track } from "../../utils/mixpanel";
 
 const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
 const canBypassKakaoLogin = import.meta.env.DEV;
@@ -462,6 +463,9 @@ function Kakao() {
             setErrorMessage("카카오 로그인 설정이 없습니다.");
             return;
         }
+
+        // 카카오로 넘어가면 페이지를 떠나므로, 이탈 측정을 위해 떠나기 전에 남긴다.
+        track("signup_login_started");
 
         const state = createKakaoOAuthState();
         const redirectUri = getKakaoRedirectUri();
