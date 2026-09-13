@@ -37,6 +37,15 @@ const MAX_POLL_COUNT = 3; // 3초마다 호출. 최대 3번. (최대 9초 대기
 
 const PAYMENT_METHODS = [{ label: '토스페이로 송금하기' }, { label: '계좌이체 하기' }];
 
+/**
+ * 지표에 남길 결제 수단 코드.
+ * 버튼 문구를 그대로 보내면 문구를 고치는 순간 과거 데이터와 비교가 끊긴다.
+ */
+const paymentMethodCodes: Record<string, string> = {
+  '토스페이로 송금하기': 'toss',
+  '계좌이체 하기': 'bank_transfer',
+};
+
 function CookiePurchasePage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -160,7 +169,7 @@ function CookiePurchasePage() {
       return;
     }
 
-    track('cookie_payment_method_clicked', { method: label });
+    track('cookie_payment_method_clicked', { method: paymentMethodCodes[label] ?? 'unknown' });
     if (label === '토스페이로 송금하기') {
       const amount = state!.price.replace(/,/g, '');
       const deepLink = `supertoss://send?bank=케이뱅크&accountNo=100140152657&amount=${amount}`;
