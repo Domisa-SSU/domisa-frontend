@@ -1,6 +1,9 @@
 import { useState, useMemo } from "react";
 import { useCheckNicknameMutation } from "../../../queries/users";
-import { generateRandomNickname } from "../../../utils/randomNickname";
+import {
+    generateRandomNickname,
+    NICKNAME_MAX_LENGTH,
+} from "../../../utils/randomNickname";
 import { useSignupFlow } from "../useSignupFlow";
 import forbiddenIcon from "../asset/forbiddenIcon.svg";
 import pinkCheckIcon from "../asset/pinkCheckIcon.svg";
@@ -8,6 +11,7 @@ import selectArrow from "../asset/selectArrow.svg";
 import sparkleIcon from "../asset/sparkleIcon.svg";
 
 const birthYears = Array.from({ length: 28 }, (_, index) => `${2007 - index}`);
+const NICKNAME_ALLOWED_CHARACTERS = /[^A-Za-z0-9가-힣]/g;
 
 export function SignupStepBasic() {
     const { formData, updateFormData, goNextStep } = useSignupFlow();
@@ -32,13 +36,16 @@ export function SignupStepBasic() {
     ]);
 
     const handleNicknameChange = (value: string) => {
-        if (value.length <= 4) {
-            updateFormData({
-                nickname: value,
-                isNicknameChecked: false,
-            });
-            setNicknameErrorMessage("");
-        }
+        const normalizedNickname = value.replace(NICKNAME_ALLOWED_CHARACTERS, "");
+        const nickname = normalizedNickname.slice(0, NICKNAME_MAX_LENGTH);
+
+        updateFormData({
+            nickname,
+            isNicknameChecked: false,
+        });
+        setNicknameErrorMessage(
+            value !== normalizedNickname ? "한글, 영문, 숫자만 사용할 수 있어요" : "",
+        );
     };
 
     const handleCheckNickname = async (nicknameToCheck?: string) => {
@@ -83,7 +90,7 @@ export function SignupStepBasic() {
                         닉네임
                     </h2>
                     <p className="text-[13px] font-semibold leading-[14px] text-primary-300">
-                        * 닉네임은 4자까지만 작성이 가능해요
+                        * 닉네임은 8자까지만 작성이 가능해요
                     </p>
                 </div>
 
@@ -97,7 +104,7 @@ export function SignupStepBasic() {
                     >
                         <input
                             value={formData.nickname}
-                            maxLength={4}
+                            maxLength={NICKNAME_MAX_LENGTH}
                             onChange={(event) => handleNicknameChange(event.target.value)}
                             placeholder="난최고야"
                             className="h-full w-full bg-transparent pr-[4.75rem] text-[16px] font-medium tracking-[-0.32px] text-primary-500 placeholder:text-grey-600 focus:outline-none"
