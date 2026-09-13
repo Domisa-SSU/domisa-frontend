@@ -14,6 +14,23 @@ import sparkleIcon from "../asset/sparkleIcon.svg";
 
 const birthYears = Array.from({ length: 28 }, (_, index) => `${2007 - index}`);
 const NICKNAME_ALLOWED_CHARACTERS = /[^A-Za-z0-9가-힣]/g;
+const NICKNAME_WHITESPACE = /\s/;
+const NICKNAME_WHITESPACE_MESSAGE =
+    "띄어쓰기 없이 한글, 영문, 숫자만 사용할 수 있어요";
+const NICKNAME_SPECIAL_CHARACTER_MESSAGE =
+    "특수문자 없이 한글, 영문, 숫자만 사용할 수 있어요";
+
+/**
+ * 걸러진 글자가 무엇이었는지 알려준다.
+ * 띄어쓰기는 조용히 지워지면 사용자가 왜 안 써지는지 알 수 없으니 따로 짚어준다.
+ */
+const getNicknameFilterMessage = (value: string, normalizedNickname: string) => {
+    if (NICKNAME_WHITESPACE.test(value)) {
+        return NICKNAME_WHITESPACE_MESSAGE;
+    }
+
+    return value !== normalizedNickname ? NICKNAME_SPECIAL_CHARACTER_MESSAGE : "";
+};
 
 export function SignupStepBasic() {
     const { formData, updateFormData, goNextStep } = useSignupFlow();
@@ -67,11 +84,7 @@ export function SignupStepBasic() {
             isNicknameChecked: false,
             isNicknameRandom: false,
         });
-        setNicknameErrorMessage(
-            value !== normalizedNickname
-                ? "공백 및 특수문자 없이 한글, 영문, 숫자만 사용할 수 있어요"
-                : "",
-        );
+        setNicknameErrorMessage(getNicknameFilterMessage(value, normalizedNickname));
     };
 
     const handleNicknameInputChange = (value: string) => {
@@ -81,7 +94,13 @@ export function SignupStepBasic() {
                 nickname: value,
                 isNicknameChecked: false,
             });
-            setNicknameErrorMessage("");
+            /**
+             * 조합 중에는 아직 완성되지 않은 자모(ㄱ, ㅏ)가 섞여 있어 특수문자 안내를 띄우면
+             * 멀쩡한 입력에도 경고가 뜬다. 조합 버퍼에 들어올 일이 없는 띄어쓰기만 짚어준다.
+             */
+            setNicknameErrorMessage(
+                NICKNAME_WHITESPACE.test(value) ? NICKNAME_WHITESPACE_MESSAGE : "",
+            );
             return;
         }
 
