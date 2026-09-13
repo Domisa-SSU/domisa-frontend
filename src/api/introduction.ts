@@ -1,5 +1,7 @@
 import { INTRODUCTION_QUESTIONS } from "../constants/introductionQuestions";
+import type { UserStatus } from "../types/user";
 import { apiClient } from "./client";
+import { isBackendStatusDto } from "./status";
 
 export type ReceivedIntroduction = {
   introductionId: number;
@@ -20,6 +22,7 @@ export type CreateIntroductionLinkResponse = {
 
 const DUMMY_LINK_CODE = "test-code";
 const DUMMY_INTRODUCTION_ID = 1;
+const DUMMY_TOTAL_USER_COUNT = 128;
 
 const dummyReceivedIntroduction: ReceivedIntroduction = {
   introductionId: DUMMY_INTRODUCTION_ID,
@@ -134,15 +137,53 @@ export const getMyIntroduction = async (): Promise<MyIntroduction | null> => {
   return data;
 };
 
+export type AcceptIntroductionResponse = {
+  status: UserStatus | null;
+  totalUserCount: number | null;
+};
+
+/**
+ * 수락 자체는 이미 성공한 상태라, 응답 body 가 기대와 달라도 던지지 않고
+ * 읽지 못한 필드만 null 로 둔다. 완료 모달의 솔로 수는 부가 정보라
+ * 그것 때문에 수락 플로우를 실패로 되돌릴 이유가 없다.
+ */
+const parseAcceptIntroductionResponse = (
+  value: unknown,
+): AcceptIntroductionResponse => {
+  if (!value || typeof value !== "object") {
+    return { status: null, totalUserCount: null };
+  }
+
+  const response = value as Record<string, unknown>;
+
+  return {
+    status: isBackendStatusDto(response.status) ? response.status : null,
+    totalUserCount:
+      typeof response.totalUserCount === "number"
+        ? response.totalUserCount
+        : null,
+  };
+};
+
 /**
  * API 제목: 친구 소개서 수락
  * POST /api/users/introduction/{introductionId}
- * 현재 로그인한 사용자의 친구 소개서로 받은 소개서를 등록한다.
+ * 현재 로그인한 사용자의 친구 소개서로 받은 소개서를 등록하고,
+ * 갱신된 가입 상태와 전체 가입자 수를 받는다.
  */
-export const acceptReceivedIntroduction = async (introductionId: number) => {
+export const acceptReceivedIntroduction = async (
+  introductionId: number,
+): Promise<AcceptIntroductionResponse> => {
   if (import.meta.env.DEV && introductionId === DUMMY_INTRODUCTION_ID) {
-    return;
+    return {
+      status: { isRegistered: true, hasIntroduction: true },
+      totalUserCount: DUMMY_TOTAL_USER_COUNT,
+    };
   }
 
-  await apiClient.post<void>(`/api/users/introduction/${introductionId}`);
+  const { data } = await apiClient.post<unknown>(
+    `/api/users/introduction/${introductionId}`,
+  );
+
+  return parseAcceptIntroductionResponse(data);
 };

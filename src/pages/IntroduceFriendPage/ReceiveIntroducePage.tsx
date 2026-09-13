@@ -149,18 +149,30 @@ function MessageModal({
   );
 }
 
-function AcceptCreatedModal({ onConfirm }: { onConfirm: () => void }) {
+function AcceptCreatedModal({
+  totalUserCount,
+  onConfirm,
+}: {
+  totalUserCount: number | null;
+  onConfirm: () => void;
+}) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
       <div className="absolute inset-0 bg-grey-900/70" />
       <div className="relative z-10 flex w-full max-w-[21.25rem] flex-col items-center gap-5 rounded-[0.875rem] bg-grey-100 px-5 pt-[1.875rem] pb-5 text-center">
-        {/* TODO: 수락 API가 totalUserCount를 내려주면 제목 아래에
-            "N명의 솔로가 기다리고 있어요 🌸" 줄을 추가한다 (#234) */}
-        <h2 className="typo-subtitle-header-2 text-grey-900">
-          소개서가 만들어졌어요!
-          <br />
-          바로 시작해볼까요?
-        </h2>
+        <div className="flex flex-col items-center gap-[0.9375rem]">
+          <h2 className="typo-subtitle-header-2 text-grey-900">
+            소개서가 만들어졌어요!
+            <br />
+            바로 시작해볼까요?
+          </h2>
+          {totalUserCount !== null && totalUserCount > 0 ? (
+            <p className="typo-input-text-m text-grey-700">
+              <span className="text-primary-600">{totalUserCount}명</span>의
+              솔로가 기다리고 있어요 🌸
+            </p>
+          ) : null}
+        </div>
         <button
           type="button"
           onClick={onConfirm}
@@ -189,6 +201,7 @@ function ReceiveIntroducePage() {
   const { data: authMe } = useAuthMeQuery();
   const [isReplaceConfirmOpen, setIsReplaceConfirmOpen] = useState(false);
   const [acceptSuccessType, setAcceptSuccessType] = useState<AcceptSuccessType | null>(null);
+  const [totalUserCount, setTotalUserCount] = useState<number | null>(null);
   const [invalidIntroductionDescription, setInvalidIntroductionDescription] =
     useState("");
 
@@ -237,10 +250,13 @@ function ReceiveIntroducePage() {
     }
 
     try {
-      await acceptIntroduction(introduction.introductionId);
+      const { totalUserCount: acceptedTotalUserCount } = await acceptIntroduction(
+        introduction.introductionId,
+      );
       await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
 
       setIsReplaceConfirmOpen(false);
+      setTotalUserCount(acceptedTotalUserCount);
       setAcceptSuccessType(successType);
     } catch (error) {
       if (reportGlobalErrorIfNeeded(error)) {
@@ -402,7 +418,10 @@ function ReceiveIntroducePage() {
       )}
 
       {acceptSuccessType === "created" && (
-        <AcceptCreatedModal onConfirm={handleGoDating} />
+        <AcceptCreatedModal
+          totalUserCount={totalUserCount}
+          onConfirm={handleGoDating}
+        />
       )}
 
       {acceptSuccessType === "changed" && (
