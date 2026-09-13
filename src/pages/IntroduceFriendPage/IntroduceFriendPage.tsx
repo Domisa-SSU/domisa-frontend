@@ -17,6 +17,7 @@ import {
 } from "../../utils/introduceFriendDraftStorage";
 import letterCorner from "../../assets/letterCorner.svg";
 import introModalArrow from "./assets/introModalArrow.svg";
+import { track } from "../../utils/mixpanel";
 
 const INTRODUCE_FRIEND_GENERATING_PATH = "/introduce-friend/generating";
 
@@ -126,6 +127,7 @@ function IntroduceFriendPage() {
     };
 
     const handleNext = () => {
+        track("introduce_friend_submitted");
         saveIntroduceFriendDraft(answers);
         navigate(INTRODUCE_FRIEND_GENERATING_PATH);
     };

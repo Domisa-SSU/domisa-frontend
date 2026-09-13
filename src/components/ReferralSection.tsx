@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import Button from "./Button/Button";
 import { ButtonVariant, ButtonSize } from "./Button/ButtonEnums";
 import heartImg from "../assets/heartIcon.svg";
+import { track } from "../utils/mixpanel";
 
 function ReferralSection() {
   const navigate = useNavigate();
@@ -20,7 +21,10 @@ function ReferralSection() {
         label="친구 소개하기"
         variant={ButtonVariant.Main}
         size={ButtonSize.Small}
-        onClick={() => navigate("/introduce-friend")}
+        onClick={() => {
+          track("introduce_friend_started");
+          navigate("/introduce-friend");
+        }}
       />
     </div>
   );
