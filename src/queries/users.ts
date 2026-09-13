@@ -18,13 +18,14 @@ const PROFILE_IMAGE_MAX_POLLS = 20;
  * "사진 없음"이 아니라 서버에서 아직 처리 중이라는 뜻이다.
  * pollWhileImageMissing 을 주면 준비될 때까지(최대 1분) 다시 받아온다.
  */
-export const useUserMeQuery = (options?: { pollWhileImageMissing?: boolean }) => {
+export const useUserMeQuery = (options?: { pollWhileImageMissing?: boolean; enabled?: boolean }) => {
   const pollAttemptsRef = useRef(0);
 
   const query = useQuery({
     queryKey: userMeQueryKey,
     queryFn: getMe,
     retry: false,
+    enabled: options?.enabled,
     staleTime: 10 * 60 * 1000, // 10분 (imageUrl Signed URL 만료 20분보다 짧게)
     refetchInterval: options?.pollWhileImageMissing
       ? (query) => {

@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import ErrorPage from "../ErrorPage/ErrorPage";
 import NotLoginHeader from "../../components/NotLoginHeader";
 import ReferralSection from "../../components/ReferralSection";
-import { useUserCookiesQuery, useUserMeQuery } from "../../queries/users";
+import { useUserCookiesQuery } from "../../queries/users";
 import { isServerError } from "../../utils/apiError";
 import {
   INSUFFICIENT_COOKIES_REASON,
@@ -24,13 +24,6 @@ function MyCookiePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: cookies, error } = useUserCookiesQuery();
-  /**
-   * 쿠키 구매 지표를 남녀로 나눠 보기 위해 성별을 등록시킨다.
-   * 소개팅에서 쿠키 부족으로 바로 넘어오면 마이페이지를 거치지 않아
-   * 성별이 아직 등록되지 않은 상태일 수 있다. staleTime 이 10분이라
-   * 대개는 캐시를 쓰고 요청이 더 나가지 않는다.
-   */
-  useUserMeQuery();
   const locationState = location.state as CookiePageLocationState | null;
   const isInsufficientCookiesEntry =
     locationState?.reason === INSUFFICIENT_COOKIES_REASON;

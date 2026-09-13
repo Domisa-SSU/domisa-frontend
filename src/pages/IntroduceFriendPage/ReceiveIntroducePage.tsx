@@ -16,6 +16,7 @@ import inviteCreatedIcon from "./assets/inviteCreatedIcon.svg";
 import IntroductionLetter from "../../components/IntroductionLetter";
 import arrowIcon from "../../assets/arrowIcon.svg";
 import eyeIcon from "../SignupPage/asset/eyeIcon.svg";
+import { track } from "../../utils/mixpanel";
 
 type MessageModalProps = {
   title: string;
@@ -254,6 +255,8 @@ function ReceiveIntroducePage() {
         introduction.introductionId,
       );
       await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
+
+      track("introduction_accepted", { accept_type: successType });
 
       setIsReplaceConfirmOpen(false);
       setTotalUserCount(acceptedTotalUserCount);
