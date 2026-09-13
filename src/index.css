@@ -48,6 +48,11 @@ body {
   overflow-x: hidden;
 }
 
+/* 모바일 키보드가 입력 필드로 스크롤할 때 sticky 회원가입 헤더에 가려지지 않도록 한다. */
+.signup-scroll-content :is(input, select, textarea) {
+  scroll-margin-top: 7.75rem;
+}
+
 @keyframes timer-slot-roll-in {
   from {
     opacity: 0.1;
