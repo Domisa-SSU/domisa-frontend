@@ -11,7 +11,7 @@ import {
   updateMe,
 } from "../api/users";
 import type { UserMeResponse } from "../api/users";
-import { authMeQueryKey, clearAuthenticatedUserQueries } from "./auth";
+import { authMeQueryKey, clearAuthenticatedUserQueries, useAuthMeQuery } from "./auth";
 import { registerGender } from "../utils/mixpanel";
 
 export const userMeQueryKey = ["users", "me"] as const;
@@ -28,12 +28,26 @@ const PROFILE_IMAGE_MAX_POLLS = 20;
  */
 export const useUserMeQuery = (options?: { pollWhileImageMissing?: boolean; enabled?: boolean }) => {
   const pollAttemptsRef = useRef(0);
+  const { data: authMe } = useAuthMeQuery();
+
+  /**
+   * 가입을 마친 사용자에게만 의미가 있는 요청이다.
+   *
+   * 탈퇴 직후가 문제였다. 세션 쿠키는 살아 있고 가입 상태만 풀리는데, 이때
+   * /api/users/me 는 401 이 아니라 200 으로 응답하면서 프로필 필드를 주지 않는다.
+   * 파싱이 실패해 "Invalid user me response" 가 나고, 계약 위반은 전역 에러로 올라가
+   * 탈퇴가 성공했는데도 사용자에게는 에러 화면이 보인다.
+   *
+   * 탈퇴·로그아웃은 캐시를 비우는데(clearAuthenticatedUserQueries), 그 순간 살아 있는
+   * 옵저버가 곧바로 다시 받아오려 한다. 호출부마다 막기보다 여기서 한 번 잠근다.
+   */
+  const isRegisteredUser = authMe?.status.isRegistered === true;
 
   const query = useQuery({
     queryKey: userMeQueryKey,
     queryFn: getMe,
     retry: false,
-    enabled: options?.enabled,
+    enabled: (options?.enabled ?? true) && isRegisteredUser,
     staleTime: 10 * 60 * 1000, // 10분 (imageUrl Signed URL 만료 20분보다 짧게)
     refetchInterval: options?.pollWhileImageMissing
       ? (query) => {
