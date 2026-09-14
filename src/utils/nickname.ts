@@ -19,6 +19,13 @@ export const normalizeNickname = (value: string) =>
     value.replace(NICKNAME_DISALLOWED_CHARACTERS, "").slice(0, NICKNAME_MAX_LENGTH);
 
 /**
+ * 그대로 써도 되는 닉네임인지. 걸러낼 게 없고 비어 있지 않으면 규칙을 만족한다.
+ * 따로 정규식을 두지 않아야 normalizeNickname 과 규칙이 어긋나지 않는다.
+ */
+export const isValidNickname = (value: string) =>
+    value.length > 0 && value === normalizeNickname(value);
+
+/**
  * 걸러진 글자가 무엇이었는지 알려준다.
  * 띄어쓰기는 조용히 지워지면 사용자가 왜 안 써지는지 알 수 없으니 따로 짚어준다.
  */
