@@ -10,6 +10,7 @@ import { useCheckNicknameMutation, useUserMeQuery, useUpdateMeMutation } from '.
 import type { ContactType, UserMeResponse } from '../../api/users';
 import {
   getNicknameFilterMessage,
+  hasHangulJamo,
   hasNicknameWhitespace,
   NICKNAME_MAX_LENGTH,
   NICKNAME_WHITESPACE_MESSAGE,
@@ -306,10 +307,12 @@ function EditProfileForm({ me, isPhotoProcessing }: EditProfileFormProps) {
   };
 
   const handleNicknameInputChange = (value: string) => {
-    if (isNicknameComposing.current) {
+    if (isNicknameComposing.current || hasHangulJamo(value)) {
       /**
        * 조합 중에는 아직 완성되지 않은 자모(ㄱ, ㅏ)가 섞여 있어 여기서 걸러내면
        * 멀쩡한 입력이 지워진다. 조합 버퍼에 들어올 일이 없는 띄어쓰기만 짚어준다.
+       *
+       * compositionstart 를 늦게 주는 키보드가 있어서, 낱자모가 보이면 그것도 조합 중으로 본다.
        */
       setNickname(value);
       setIsNicknameChecked(false);

@@ -5,6 +5,7 @@ import {
 } from "../../../queries/users";
 import {
     getNicknameFilterMessage,
+    hasHangulJamo,
     hasNicknameWhitespace,
     NICKNAME_MAX_LENGTH,
     NICKNAME_WHITESPACE_MESSAGE,
@@ -75,7 +76,7 @@ export function SignupStepBasic() {
     };
 
     const handleNicknameInputChange = (value: string) => {
-        if (isNicknameComposing.current) {
+        if (isNicknameComposing.current || hasHangulJamo(value)) {
             randomNicknameRequestId.current += 1;
             updateFormData({
                 nickname: value,
@@ -84,6 +85,8 @@ export function SignupStepBasic() {
             /**
              * 조합 중에는 아직 완성되지 않은 자모(ㄱ, ㅏ)가 섞여 있어 특수문자 안내를 띄우면
              * 멀쩡한 입력에도 경고가 뜬다. 조합 버퍼에 들어올 일이 없는 띄어쓰기만 짚어준다.
+             *
+             * compositionstart 를 늦게 주는 키보드가 있어서, 낱자모가 보이면 그것도 조합 중으로 본다.
              */
             setNicknameErrorMessage(
                 hasNicknameWhitespace(value) ? NICKNAME_WHITESPACE_MESSAGE : "",

@@ -15,6 +15,17 @@ export const NICKNAME_SPECIAL_CHARACTER_MESSAGE =
 export const hasNicknameWhitespace = (value: string) =>
     NICKNAME_WHITESPACE.test(value);
 
+/**
+ * 조합 중인 한글 낱자모(ㄱ, ㅏ). 글자가 완성되면 가-힣 으로 바뀐다.
+ *
+ * compositionstart 를 첫 글자보다 늦게 주거나 아예 주지 않는 키보드가 있다.
+ * 그때 낱자모를 허용 문자가 아니라고 지워버리면 글자가 완성되기 전에 사라져서
+ * 한글이 아예 입력되지 않는다. 자모가 보이면 아직 조합 중으로 보고 손대지 않는다.
+ */
+const HANGUL_JAMO = /[\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uD7B0-\uD7FF]/;
+
+export const hasHangulJamo = (value: string) => HANGUL_JAMO.test(value);
+
 export const normalizeNickname = (value: string) =>
     value.replace(NICKNAME_DISALLOWED_CHARACTERS, "").slice(0, NICKNAME_MAX_LENGTH);
 
