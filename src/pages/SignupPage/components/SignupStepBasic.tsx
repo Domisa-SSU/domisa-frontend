@@ -5,9 +5,8 @@ import {
 } from "../../../queries/users";
 import {
     getNicknameFilterMessage,
-    hasNicknameWhitespace,
+    getTypingNicknameMessage,
     NICKNAME_MAX_LENGTH,
-    NICKNAME_WHITESPACE_MESSAGE,
     normalizeNickname,
 } from "../../../utils/nickname";
 import Toast from "../../../components/Toast";
@@ -26,7 +25,6 @@ export function SignupStepBasic() {
     const [toastMessage, setToastMessage] = useState("");
     const hasRequestedInitialRandomNickname = useRef(false);
     const randomNicknameRequestId = useRef(0);
-    const isNicknameComposing = useRef(false);
     const {
         mutateAsync: checkNicknameAvailability,
         isPending: isCheckingNickname,
@@ -75,23 +73,21 @@ export function SignupStepBasic() {
     };
 
     const handleNicknameInputChange = (value: string) => {
-        if (isNicknameComposing.current) {
-            randomNicknameRequestId.current += 1;
-            updateFormData({
-                nickname: value,
-                isNicknameChecked: false,
-            });
-            /**
-             * 조합 중에는 아직 완성되지 않은 자모(ㄱ, ㅏ)가 섞여 있어 특수문자 안내를 띄우면
-             * 멀쩡한 입력에도 경고가 뜬다. 조합 버퍼에 들어올 일이 없는 띄어쓰기만 짚어준다.
-             */
-            setNicknameErrorMessage(
-                hasNicknameWhitespace(value) ? NICKNAME_WHITESPACE_MESSAGE : "",
-            );
-            return;
-        }
+        /**
+         * 타이핑 중에는 값을 건드리지 않는다. 조합 중인 한글(ㅎ, 하)은 허용 문자가 아니라
+         * 여기서 걸러내면 글자가 완성되기 전에 사라진다. compositionstart 를 늦게 주거나
+         * 주지 않는 키보드가 있어서 조합 여부로 판단하는 것도 믿을 수 없다.
+         *
+         * 걸러내는 건 입력창을 벗어날 때와 확인을 누를 때 한다. 그때는 조합이 끝나 있다.
+         */
+        randomNicknameRequestId.current += 1;
 
-        handleNicknameChange(value);
+        updateFormData({
+            nickname: value,
+            isNicknameChecked: false,
+            isNicknameRandom: false,
+        });
+        setNicknameErrorMessage(getTypingNicknameMessage(value));
     };
 
     const handleCheckNickname = async (nicknameToCheck?: string) => {
@@ -215,20 +211,8 @@ export function SignupStepBasic() {
                             autoCorrect="off"
                             autoCapitalize="none"
                             onChange={(event) => handleNicknameInputChange(event.target.value)}
-                            onCompositionStart={() => {
-                                isNicknameComposing.current = true;
-                            }}
-                            onCompositionEnd={(event) => {
-                                isNicknameComposing.current = false;
-                                handleNicknameChange(event.currentTarget.value);
-                            }}
                             onBlur={(event) => {
-                                /**
-                                 * 조합을 끝내지 않고 빠져나가는 키보드가 있다.
-                                 * 걸러낼 게 있을 때만 손대야 확인까지 마친 닉네임이 초기화되지 않는다.
-                                 */
-                                isNicknameComposing.current = false;
-
+                                // 걸러낼 게 있을 때만 손대야 확인까지 마친 닉네임이 초기화되지 않는다.
                                 const { value } = event.currentTarget;
 
                                 if (value !== normalizeNickname(value)) {

@@ -15,6 +15,9 @@ export const NICKNAME_SPECIAL_CHARACTER_MESSAGE =
 export const hasNicknameWhitespace = (value: string) =>
     NICKNAME_WHITESPACE.test(value);
 
+/** 조합 중인 한글 낱자모(ㄱ, ㅏ). 글자가 완성되면 가-힣 으로 바뀐다. */
+const HANGUL_JAMO = /[\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uD7B0-\uD7FF]/g;
+
 export const normalizeNickname = (value: string) =>
     value.replace(NICKNAME_DISALLOWED_CHARACTERS, "").slice(0, NICKNAME_MAX_LENGTH);
 
@@ -26,7 +29,24 @@ export const isValidNickname = (value: string) =>
     value.length > 0 && value === normalizeNickname(value);
 
 /**
- * 걸러진 글자가 무엇이었는지 알려준다.
+ * 타이핑 중에 보여줄 안내. 값은 건드리지 않고 무엇이 문제인지만 알려준다.
+ *
+ * 조합 중인 낱자모는 빼고 본다. 아직 완성되지 않은 글자를 특수문자라고 할 수는 없다.
+ * 길이도 보지 않는다. maxLength 로 막혀 있고, 넘치는 건 확정 시점에 자른다.
+ */
+export const getTypingNicknameMessage = (value: string) => {
+    if (hasNicknameWhitespace(value)) {
+        return NICKNAME_WHITESPACE_MESSAGE;
+    }
+
+    const withoutComposingJamo = value.replace(HANGUL_JAMO, "");
+    const allowedOnly = withoutComposingJamo.replace(NICKNAME_DISALLOWED_CHARACTERS, "");
+
+    return allowedOnly !== withoutComposingJamo ? NICKNAME_SPECIAL_CHARACTER_MESSAGE : "";
+};
+
+/**
+ * 걸러낸 뒤 무엇이 지워졌는지 알려준다.
  * 띄어쓰기는 조용히 지워지면 사용자가 왜 안 써지는지 알 수 없으니 따로 짚어준다.
  */
 export const getNicknameFilterMessage = (
