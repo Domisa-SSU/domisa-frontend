@@ -8,9 +8,9 @@ const NICKNAME_DISALLOWED_CHARACTERS = /[^A-Za-z0-9가-힣]/g;
 const NICKNAME_WHITESPACE = /\s/;
 
 export const NICKNAME_WHITESPACE_MESSAGE =
-    "띄어쓰기 없이 한글, 영문, 숫자만 사용할 수 있어요";
+    "띄어쓰기 및 특수문자 없이 한글, 영문, 숫자만 사용할 수 있어요";
 export const NICKNAME_SPECIAL_CHARACTER_MESSAGE =
-    "특수문자 없이 한글, 영문, 숫자만 사용할 수 있어요";
+    "띄어쓰기 및 특수문자 없이 한글, 영문, 숫자만 사용할 수 있어요";
 
 export const hasNicknameWhitespace = (value: string) =>
     NICKNAME_WHITESPACE.test(value);
