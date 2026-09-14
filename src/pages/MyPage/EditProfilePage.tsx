@@ -10,9 +10,8 @@ import { useCheckNicknameMutation, useUserMeQuery, useUpdateMeMutation } from '.
 import type { ContactType, UserMeResponse } from '../../api/users';
 import {
   getNicknameFilterMessage,
-  hasNicknameWhitespace,
+  getTypingNicknameMessage,
   NICKNAME_MAX_LENGTH,
-  NICKNAME_WHITESPACE_MESSAGE,
   normalizeNickname,
 } from '../../utils/nickname';
 import {
@@ -207,7 +206,6 @@ function EditProfileForm({ me, isPhotoProcessing }: EditProfileFormProps) {
   const [nickname, setNickname] = useState(me.nickname);
   const [isNicknameChecked, setIsNicknameChecked] = useState(true);
   const [nicknameErrorMessage, setNicknameErrorMessage] = useState('');
-  const isNicknameComposing = useRef(false);
   const gender = me.gender ? '남성' : '여성';
   const [birthYear, setBirthYear] = useState(String(me.birthYear));
   const [mbti, setMbti] = useState(me.mbti ?? '');
@@ -306,18 +304,16 @@ function EditProfileForm({ me, isPhotoProcessing }: EditProfileFormProps) {
   };
 
   const handleNicknameInputChange = (value: string) => {
-    if (isNicknameComposing.current) {
-      /**
-       * 조합 중에는 아직 완성되지 않은 자모(ㄱ, ㅏ)가 섞여 있어 여기서 걸러내면
-       * 멀쩡한 입력이 지워진다. 조합 버퍼에 들어올 일이 없는 띄어쓰기만 짚어준다.
-       */
-      setNickname(value);
-      setIsNicknameChecked(false);
-      setNicknameErrorMessage(hasNicknameWhitespace(value) ? NICKNAME_WHITESPACE_MESSAGE : '');
-      return;
-    }
-
-    handleNicknameChange(value);
+    /**
+     * 타이핑 중에는 값을 건드리지 않는다. 조합 중인 한글(ㅎ, 하)은 허용 문자가 아니라
+     * 여기서 걸러내면 글자가 완성되기 전에 사라진다. compositionstart 를 늦게 주거나
+     * 주지 않는 키보드가 있어서 조합 여부로 판단하는 것도 믿을 수 없다.
+     *
+     * 걸러내는 건 입력창을 벗어날 때와 확인을 누를 때 한다. 그때는 조합이 끝나 있다.
+     */
+    setNickname(value);
+    setIsNicknameChecked(value === me.nickname);
+    setNicknameErrorMessage(getTypingNicknameMessage(value));
   };
 
   const handleCheckNickname = async () => {
@@ -467,20 +463,8 @@ function EditProfileForm({ me, isPhotoProcessing }: EditProfileFormProps) {
                   autoCorrect="off"
                   autoCapitalize="none"
                   onChange={(event) => handleNicknameInputChange(event.target.value)}
-                  onCompositionStart={() => {
-                    isNicknameComposing.current = true;
-                  }}
-                  onCompositionEnd={(event) => {
-                    isNicknameComposing.current = false;
-                    handleNicknameChange(event.currentTarget.value);
-                  }}
                   onBlur={(event) => {
-                    /**
-                     * 조합을 끝내지 않고 빠져나가는 키보드가 있다.
-                     * 걸러낼 게 있을 때만 손대야 확인까지 마친 닉네임이 초기화되지 않는다.
-                     */
-                    isNicknameComposing.current = false;
-
+                    // 걸러낼 게 있을 때만 손대야 확인까지 마친 닉네임이 초기화되지 않는다.
                     const { value } = event.currentTarget;
 
                     if (value !== normalizeNickname(value)) {
