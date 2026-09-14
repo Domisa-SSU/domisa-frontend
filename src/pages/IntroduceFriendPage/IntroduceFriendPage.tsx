@@ -127,6 +127,10 @@ function IntroduceFriendPage() {
     };
 
     const handleNext = () => {
+        if (!hasCompleteIntroductionAnswers(answers)) {
+            return;
+        }
+
         track("introduce_friend_submitted");
         saveIntroduceFriendDraft(answers);
         navigate(INTRODUCE_FRIEND_GENERATING_PATH);
@@ -148,6 +152,9 @@ function IntroduceFriendPage() {
                         const question = INTRODUCTION_QUESTIONS[questionId];
                         const answer = answers[questionId];
                         const isShortAnswer = questionId === "q1";
+                        const isBelowMinimumLength =
+                            answer.trim().length > 0 &&
+                            answer.trim().length < question.minLength;
 
                         return (
                             <section key={questionId} className="flex flex-col gap-4">
@@ -176,8 +183,14 @@ function IntroduceFriendPage() {
                                             {question.helperText}
                                         </p>
                                     ) : null}
-                                    <span className="typo-comment-1-m text-grey-600">
-                                        {`${answer.length}/${question.maxLength}`}
+                                    <span
+                                        className={`typo-comment-1-m ${
+                                            isBelowMinimumLength
+                                                ? "text-warning"
+                                                : "text-grey-600"
+                                        }`}
+                                    >
+                                        {`${answer.length}/${question.maxLength} · 최소 ${question.minLength}자`}
                                     </span>
                                 </div>
                             </section>

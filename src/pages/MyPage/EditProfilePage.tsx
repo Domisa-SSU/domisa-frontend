@@ -10,7 +10,7 @@ import { useCheckNicknameMutation, useUserMeQuery, useUpdateMeMutation } from '.
 import type { ContactType, UserMeResponse } from '../../api/users';
 import {
   getNicknameFilterMessage,
-  getTypingNicknameMessage,
+  isValidNickname,
   NICKNAME_MAX_LENGTH,
   normalizeNickname,
 } from '../../utils/nickname';
@@ -246,7 +246,7 @@ function EditProfileForm({ me, isPhotoProcessing }: EditProfileFormProps) {
 
   const isFormValid = useMemo(() => {
     return (
-      nickname.trim().length > 0 &&
+      isValidNickname(nickname) &&
       isNicknameChecked &&
       gender.length > 0 &&
       birthYear.length > 0 &&
@@ -295,61 +295,38 @@ function EditProfileForm({ me, isPhotoProcessing }: EditProfileFormProps) {
     closeCropModal();
   };
 
-  const handleNicknameChange = (value: string) => {
-    const nextNickname = normalizeNickname(value);
-
-    setNickname(nextNickname);
-    setIsNicknameChecked(nextNickname === me.nickname);
-    setNicknameErrorMessage(getNicknameFilterMessage(value, nextNickname));
-  };
-
   const handleNicknameInputChange = (value: string) => {
     /**
      * 타이핑 중에는 값을 건드리지 않는다. 조합 중인 한글(ㅎ, 하)은 허용 문자가 아니라
      * 여기서 걸러내면 글자가 완성되기 전에 사라진다. compositionstart 를 늦게 주거나
      * 주지 않는 키보드가 있어서 조합 여부로 판단하는 것도 믿을 수 없다.
      *
-     * 걸러내는 건 입력창을 벗어날 때와 확인을 누를 때 한다. 그때는 조합이 끝나 있다.
+     * 형식 검증은 확인을 눌렀을 때만 한다.
      */
     setNickname(value);
     setIsNicknameChecked(value === me.nickname);
-    setNicknameErrorMessage(getTypingNicknameMessage(value));
+    setNicknameErrorMessage('');
   };
 
   const handleCheckNickname = async () => {
-    const targetNickname = normalizeNickname(nickname);
-
-    if (targetNickname.length === 0) {
-      setNickname(targetNickname);
+    if (!isValidNickname(nickname)) {
       setIsNicknameChecked(false);
       setNicknameErrorMessage(
-        nickname.length > 0
-          ? getNicknameFilterMessage(nickname, targetNickname)
+        nickname
+          ? getNicknameFilterMessage(nickname, normalizeNickname(nickname))
           : '닉네임을 입력해주세요'
       );
       return;
     }
 
-    /**
-     * 조합 중이던 입력은 아직 걸러지지 않은 채 들어와 있다.
-     * 띄어쓰기가 낀 채로 서버에 보내면 400 이 떨어져서
-     * "닉네임 확인에 실패했어요" 라는 이유를 알 수 없는 문구만 보인다.
-     */
-    if (targetNickname !== nickname) {
-      setNickname(targetNickname);
-      setIsNicknameChecked(false);
-      setNicknameErrorMessage(getNicknameFilterMessage(nickname, targetNickname));
-      return;
-    }
-
-    if (targetNickname === me.nickname) {
+    if (nickname === me.nickname) {
       setIsNicknameChecked(true);
       setNicknameErrorMessage('');
       return;
     }
 
     try {
-      const { isAvailable } = await checkNicknameAvailability(targetNickname);
+      const { isAvailable } = await checkNicknameAvailability(nickname);
 
       setIsNicknameChecked(isAvailable);
       setNicknameErrorMessage(isAvailable ? '' : '이미 사용 중인 닉네임입니다');
@@ -390,9 +367,7 @@ function EditProfileForm({ me, isPhotoProcessing }: EditProfileFormProps) {
 
       // PUT 은 전체 교체라 8개 필드를 모두 보낸다. 일부만 보내면 나머지가 비워진다
       await updateMe({
-        // 완료는 isNicknameChecked 일 때만 열리고, 그 값은 이미 걸러진 닉네임이다.
-        // 여기서 또 거르면 규칙이 생기기 전의 닉네임을 그대로 둔 사용자가 말없이 개명된다
-        nickname: nickname.trim(),
+        nickname,
         gender: gender === '남성',
         birthYear: Number(birthYear),
         animalProfile: animalProfileByName[selectedAnimal],
@@ -463,14 +438,6 @@ function EditProfileForm({ me, isPhotoProcessing }: EditProfileFormProps) {
                   autoCorrect="off"
                   autoCapitalize="none"
                   onChange={(event) => handleNicknameInputChange(event.target.value)}
-                  onBlur={(event) => {
-                    // 걸러낼 게 있을 때만 손대야 확인까지 마친 닉네임이 초기화되지 않는다.
-                    const { value } = event.currentTarget;
-
-                    if (value !== normalizeNickname(value)) {
-                      handleNicknameChange(value);
-                    }
-                  }}
                   className={`${fieldClassName} pr-[5.5rem] ${
                     nicknameErrorMessage ? 'border-[1.2px] border-warning' : ''
                   }`}
@@ -480,7 +447,7 @@ function EditProfileForm({ me, isPhotoProcessing }: EditProfileFormProps) {
                   type="button"
                   disabled={isCheckingNickname}
                   onClick={handleCheckNickname}
-                  className="absolute right-[0.31rem] top-1/2 flex -translate-y-1/2 items-center justify-center rounded-[0.625rem] border-[0.8px] border-primary-200 bg-grey-100 px-4 py-2"
+                  className="absolute right-[0.31rem] top-1/2 flex -translate-y-1/2 items-center justify-center rounded-[0.625rem] border-[0.8px] border-primary-200 bg-grey-100 px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <span className="typo-comment-2 text-primary-300">
                     {isCheckingNickname ? '확인 중' : '확인'}

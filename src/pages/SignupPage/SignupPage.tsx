@@ -222,7 +222,7 @@ function SignupPage() {
             const notificationPhone = formData.isSmsOptedOut || digitsOnly.length === 0 ? null : digitsOnly;
 
             const response = await registerUser({
-                nickname: formData.nickname.trim(),
+                nickname: formData.nickname,
                 gender: formData.gender === "남성",
                 birthYear: Number(formData.birthYear),
                 animalProfile,

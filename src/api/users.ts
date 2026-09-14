@@ -240,6 +240,27 @@ export type UpdateMeResponse = {
   notificationPhone?: string | null;
 };
 
+const describeResponseValue = (value: unknown): unknown => {
+  if (value === null) {
+    return "null";
+  }
+
+  if (Array.isArray(value)) {
+    return "array";
+  }
+
+  if (typeof value !== "object") {
+    return typeof value;
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, nestedValue]) => [
+      key,
+      nestedValue === null ? "null" : typeof nestedValue,
+    ]),
+  );
+};
+
 const parseUserMeResponse = (value: unknown): UserMeResponse | null => {
   if (!value || typeof value !== 'object') return null;
   const r = value as Record<string, unknown>;
@@ -305,7 +326,14 @@ const parseUserCookiesResponse = (value: unknown): UserCookiesResponse | null =>
 export const getMe = async (): Promise<UserMeResponse> => {
   const { data } = await apiClient.get<unknown>('/api/users/me');
   const result = parseUserMeResponse(data);
-  if (!result) throw new Error('Invalid user me response');
+  if (!result) {
+    // 개인 정보 값은 기록하지 않고, 실제 응답의 필드명과 타입만 남겨 계약 불일치를 확인한다.
+    console.error(
+      "[Domisa] Invalid user me response shape",
+      JSON.stringify(describeResponseValue(data)),
+    );
+    throw new Error('Invalid user me response');
+  }
   return result;
 };
 
