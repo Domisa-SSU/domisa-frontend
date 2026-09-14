@@ -131,7 +131,7 @@ export function PhotoCropModal({ sourceFile, imageUrl, onConfirm, onCancel }: Ph
       <div className="relative z-10 flex w-full max-w-[22.6875rem] flex-col gap-5 rounded-[0.875rem] bg-grey-100 px-5 py-5">
         <h2 className="typo-subtitle-header-2 text-grey-900">사진 영역 조정</h2>
 
-        <div className="flex max-h-[58vh] min-h-[12rem] w-full items-center justify-center overflow-auto rounded-[0.625rem] bg-grey-900">
+        <div className="flex max-h-[58vh] min-h-[12rem] w-full items-center justify-center overflow-hidden rounded-[0.625rem] bg-grey-900">
           <ReactCrop
             crop={crop}
             aspect={PHOTO_CROP_ASPECT}
@@ -139,13 +139,13 @@ export function PhotoCropModal({ sourceFile, imageUrl, onConfirm, onCancel }: Ph
             ruleOfThirds
             onChange={(_pixelCrop, percentCrop) => setCrop(percentCrop)}
             onComplete={(pixelCrop) => setCropAreaPixels(pixelCrop)}
-            className="max-h-[58vh] w-full max-w-full"
+            className="max-h-[58vh] max-w-full"
           >
             <img
               src={imageUrl}
               alt="크롭할 프로필 사진"
               onLoad={handleImageLoad}
-              className="h-auto max-h-[58vh] w-full object-contain"
+              className="h-auto w-auto max-h-[58vh] max-w-full"
             />
           </ReactCrop>
         </div>
