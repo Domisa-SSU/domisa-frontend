@@ -24,7 +24,7 @@ const COOKIE_PACKAGES: {
   { count: 10, price: "3,500", productCode: "COOKIE_10", discount: "8% 할인" },
   { count: 15, price: "5,000", productCode: "COOKIE_15", discount: "12% 할인" },
   { count: 50, price: "7,000", productCode: "COOKIE_50", discount: "63% 할인" },
-  { count: 999999, price: "150,000", productCode: "COOKIE_999999", discount: "99% 할인" },
+  { count: 999999, price: "999,999", productCode: "COOKIE_999999", discount: "99% 할인" },
 ];
 
 const PRICE_BUTTON_GRADIENT =

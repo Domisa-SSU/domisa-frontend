@@ -3,7 +3,13 @@ import {
     useCheckNicknameMutation,
     useRandomNicknameMutation,
 } from "../../../queries/users";
-import { NICKNAME_MAX_LENGTH } from "../../../utils/randomNickname";
+import {
+    getNicknameFilterMessage,
+    hasNicknameWhitespace,
+    NICKNAME_MAX_LENGTH,
+    NICKNAME_WHITESPACE_MESSAGE,
+    normalizeNickname,
+} from "../../../utils/nickname";
 import Toast from "../../../components/Toast";
 import { useSignupFlow } from "../useSignupFlow";
 import { track } from "../../../utils/mixpanel";
@@ -13,7 +19,6 @@ import selectArrow from "../asset/selectArrow.svg";
 import sparkleIcon from "../asset/sparkleIcon.svg";
 
 const birthYears = Array.from({ length: 28 }, (_, index) => `${2007 - index}`);
-const NICKNAME_ALLOWED_CHARACTERS = /[^A-Za-z0-9가-힣]/g;
 
 export function SignupStepBasic() {
     const { formData, updateFormData, goNextStep } = useSignupFlow();
@@ -59,19 +64,14 @@ export function SignupStepBasic() {
 
     const handleNicknameChange = (value: string) => {
         randomNicknameRequestId.current += 1;
-        const normalizedNickname = value.replace(NICKNAME_ALLOWED_CHARACTERS, "");
-        const nickname = normalizedNickname.slice(0, NICKNAME_MAX_LENGTH);
+        const nickname = normalizeNickname(value);
 
         updateFormData({
             nickname,
             isNicknameChecked: false,
             isNicknameRandom: false,
         });
-        setNicknameErrorMessage(
-            value !== normalizedNickname
-                ? "공백 및 특수문자 없이 한글, 영문, 숫자만 사용할 수 있어요"
-                : "",
-        );
+        setNicknameErrorMessage(getNicknameFilterMessage(value, nickname));
     };
 
     const handleNicknameInputChange = (value: string) => {
@@ -81,7 +81,13 @@ export function SignupStepBasic() {
                 nickname: value,
                 isNicknameChecked: false,
             });
-            setNicknameErrorMessage("");
+            /**
+             * 조합 중에는 아직 완성되지 않은 자모(ㄱ, ㅏ)가 섞여 있어 특수문자 안내를 띄우면
+             * 멀쩡한 입력에도 경고가 뜬다. 조합 버퍼에 들어올 일이 없는 띄어쓰기만 짚어준다.
+             */
+            setNicknameErrorMessage(
+                hasNicknameWhitespace(value) ? NICKNAME_WHITESPACE_MESSAGE : "",
+            );
             return;
         }
 
@@ -89,11 +95,27 @@ export function SignupStepBasic() {
     };
 
     const handleCheckNickname = async (nicknameToCheck?: string) => {
-        const targetNickname = (nicknameToCheck ?? formData.nickname).trim();
+        const rawNickname = nicknameToCheck ?? formData.nickname;
+        const targetNickname = normalizeNickname(rawNickname);
 
         if (targetNickname.length === 0) {
-            updateFormData({ isNicknameChecked: false });
-            setNicknameErrorMessage("닉네임을 입력해주세요");
+            updateFormData({ nickname: targetNickname, isNicknameChecked: false });
+            setNicknameErrorMessage(
+                rawNickname.length > 0
+                    ? getNicknameFilterMessage(rawNickname, targetNickname)
+                    : "닉네임을 입력해주세요",
+            );
+            return;
+        }
+
+        /**
+         * 조합 중이던 입력은 아직 걸러지지 않은 채 들어와 있다.
+         * 띄어쓰기가 섞인 채로 서버에 보내면 400 이 떨어져서
+         * "닉네임 확인에 실패했어요" 처럼 이유를 알 수 없는 문구만 보인다.
+         */
+        if (targetNickname !== rawNickname) {
+            updateFormData({ nickname: targetNickname, isNicknameChecked: false });
+            setNicknameErrorMessage(getNicknameFilterMessage(rawNickname, targetNickname));
             return;
         }
 
@@ -199,6 +221,19 @@ export function SignupStepBasic() {
                             onCompositionEnd={(event) => {
                                 isNicknameComposing.current = false;
                                 handleNicknameChange(event.currentTarget.value);
+                            }}
+                            onBlur={(event) => {
+                                /**
+                                 * 조합을 끝내지 않고 빠져나가는 키보드가 있다.
+                                 * 걸러낼 게 있을 때만 손대야 확인까지 마친 닉네임이 초기화되지 않는다.
+                                 */
+                                isNicknameComposing.current = false;
+
+                                const { value } = event.currentTarget;
+
+                                if (value !== normalizeNickname(value)) {
+                                    handleNicknameChange(value);
+                                }
                             }}
                             placeholder="난최고야"
                             className="h-full w-full bg-transparent pr-[4.75rem] text-[16px] font-medium tracking-[-0.32px] text-primary-500 placeholder:text-grey-600 focus:outline-none"

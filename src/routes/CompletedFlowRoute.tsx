@@ -2,6 +2,7 @@ import { type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
 import { useAuthMeQuery } from "../queries/auth";
+import { getPostSignupPath } from "../utils/postSignupPath";
 
 type CompletedFlow = "signup";
 
@@ -77,8 +78,15 @@ function CompletedFlowRoute({ children, flow }: CompletedFlowRouteProps) {
 
   const isCompleted = flow === "signup" && authMe?.status.isRegistered === true;
 
-  if (isCompleted) {
-    return <Navigate to={getOriginPath(location)} replace />;
+  if (isCompleted && authMe) {
+    /**
+     * 가입 직후에는 SignupPage 의 이동과 이 redirect 가 authMe 갱신을 두고 경쟁한다.
+     * 두 곳이 같은 규칙을 쓰지 않으면 소개서가 없는 사용자가 안내 화면 대신
+     * 출발지로 되돌아가버린다.
+     */
+    return (
+      <Navigate to={getPostSignupPath(authMe.status, getOriginPath(location))} replace />
+    );
   }
 
   if (flow === "signup" && !hasAcceptedSignupTerms(location)) {
