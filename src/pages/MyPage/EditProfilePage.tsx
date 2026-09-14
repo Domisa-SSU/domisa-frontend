@@ -9,6 +9,13 @@ import { EDIT_PROFILE_TOAST_STORAGE_KEY } from '../../constants/storageKeys';
 import { useCheckNicknameMutation, useUserMeQuery, useUpdateMeMutation } from '../../queries/users';
 import type { ContactType, UserMeResponse } from '../../api/users';
 import {
+  getNicknameFilterMessage,
+  hasNicknameWhitespace,
+  NICKNAME_MAX_LENGTH,
+  NICKNAME_WHITESPACE_MESSAGE,
+  normalizeNickname,
+} from '../../utils/nickname';
+import {
   completeProfileImageUpload,
   createProfileImageUploadUrl,
   uploadProfileImageToS3,
@@ -200,6 +207,7 @@ function EditProfileForm({ me, isPhotoProcessing }: EditProfileFormProps) {
   const [nickname, setNickname] = useState(me.nickname);
   const [isNicknameChecked, setIsNicknameChecked] = useState(true);
   const [nicknameErrorMessage, setNicknameErrorMessage] = useState('');
+  const isNicknameComposing = useRef(false);
   const gender = me.gender ? '남성' : '여성';
   const [birthYear, setBirthYear] = useState(String(me.birthYear));
   const [mbti, setMbti] = useState(me.mbti ?? '');
@@ -289,33 +297,63 @@ function EditProfileForm({ me, isPhotoProcessing }: EditProfileFormProps) {
     closeCropModal();
   };
 
-  const handleLimitedChange = (
-    value: string,
-    limit: number,
-    setter: (nextValue: string) => void
-  ) => {
-    if (value.length <= limit) {
-      setter(value);
-    }
+  const handleNicknameChange = (value: string) => {
+    const nextNickname = normalizeNickname(value);
+
+    setNickname(nextNickname);
+    setIsNicknameChecked(nextNickname === me.nickname);
+    setNicknameErrorMessage(getNicknameFilterMessage(value, nextNickname));
   };
 
-  const handleCheckNickname = async () => {
-    const trimmedNickname = nickname.trim();
-
-    if (trimmedNickname.length === 0) {
+  const handleNicknameInputChange = (value: string) => {
+    if (isNicknameComposing.current) {
+      /**
+       * 조합 중에는 아직 완성되지 않은 자모(ㄱ, ㅏ)가 섞여 있어 여기서 걸러내면
+       * 멀쩡한 입력이 지워진다. 조합 버퍼에 들어올 일이 없는 띄어쓰기만 짚어준다.
+       */
+      setNickname(value);
       setIsNicknameChecked(false);
-      setNicknameErrorMessage('닉네임을 입력해주세요');
+      setNicknameErrorMessage(hasNicknameWhitespace(value) ? NICKNAME_WHITESPACE_MESSAGE : '');
       return;
     }
 
-    if (trimmedNickname === me.nickname) {
+    handleNicknameChange(value);
+  };
+
+  const handleCheckNickname = async () => {
+    const targetNickname = normalizeNickname(nickname);
+
+    if (targetNickname.length === 0) {
+      setNickname(targetNickname);
+      setIsNicknameChecked(false);
+      setNicknameErrorMessage(
+        nickname.length > 0
+          ? getNicknameFilterMessage(nickname, targetNickname)
+          : '닉네임을 입력해주세요'
+      );
+      return;
+    }
+
+    /**
+     * 조합 중이던 입력은 아직 걸러지지 않은 채 들어와 있다.
+     * 띄어쓰기가 낀 채로 서버에 보내면 400 이 떨어져서
+     * "닉네임 확인에 실패했어요" 라는 이유를 알 수 없는 문구만 보인다.
+     */
+    if (targetNickname !== nickname) {
+      setNickname(targetNickname);
+      setIsNicknameChecked(false);
+      setNicknameErrorMessage(getNicknameFilterMessage(nickname, targetNickname));
+      return;
+    }
+
+    if (targetNickname === me.nickname) {
       setIsNicknameChecked(true);
       setNicknameErrorMessage('');
       return;
     }
 
     try {
-      const { isAvailable } = await checkNicknameAvailability(trimmedNickname);
+      const { isAvailable } = await checkNicknameAvailability(targetNickname);
 
       setIsNicknameChecked(isAvailable);
       setNicknameErrorMessage(isAvailable ? '' : '이미 사용 중인 닉네임입니다');
@@ -356,6 +394,8 @@ function EditProfileForm({ me, isPhotoProcessing }: EditProfileFormProps) {
 
       // PUT 은 전체 교체라 8개 필드를 모두 보낸다. 일부만 보내면 나머지가 비워진다
       await updateMe({
+        // 완료는 isNicknameChecked 일 때만 열리고, 그 값은 이미 걸러진 닉네임이다.
+        // 여기서 또 거르면 규칙이 생기기 전의 닉네임을 그대로 둔 사용자가 말없이 개명된다
         nickname: nickname.trim(),
         gender: gender === '남성',
         birthYear: Number(birthYear),
@@ -422,13 +462,30 @@ function EditProfileForm({ me, isPhotoProcessing }: EditProfileFormProps) {
               <div className="relative">
                 <input
                   value={nickname}
-                  maxLength={8}
-                  onChange={(event) => {
-                    const nextNickname = event.target.value;
+                  maxLength={NICKNAME_MAX_LENGTH}
+                  spellCheck={false}
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  onChange={(event) => handleNicknameInputChange(event.target.value)}
+                  onCompositionStart={() => {
+                    isNicknameComposing.current = true;
+                  }}
+                  onCompositionEnd={(event) => {
+                    isNicknameComposing.current = false;
+                    handleNicknameChange(event.currentTarget.value);
+                  }}
+                  onBlur={(event) => {
+                    /**
+                     * 조합을 끝내지 않고 빠져나가는 키보드가 있다.
+                     * 걸러낼 게 있을 때만 손대야 확인까지 마친 닉네임이 초기화되지 않는다.
+                     */
+                    isNicknameComposing.current = false;
 
-                    handleLimitedChange(nextNickname, 8, setNickname);
-                    setIsNicknameChecked(nextNickname.trim() === me.nickname);
-                    setNicknameErrorMessage('');
+                    const { value } = event.currentTarget;
+
+                    if (value !== normalizeNickname(value)) {
+                      handleNicknameChange(value);
+                    }
                   }}
                   className={`${fieldClassName} pr-[5.5rem] ${
                     nicknameErrorMessage ? 'border-[1.2px] border-warning' : ''

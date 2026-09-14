@@ -3,7 +3,13 @@ import {
     useCheckNicknameMutation,
     useRandomNicknameMutation,
 } from "../../../queries/users";
-import { NICKNAME_MAX_LENGTH } from "../../../utils/randomNickname";
+import {
+    getNicknameFilterMessage,
+    hasNicknameWhitespace,
+    NICKNAME_MAX_LENGTH,
+    NICKNAME_WHITESPACE_MESSAGE,
+    normalizeNickname,
+} from "../../../utils/nickname";
 import Toast from "../../../components/Toast";
 import { useSignupFlow } from "../useSignupFlow";
 import { track } from "../../../utils/mixpanel";
@@ -13,27 +19,6 @@ import selectArrow from "../asset/selectArrow.svg";
 import sparkleIcon from "../asset/sparkleIcon.svg";
 
 const birthYears = Array.from({ length: 28 }, (_, index) => `${2007 - index}`);
-const NICKNAME_ALLOWED_CHARACTERS = /[^A-Za-z0-9가-힣]/g;
-const NICKNAME_WHITESPACE = /\s/;
-const NICKNAME_WHITESPACE_MESSAGE =
-    "띄어쓰기 없이 한글, 영문, 숫자만 사용할 수 있어요";
-const NICKNAME_SPECIAL_CHARACTER_MESSAGE =
-    "특수문자 없이 한글, 영문, 숫자만 사용할 수 있어요";
-
-const normalizeNickname = (value: string) =>
-    value.replace(NICKNAME_ALLOWED_CHARACTERS, "").slice(0, NICKNAME_MAX_LENGTH);
-
-/**
- * 걸러진 글자가 무엇이었는지 알려준다.
- * 띄어쓰기는 조용히 지워지면 사용자가 왜 안 써지는지 알 수 없으니 따로 짚어준다.
- */
-const getNicknameFilterMessage = (value: string, normalizedNickname: string) => {
-    if (NICKNAME_WHITESPACE.test(value)) {
-        return NICKNAME_WHITESPACE_MESSAGE;
-    }
-
-    return value !== normalizedNickname ? NICKNAME_SPECIAL_CHARACTER_MESSAGE : "";
-};
 
 export function SignupStepBasic() {
     const { formData, updateFormData, goNextStep } = useSignupFlow();
@@ -101,7 +86,7 @@ export function SignupStepBasic() {
              * 멀쩡한 입력에도 경고가 뜬다. 조합 버퍼에 들어올 일이 없는 띄어쓰기만 짚어준다.
              */
             setNicknameErrorMessage(
-                NICKNAME_WHITESPACE.test(value) ? NICKNAME_WHITESPACE_MESSAGE : "",
+                hasNicknameWhitespace(value) ? NICKNAME_WHITESPACE_MESSAGE : "",
             );
             return;
         }
