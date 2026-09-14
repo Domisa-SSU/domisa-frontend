@@ -19,6 +19,9 @@ function TransferPendingModal() {
             쿠키 지급 중{".".repeat(dotCount)}
           </p>
           <p className="typo-input-text-m text-grey-700">도미사가 쿠키를 굽고 있어요</p>
+          <p className="typo-comment-2 text-grey-600">
+            입금 확인에는 최대 20초가 걸릴 수 있어요
+          </p>
         </div>
         <img src={requireIcon} alt="쿠키 지급 중" className="w-[12.288rem] h-[12.288rem] object-cover" />
       </div>

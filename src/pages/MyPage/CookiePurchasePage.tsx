@@ -53,7 +53,7 @@ const PAYMENT_METHOD_GRADIENT =
  * WAITING(202) 응답을 받으면 곧바로 재요청한다.
  * 서버가 응답을 약 1초 지연시키므로 별도 대기 없이 이 횟수만큼 확인하고 실패로 넘긴다.
  */
-const MAX_CONFIRM_ATTEMPTS = 8;
+const MAX_CONFIRM_ATTEMPTS = 20;
 
 function CookiePurchasePage() {
   const navigate = useNavigate();
