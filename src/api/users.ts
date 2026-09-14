@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { isValidNickname } from '../utils/nickname';
 import { logout } from './auth';
 import { isBackendStatusDto } from './status';
 import type { UserStatus } from '../types/user';
@@ -38,8 +39,6 @@ export type RegisterUserResponse = {
 export type CheckNicknameAvailabilityResponse = {
   isAvailable: boolean;
 };
-
-const NICKNAME_PATTERN = /^[A-Za-z0-9가-힣]{1,8}$/;
 
 export type DeleteUserResponse = {
   message: string;
@@ -96,7 +95,7 @@ const parseRandomNicknameResponse = (value: unknown): string | null => {
 
   const nickname = response.RandomNick.replace(/\s+/g, '');
 
-  return NICKNAME_PATTERN.test(nickname) ? nickname : null;
+  return isValidNickname(nickname) ? nickname : null;
 };
 
 const parseDeleteUserResponse = (value: unknown): DeleteUserResponse | null => {
