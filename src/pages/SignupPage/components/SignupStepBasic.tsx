@@ -5,7 +5,7 @@ import {
 } from "../../../queries/users";
 import {
     getNicknameFilterMessage,
-    getTypingNicknameMessage,
+    isValidNickname,
     NICKNAME_MAX_LENGTH,
     normalizeNickname,
 } from "../../../utils/nickname";
@@ -48,7 +48,7 @@ export function SignupStepBasic() {
 
     const isFormValid = useMemo(() => {
         return (
-            formData.nickname.trim().length > 0 &&
+            isValidNickname(formData.nickname) &&
             formData.isNicknameChecked &&
             formData.gender.length > 0 &&
             formData.birthYear.length > 0
@@ -60,25 +60,13 @@ export function SignupStepBasic() {
         formData.nickname,
     ]);
 
-    const handleNicknameChange = (value: string) => {
-        randomNicknameRequestId.current += 1;
-        const nickname = normalizeNickname(value);
-
-        updateFormData({
-            nickname,
-            isNicknameChecked: false,
-            isNicknameRandom: false,
-        });
-        setNicknameErrorMessage(getNicknameFilterMessage(value, nickname));
-    };
-
     const handleNicknameInputChange = (value: string) => {
         /**
          * 타이핑 중에는 값을 건드리지 않는다. 조합 중인 한글(ㅎ, 하)은 허용 문자가 아니라
          * 여기서 걸러내면 글자가 완성되기 전에 사라진다. compositionstart 를 늦게 주거나
          * 주지 않는 키보드가 있어서 조합 여부로 판단하는 것도 믿을 수 없다.
          *
-         * 걸러내는 건 입력창을 벗어날 때와 확인을 누를 때 한다. 그때는 조합이 끝나 있다.
+         * 형식 검증은 확인을 눌렀을 때만 한다.
          */
         randomNicknameRequestId.current += 1;
 
@@ -87,36 +75,24 @@ export function SignupStepBasic() {
             isNicknameChecked: false,
             isNicknameRandom: false,
         });
-        setNicknameErrorMessage(getTypingNicknameMessage(value));
+        setNicknameErrorMessage("");
     };
 
-    const handleCheckNickname = async (nicknameToCheck?: string) => {
-        const rawNickname = nicknameToCheck ?? formData.nickname;
-        const targetNickname = normalizeNickname(rawNickname);
+    const handleCheckNickname = async () => {
+        const nickname = formData.nickname;
 
-        if (targetNickname.length === 0) {
-            updateFormData({ nickname: targetNickname, isNicknameChecked: false });
+        if (!isValidNickname(nickname)) {
+            updateFormData({ isNicknameChecked: false });
             setNicknameErrorMessage(
-                rawNickname.length > 0
-                    ? getNicknameFilterMessage(rawNickname, targetNickname)
+                nickname
+                    ? getNicknameFilterMessage(nickname, normalizeNickname(nickname))
                     : "닉네임을 입력해주세요",
             );
             return;
         }
 
-        /**
-         * 조합 중이던 입력은 아직 걸러지지 않은 채 들어와 있다.
-         * 띄어쓰기가 섞인 채로 서버에 보내면 400 이 떨어져서
-         * "닉네임 확인에 실패했어요" 처럼 이유를 알 수 없는 문구만 보인다.
-         */
-        if (targetNickname !== rawNickname) {
-            updateFormData({ nickname: targetNickname, isNicknameChecked: false });
-            setNicknameErrorMessage(getNicknameFilterMessage(rawNickname, targetNickname));
-            return;
-        }
-
         try {
-            const { isAvailable } = await checkNicknameAvailability(targetNickname);
+            const { isAvailable } = await checkNicknameAvailability(nickname);
 
             updateFormData({ isNicknameChecked: isAvailable });
             setNicknameErrorMessage(
@@ -211,14 +187,6 @@ export function SignupStepBasic() {
                             autoCorrect="off"
                             autoCapitalize="none"
                             onChange={(event) => handleNicknameInputChange(event.target.value)}
-                            onBlur={(event) => {
-                                // 걸러낼 게 있을 때만 손대야 확인까지 마친 닉네임이 초기화되지 않는다.
-                                const { value } = event.currentTarget;
-
-                                if (value !== normalizeNickname(value)) {
-                                    handleNicknameChange(value);
-                                }
-                            }}
                             placeholder="난최고야"
                             className="h-full w-full bg-transparent pr-[4.75rem] text-[16px] font-medium tracking-[-0.32px] text-primary-500 placeholder:text-grey-600 focus:outline-none"
                         />
@@ -226,7 +194,7 @@ export function SignupStepBasic() {
                             type="button"
                             disabled={isCheckingNickname}
                             onClick={() => handleCheckNickname()}
-                            className="absolute right-[5px] top-1/2 -translate-y-1/2 flex items-center justify-center rounded-[12px] border-[0.88px] border-primary-200 bg-white px-[17.6px] py-[8.8px] transition-colors hover:bg-primary-100/40 disabled:opacity-50"
+                            className="absolute right-[5px] top-1/2 -translate-y-1/2 flex items-center justify-center rounded-[12px] border-[0.88px] border-primary-200 bg-white px-[17.6px] py-[8.8px] transition-colors hover:bg-primary-100/40 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <span className="text-[14px] font-semibold leading-[15.4px] text-primary-300">
                                 {isCheckingNickname ? "확인 중" : "확인"}
