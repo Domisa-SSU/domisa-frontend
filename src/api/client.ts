@@ -2,6 +2,19 @@ import axios from 'axios';
 import { queryClient } from '../queries/queryClient';
 import { reportGlobalErrorIfNeeded } from '../stores/globalErrorStore';
 
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    /**
+     * 실패해도 전역 에러 화면까지는 띄우지 않는다.
+     *
+     * react-query 의 meta.suppressGlobalError 와 짝이다. 아래 인터셉터는 meta 를 알 수 없고
+     * mutationCache 보다 먼저 돌기 때문에, 여기서 표시해두지 않으면 화면 한 켠에서 조용히
+     * 실패해야 할 요청이 앱 전체를 에러 페이지로 덮어버린다.
+     */
+    skipGlobalError?: boolean;
+  }
+}
+
 const authMeQueryKey = ['auth', 'me'] as const;
 
 /**
@@ -20,7 +33,9 @@ apiClient.interceptors.response.use(
       queryClient.setQueryData(authMeQueryKey, null);
     }
 
-    reportGlobalErrorIfNeeded(error);
+    if (!error.config?.skipGlobalError) {
+      reportGlobalErrorIfNeeded(error);
+    }
 
     return Promise.reject(error);
   },

@@ -152,7 +152,9 @@ export const checkNicknameAvailability = async (nickname: string) => {
  * 서버가 중복되지 않는 닉네임을 생성해 반환한다.
  */
 export const getRandomNickname = async () => {
-  const { data } = await apiClient.get<unknown>('/api/users/random-nickname');
+  const { data } = await apiClient.get<unknown>('/api/users/random-nickname', {
+    skipGlobalError: true,
+  });
   const randomNickname = parseRandomNicknameResponse(data);
 
   if (!randomNickname) {
