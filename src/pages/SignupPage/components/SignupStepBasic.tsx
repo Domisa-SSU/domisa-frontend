@@ -20,6 +20,9 @@ const NICKNAME_WHITESPACE_MESSAGE =
 const NICKNAME_SPECIAL_CHARACTER_MESSAGE =
     "특수문자 없이 한글, 영문, 숫자만 사용할 수 있어요";
 
+const normalizeNickname = (value: string) =>
+    value.replace(NICKNAME_ALLOWED_CHARACTERS, "").slice(0, NICKNAME_MAX_LENGTH);
+
 /**
  * 걸러진 글자가 무엇이었는지 알려준다.
  * 띄어쓰기는 조용히 지워지면 사용자가 왜 안 써지는지 알 수 없으니 따로 짚어준다.
@@ -76,15 +79,14 @@ export function SignupStepBasic() {
 
     const handleNicknameChange = (value: string) => {
         randomNicknameRequestId.current += 1;
-        const normalizedNickname = value.replace(NICKNAME_ALLOWED_CHARACTERS, "");
-        const nickname = normalizedNickname.slice(0, NICKNAME_MAX_LENGTH);
+        const nickname = normalizeNickname(value);
 
         updateFormData({
             nickname,
             isNicknameChecked: false,
             isNicknameRandom: false,
         });
-        setNicknameErrorMessage(getNicknameFilterMessage(value, normalizedNickname));
+        setNicknameErrorMessage(getNicknameFilterMessage(value, nickname));
     };
 
     const handleNicknameInputChange = (value: string) => {
@@ -108,11 +110,27 @@ export function SignupStepBasic() {
     };
 
     const handleCheckNickname = async (nicknameToCheck?: string) => {
-        const targetNickname = (nicknameToCheck ?? formData.nickname).trim();
+        const rawNickname = nicknameToCheck ?? formData.nickname;
+        const targetNickname = normalizeNickname(rawNickname);
 
         if (targetNickname.length === 0) {
-            updateFormData({ isNicknameChecked: false });
-            setNicknameErrorMessage("닉네임을 입력해주세요");
+            updateFormData({ nickname: targetNickname, isNicknameChecked: false });
+            setNicknameErrorMessage(
+                rawNickname.length > 0
+                    ? getNicknameFilterMessage(rawNickname, targetNickname)
+                    : "닉네임을 입력해주세요",
+            );
+            return;
+        }
+
+        /**
+         * 조합 중이던 입력은 아직 걸러지지 않은 채 들어와 있다.
+         * 띄어쓰기가 섞인 채로 서버에 보내면 400 이 떨어져서
+         * "닉네임 확인에 실패했어요" 처럼 이유를 알 수 없는 문구만 보인다.
+         */
+        if (targetNickname !== rawNickname) {
+            updateFormData({ nickname: targetNickname, isNicknameChecked: false });
+            setNicknameErrorMessage(getNicknameFilterMessage(rawNickname, targetNickname));
             return;
         }
 
@@ -218,6 +236,19 @@ export function SignupStepBasic() {
                             onCompositionEnd={(event) => {
                                 isNicknameComposing.current = false;
                                 handleNicknameChange(event.currentTarget.value);
+                            }}
+                            onBlur={(event) => {
+                                /**
+                                 * 조합을 끝내지 않고 빠져나가는 키보드가 있다.
+                                 * 걸러낼 게 있을 때만 손대야 확인까지 마친 닉네임이 초기화되지 않는다.
+                                 */
+                                isNicknameComposing.current = false;
+
+                                const { value } = event.currentTarget;
+
+                                if (value !== normalizeNickname(value)) {
+                                    handleNicknameChange(value);
+                                }
                             }}
                             placeholder="난최고야"
                             className="h-full w-full bg-transparent pr-[4.75rem] text-[16px] font-medium tracking-[-0.32px] text-primary-500 placeholder:text-grey-600 focus:outline-none"
