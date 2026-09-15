@@ -805,10 +805,10 @@ function DatingPreviewSection({
             </div>
           </div>
           {scrollFadeStatus.left && (
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-[#ff88b0] to-[rgba(255,136,176,0)]" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-10 dating-scroll-fade-left" />
           )}
           {scrollFadeStatus.right && (
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-[4.5rem] bg-gradient-to-l from-[#ff88b0] to-[rgba(255,136,176,0)]" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-[4.5rem] dating-scroll-fade-right" />
           )}
         </div>
       )}
