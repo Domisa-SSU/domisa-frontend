@@ -35,7 +35,7 @@ const MODAL_ACTION_STYLES: Record<
   MessageModalProps["actions"][number]["variant"],
   string
 > = {
-  primary: "bg-gradient-to-b from-[#ff98b5] to-[#ff5a99] text-grey-100",
+  primary: "bg-pink-action-gradient text-grey-100",
   primarySolid: "bg-primary-500 text-grey-100",
   secondary: "bg-grey-400 text-grey-800",
 };

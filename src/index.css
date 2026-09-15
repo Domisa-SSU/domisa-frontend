@@ -355,6 +355,22 @@ select.typo-input-text-r {
   background: linear-gradient(161.75deg, #ffe2f6 2.77%, #ffe0ed 61.45%);
 }
 
+.bg-pink-action-gradient {
+  background-color: #ff5a99;
+  background-image: linear-gradient(to bottom, #ff98b5, #ff5a99);
+  background-image: linear-gradient(to bottom in oklab, #ff98b5, #ff5a99);
+}
+
+.dating-scroll-fade-left {
+  background-image: linear-gradient(to right, #ff88b0, rgba(255, 136, 176, 0));
+  background-image: linear-gradient(to right in oklab, #ff88b0, rgba(255, 136, 176, 0));
+}
+
+.dating-scroll-fade-right {
+  background-image: linear-gradient(to left, #ff88b0, rgba(255, 136, 176, 0));
+  background-image: linear-gradient(to left in oklab, #ff88b0, rgba(255, 136, 176, 0));
+}
+
 .bg-home-friend-card {
   background: linear-gradient(161.75deg, #caf1ff 2.77%, #bae9ff 61.45%);
 }

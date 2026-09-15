@@ -556,7 +556,7 @@ function DetailFooter({
             type="button"
             onClick={onUnblurReceivedLike}
             disabled={isUnblurPending}
-            className="flex h-[3.125rem] w-full items-center justify-center rounded-[0.875rem] bg-gradient-to-b from-[#ff98b5] to-[#ff5a99] px-2.5 py-2.5 text-grey-100 disabled:cursor-wait disabled:opacity-80"
+            className="flex h-[3.125rem] w-full items-center justify-center rounded-[0.875rem] bg-pink-action-gradient px-2.5 py-2.5 text-grey-100 disabled:cursor-wait disabled:opacity-80"
           >
             <span className="typo-button-text-b">
               {isUnblurPending ? "카드 확인 중..." : "소개팅 카드 확인하기 (쿠키 2개)"}
