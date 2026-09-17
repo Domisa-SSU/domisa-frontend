@@ -28,7 +28,7 @@ import FallingLeaves from "./HomePage/FallingLeaves";
 const datingMatchCountQueryKey = ["dating", "count"] as const;
 const fallbackMatchCount = 21;
 // 다음 서비스 종료 일정으로 변경하면 공지 문구와 노출 이력이 함께 갱신됩니다.
-const serviceClosingAt = new Date("2026-05-17T00:00:00+09:00");
+const serviceClosingAt = new Date("2026-09-18T00:00:00+09:00");
 const isServiceClosingNoticeActive = Date.now() < serviceClosingAt.getTime();
 const homeServiceClosingNoticeStorageKey =
   `domisa-home-service-closing-notice-seen-${serviceClosingAt.toISOString()}`;
