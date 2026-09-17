@@ -27,8 +27,8 @@ import FallingLeaves from "./HomePage/FallingLeaves";
 
 const datingMatchCountQueryKey = ["dating", "count"] as const;
 const fallbackMatchCount = 21;
-// 다음 서비스 종료 일정으로 변경하면 공지 문구와 노출 이력이 함께 갱신됩니다.
-const serviceClosingAt = new Date("2026-05-17T00:00:00+09:00");
+// 서비스 종료 시각으로 공지 노출 여부와 확인 이력을 구분합니다. 일정 변경 시 안내 문구도 수정합니다.
+const serviceClosingAt = new Date("2026-09-18T00:00:00+09:00");
 const isServiceClosingNoticeActive = Date.now() < serviceClosingAt.getTime();
 const homeServiceClosingNoticeStorageKey =
   `domisa-home-service-closing-notice-seen-${serviceClosingAt.toISOString()}`;
@@ -78,26 +78,6 @@ const homeOneTimeNoticeStorageKeys: Record<HomeOneTimeNoticeType, string> = {
 const homeOneTimeNoticeOrder: readonly HomeOneTimeNoticeType[] = [
   ...(isServiceClosingNoticeActive ? (["serviceClosing"] as const) : []),
 ];
-
-const formatServiceClosingDate = () => {
-  const parts = new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
-    month: "numeric",
-    day: "numeric",
-    weekday: "short",
-    hour: "numeric",
-    hourCycle: "h23",
-  }).formatToParts(serviceClosingAt);
-  const partValue = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((part) => part.type === type)?.value ?? "";
-  const hour = Number(partValue("hour"));
-
-  return `${partValue("month")}/${partValue("day")}(${partValue("weekday")}) ${
-    hour < 12 ? "오전" : "오후"
-  } ${hour % 12}시 이후`;
-};
-
-const serviceClosingDateLabel = formatServiceClosingDate();
 
 const hasSeenHomeOneTimeNotice = (type: HomeOneTimeNoticeType) => {
   try {
@@ -154,11 +134,11 @@ function HomeOneTimeNoticeModal({
             id={titleId}
             className="typo-subtitle-header-2 text-center text-grey-900"
           >
-            서비스가 곧 종료돼요
+            서비스가 곧 종료돼요 😢
           </div>
           <div className="typo-button-text text-center text-warning-ac">
-            <p>{serviceClosingDateLabel}</p>
-            <p>운영이 종료되어 이용이 불가능해요</p>
+            <p>9월 17일 23시 59분 후에</p>
+            <p>모든 쿠키와 사용자 정보가 사라집니다</p>
           </div>
         </div>
         <button
